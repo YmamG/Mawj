@@ -38,7 +38,7 @@ The default `AI_PROVIDER=demo` is a **simulation**, not a live AI model: journal
 
 Only the owner can view or modify their tasks, entries and suggestions. AI suggestions do not create tasks until accepted. Sequential repeat acceptance does not duplicate tasks; concurrent acceptance is a known limitation. Editing journal text saves it as written and dismisses obsolete pending suggestions without calling AI or deleting previously accepted tasks. Deleting an entry cascades to its suggestions, but accepted tasks remain independent.
 
-Task duration, if supplied, must be 1–1440 minutes; title is required. Unspecified priority defaults to medium. Completion percentage is completed / total tasks scheduled in the selected calendar period, rounded to an integer. Undated tasks use their creation date in Asia/Riyadh. Weeks start Sunday; calendar months/years include the whole period, including scheduled future tasks. An empty period displays an empty state rather than a misleading percentage. This is scheduled-work completion, not a count of completion events during that period.
+Task duration, if supplied, must be 1–1440 minutes; title is required. Unspecified priority defaults to medium. Account passwords require at least 8 characters; no additional character rules are imposed. Completion percentage is completed / total tasks scheduled in the selected calendar period, rounded to an integer. Undated tasks use their creation date in Asia/Riyadh. Weeks start Sunday; calendar months/years include the whole period, including scheduled future tasks. An empty period displays an empty state rather than a misleading percentage. This is scheduled-work completion, not a count of completion events during that period.
 
 ## ORM evidence
 

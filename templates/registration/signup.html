@@ -10,7 +10,7 @@
         <div class="auth-field">{{ form.username.label_tag }}{{ form.username }}{{ form.username.errors }}</div>
         <p class="auth-hint">Use letters, numbers, or @ . + - _</p>
         <div class="auth-field">{{ form.password1.label_tag }}{{ form.password1 }}{{ form.password1.errors }}</div>
-        <p class="auth-hint">Use at least 8 characters. Avoid common passwords, only numbers, or a password similar to your username.</p>
+        <p class="auth-hint">Use at least 8 characters. Letters, numbers, and symbols are all optional.</p>
         <div class="auth-field">{{ form.password2.label_tag }}{{ form.password2 }}{{ form.password2.errors }}</div>
         <p class="auth-hint">Enter the same password again.</p>
         {% include "registration/password_toggle.html" %}

@@ -84,3 +84,22 @@ class ProfileViewTests(TestCase):
     def test_invalid_theme_is_rejected(self):
         response = self.client.post(reverse("theme_update"), {"theme": "unknown"})
         self.assertEqual(response.status_code, 400)
+
+
+class PasswordPolicyTests(TestCase):
+    def test_eight_character_password_has_no_composition_rules(self):
+        response = self.client.post(reverse("signup"), {
+            "username": "numbers", "password1": "12345678", "password2": "12345678",
+        })
+        self.assertRedirects(response, reverse("task_list"))
+        self.assertTrue(get_user_model().objects.get(username="numbers").check_password("12345678"))
+
+    def test_short_password_and_mismatched_confirmation_are_rejected(self):
+        for password, confirmation in [("1234567", "1234567"), ("12345678", "87654321")]:
+            with self.subTest(password=password):
+                response = self.client.post(reverse("signup"), {
+                    "username": "rejected", "password1": password, "password2": confirmation,
+                })
+                self.assertEqual(response.status_code, 200)
+                self.assertTrue(response.context["form"].errors)
+                self.assertFalse(get_user_model().objects.filter(username="rejected").exists())
