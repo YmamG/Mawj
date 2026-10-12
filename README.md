@@ -8,7 +8,11 @@ Unlike copying actions manually from notes, Mawj keeps journaling, reviewed task
 
 Features: Django accounts and private records; task CRUD with title-only quick entry, optional scheduling and details, search/status/priority filters and pagination; journal create/read/edit/delete with search and annotated pending-suggestion counts; explicit suggestion acceptance/dismissal; calendar; weekly/monthly/yearly achievements with a chart and data table; Today/overdue/completed sections; daily/weekly repeating tasks; Study/Personal/Work categories; optional in-app reminders; profile photos and themes.
 
-## Setup
+## New Next.js interface
+
+A redesigned landing page and full Next.js workspace now sit in front of the Django app. Choose Grove, Petal or Dusk; all tasks, journals, profiles, photos, reminders and reports use the same Django data. See [Next.js setup](docs/nextjs.md) for one-time setup and the single `node scripts/dev.mjs` startup command. Use port **3000** for the new interface; port 8000 retains the original Django screens.
+
+## Original Django-only setup
 
 Validated with Python 3.12.14, Django 6.1.2, requests 2.34.2 and Pillow 12.3.0 on Linux. SQLite is included with Python. Use the root `manage.py`; `myproject/` is a legacy scaffold and is not the active application.
 
@@ -85,4 +89,4 @@ See [design](docs/design.md), [verification](docs/verification.md), [demo](docs/
 
 ## Sources and assistance
 
-Built with Django and Requests; use their official documentation for authentication, forms, ORM, migrations and HTTP behavior. OpenAI Codex assistance was used for environment setup, feature implementation, tests and documentation. The student must review and understand these contributions and be able to explain the URL → view → ORM → template flow and design choices. Requirements were reviewed against the supplied Capstone Project Guide.
+Built with Django and Requests; use their official documentation for authentication, forms, ORM, migrations and HTTP behavior. OpenAI Codex assistance was used for environment setup, feature implementation, tests, documentation and the Next.js redesign. The installed Leonxlnx/taste-skill `redesign-existing-projects` skill guided the visual audit; Next.js, React, Phosphor, DM Sans and Fraunces support the new frontend. The student must review and understand these contributions and be able to explain the URL → view → ORM → template flow and design choices. Requirements were reviewed against the supplied Capstone Project Guide.

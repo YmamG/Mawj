@@ -20,3 +20,7 @@ Before submission: run checks, confirm instructor repository access, choose the 
 - Show the Today/Overdue/Completed today tabs and the category filter in Tasks.
 - Choose a reminder a few minutes in the future. After its time passes, reload the site, open Today, and dismiss it. Explain that these are in-app reminders, not external notifications.
 - Switch the achievement chart week/month/year; expand View chart data and compare the exact totals.
+
+## Presenting the Next.js redesign
+
+Use the new interface on port 3000 after following `docs/nextjs.md`. Start with the public landing page and try Grove/Petal/Dusk. Sign in, show the Today workspace, then follow the same core demonstrations above through My tasks, Journal, Progress, Calendar and My space. Show that theme choice persists after reload and that all changes are real Django records, not landing mock data. The landing preview is explicitly illustrative. Existing Django HTML screens remain available separately.

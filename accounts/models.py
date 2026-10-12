@@ -9,6 +9,9 @@ def avatar_path(instance, filename):
 
 class UserPreferences(models.Model):
     THEME_CHOICES = [
+        ("petal", "Petal"),
+        ("grove", "Grove"),
+        ("dusk", "Dusk"),
         ("tide", "Tide"),
         ("orchid", "Orchid"),
         ("forest", "Forest"),

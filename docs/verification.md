@@ -66,3 +66,17 @@ Record actual results, not anticipated passes:
 | Extra UI at mobile/desktop | No document overflow at 375/1280 px | Today, task form/list, profile/edit and month chart passed; screenshots reviewed | PASS, Chromium + manual screenshot review |
 
 This second clean source copy reused the validated installed interpreter/dependencies and verified new migrations from an empty database. It was not a fresh remote Git clone. Browser-generated data and uploads stayed in the isolated copy. A first run-server command from `/tmp` failed due to the wrong working directory; running from the documented project directory succeeded. Actual phone/manual acceptance and live provider checks remain pending as noted above.
+
+## Next.js redesign verification (2026-10-12)
+
+- Full Django suite: **83 tests passed**, including API ownership, CSRF rejection and trusted-origin acceptance, auth/theme persistence, form validation, recurrence, journal acceptance, reports and calendar. After adding private no-cache headers, the six API tests passed again.
+- Production Next.js build and TypeScript checking passed. `npm ci` installs the committed lockfile. Fonts are bundled locally, with no font-network dependency.
+- Chromium exercised the actual two-service flow: login, all three themes, category search, demo AI suggestions, daily recurrence, task edit/delete, journal accept/edit/delete, private avatar upload/removal, theme persistence after reload, reminder dismissal, calendar month/day selection, and chart period/data controls. Actions used the real Django API on an isolated fictional database.
+- The initial browser check diagnosed a trailing-slash redirect conflict between Next.js and Django; the tested rewrite preserves API URLs and appends the backend slash. A subsequent check found mobile decorative-orbit overflow; reducing the orbit dimensions fixed it. Test-script selector/navigation issues were corrected separately from application changes.
+- Anonymous landing/auth/privacy/about pages and workspace layouts were checked at **390, 768, and 1440 px**. Expanded task details were checked on mobile. No document overflow or browser runtime errors remained in the layout run. Screenshots were reviewed manually.
+- `next start` production startup, landing themes, mobile layout, API proxy and branded 404 passed. `node scripts/dev.mjs` starts the main Django checkout and Next.js together; landing and API readiness requests returned 200. Ports must be free; a launcher test with earlier validation servers still running correctly failed rather than silently selecting different ports.
+- A clean backend source copy built its schema with the theme migration and fictional demo data; the main existing schema also migrated successfully. The clean copy reused installed Python dependencies, and was not a remote Git clone.
+
+Saved visual previews: [Grove](previews/landing-grove.png), [Petal](previews/landing-petal.png), [Dusk](previews/landing-dusk.png), [mobile](previews/landing-mobile.png). These contain illustrative landing content only, not private user data.
+
+Limitations remain: no production deployment or live AI provider test; reminders are in-app on visits; repetition advances on completion; real-device manual acceptance and instructor scope approval are still pending. The original Django screens remain available on port 8000.

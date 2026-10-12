@@ -113,3 +113,11 @@ Responsive design wraps controls on narrow screens; wide calendar content scroll
 - Add task → optional category/repeat/reminder → complete → successor created once → inspect Today sections and category filters.
 - Open a page after reminder time → reminder banner → Today → dismiss reminder.
 - Achievements → choose period → compare completed/remaining bars → expand exact data table.
+
+## Next.js visual system
+
+The Next.js landing page introduces Mawj’s journal-to-task workflow through a large editorial hero, an explicitly illustrative app preview, a sequential workflow, a journal example and a focused signup action. The workspace uses horizontal navigation, compact task rows, optional inline forms and calm summary panels rather than long lists of empty fields. DM Sans handles interface text; Fraunces handles editorial headings. Keyboard focus, reduced motion, loading skeletons, empty states, inline errors and destructive-action confirmations are included.
+
+Three user-requested palette themes are Grove (green), Petal (pink/lavender/blue) and Dusk (mauve/ink). The duplicated green URL maps to one theme. Additional neutral surfaces and readable foreground colors complement the exact supplied palette tokens. Theme preferences persist to Django for signed-in users and to local storage for anonymous browsing. This redesign changes presentation and adds a session API; the existing entities, relationships and business rules remain in Django.
+
+See [the new interface](nextjs.md) for routes, setup and architecture, and [Grove visual preview](previews/landing-grove.png).

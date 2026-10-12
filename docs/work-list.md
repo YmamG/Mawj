@@ -14,3 +14,5 @@ Optional future work: email/push notifications, custom categories, validated liv
 Known limitations: live provider tests are mocked; no deployed production configuration; no evidence of demand yet; concurrent acceptance requests can create duplicate tasks; direct database writes can bypass form-level business rules. Edited journals save as written rather than reprocessing AI.
 
 Extra-feature limitations: recurrence advances on completion; reminders only appear on site visits; charts report scheduled work rather than completion-event history; avatar files require backup with the database.
+
+Next.js redesign completed: real Django API integration, public landing page, three requested palette themes, complete workspace, locally hosted fonts, accessible state handling, private photo delivery and a cross-platform two-service launcher. Production deployment remains separate.
