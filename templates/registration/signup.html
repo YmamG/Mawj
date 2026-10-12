@@ -1,7 +1,21 @@
 {% extends "base.html" %}
 {% block title %}Sign up - Mawj{% endblock %}
 {% block content %}
-<h1>Sign up</h1>
-<form method="post">{% csrf_token %}{{ form.as_p }}<button type="submit">Create account</button></form>
-<p>Have an account? <a href="{% url 'login' %}">Login</a></p>
+<section class="auth-card">
+    <h1>Create your account</h1>
+    <p>Choose a username and password. No email is needed.</p>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        <div class="auth-field">{{ form.username.label_tag }}{{ form.username }}{{ form.username.errors }}</div>
+        <p class="auth-hint">Use letters, numbers, or @ . + - _</p>
+        <div class="auth-field">{{ form.password1.label_tag }}{{ form.password1 }}{{ form.password1.errors }}</div>
+        <p class="auth-hint">Use at least 8 characters. Avoid common passwords, only numbers, or a password similar to your username.</p>
+        <div class="auth-field">{{ form.password2.label_tag }}{{ form.password2 }}{{ form.password2.errors }}</div>
+        <p class="auth-hint">Enter the same password again.</p>
+        {% include "registration/password_toggle.html" %}
+        <button type="submit">Create account</button>
+    </form>
+    <p>Have an account? <a href="{% url 'login' %}">Login</a></p>
+</section>
 {% endblock %}
