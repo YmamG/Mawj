@@ -1,0 +1,1 @@
+"""Dashboard views and URL configuration for Mawj."""

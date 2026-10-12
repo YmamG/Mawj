@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}My Tasks - Mawj{% endblock %}
+{% block content %}
+    <h1>My Tasks</h1>
+
+    {% if messages %}
+        <ul>
+            {% for message in messages %}
+                <li>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <p><a href="{% url 'task_create' %}">+ Add Task</a></p>
+
+    {% for task in tasks %}
+        <div class="task-card" style="border: 1px solid #999; padding: 10px; margin-bottom: 10px;">
+            <h3>{{ task.title }}</h3>
+            <p>{{ task.description|default:"No description" }}</p>
+
+            <ul>
+                <li>Date: {{ task.date|date:"Y-m-d"|default:"-" }}</li>
+                <li>Start time: {{ task.start_time|time:"H:i"|default:"-" }}</li>
+                <li>Deadline: {{ task.deadline|date:"Y-m-d H:i"|default:"-" }}</li>
+                <li>
+                    Estimated duration:
+                    {% if task.estimated_duration %}{{ task.estimated_duration }} min{% else %}-{% endif %}
+                </li>
+                <li>Priority: {{ task.get_priority_display }}</li>
+                <li>Status: {{ task.get_status_display }}</li>
+            </ul>
+
+            <a href="{% url 'task_update' task.pk %}">Edit</a>
+            <a href="{% url 'task_delete' task.pk %}">Delete</a>
+
+            <form method="post" action="{% url 'task_toggle' task.pk %}" style="display: inline;">
+                {% csrf_token %}
+                {% if task.status == "todo" %}
+                    <button type="submit">Mark Done</button>
+                {% else %}
+                    <button type="submit">Mark Todo</button>
+                {% endif %}
+            </form>
+        </div>
+    {% empty %}
+        <p>You have no tasks yet.</p>
+    {% endfor %}
+{% endblock %}

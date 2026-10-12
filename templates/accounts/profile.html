@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Profile - Mawj{% endblock %}
+{% block content %}
+<h1>Profile</h1>
+<p><a href="{% url 'profile_edit' %}">Edit profile</a></p>
+
+<h2>Account</h2>
+<dl>
+    <dt>Username</dt>
+    <dd>{{ profile_user.username }}</dd>
+    <dt>Display name</dt>
+    <dd>{{ display_name|default:"-" }}</dd>
+    <dt>First name</dt>
+    <dd>{{ profile_user.first_name|default:"-" }}</dd>
+    <dt>Last name</dt>
+    <dd>{{ profile_user.last_name|default:"-" }}</dd>
+    <dt>Email</dt>
+    <dd>{{ profile_user.email|default:"-" }}</dd>
+    <dt>Date joined</dt>
+    <dd>{{ profile_user.date_joined|date:"F j, Y" }}</dd>
+</dl>
+
+<h2>Your activity</h2>
+<ul>
+    <li>Journal entries: {{ journal_count }}</li>
+    <li>Total tasks: {{ total_tasks }}</li>
+    <li>Completed tasks: {{ completed_tasks }}</li>
+    <li>Pending tasks: {{ pending_tasks }}</li>
+</ul>
+{% endblock %}

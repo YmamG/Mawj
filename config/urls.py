@@ -1,0 +1,12 @@
+from django.contrib import admin
+from django.shortcuts import redirect
+from django.urls import include, path
+
+urlpatterns = [
+    path("admin/", admin.site.urls),
+    path("", lambda request: redirect("task_list")),
+    path("accounts/", include("accounts.urls")),
+    path("tasks/", include("tasks.urls")),
+    path("journal/", include("journal.urls")),
+    path("calendar/", include("dashboard.urls")),
+]

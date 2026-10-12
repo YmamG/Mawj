@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Journal - Mawj{% endblock %}
+{% block content %}
+<h1>My Journal</h1>
+
+{% if messages %}
+    <ul>{% for message in messages %}<li>{{ message }}</li>{% endfor %}</ul>
+{% endif %}
+
+<p><a href="{% url 'journal_create' %}">+ New Entry</a></p>
+
+{% for entry in entries %}
+    <div style="border: 1px solid #999; padding: 10px; margin-bottom: 10px;">
+        <p><small>{{ entry.created_at|date:"Y-m-d H:i" }}</small></p>
+        <p>{{ entry.clean_text|truncatechars:150 }}</p>
+        <a href="{% url 'journal_detail' entry.pk %}">Open</a>
+        <a href="{% url 'journal_delete' entry.pk %}">Delete</a>
+    </div>
+{% empty %}
+    <p>No journal entries yet.</p>
+{% endfor %}
+{% endblock %}

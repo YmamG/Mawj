@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Mawj{% endblock %}</title>
+    <style>
+        :root,
+        [data-theme="tide"] {
+            --page-bg: #f1f7f8;
+            --surface-bg: #ffffff;
+            --text-color: #18343b;
+            --muted-color: #587078;
+            --accent-color: #087f8c;
+            --accent-text: #ffffff;
+            --border-color: #b9d2d7;
+        }
+        [data-theme="orchid"] {
+            --page-bg: #faf4fb;
+            --surface-bg: #ffffff;
+            --text-color: #392641;
+            --muted-color: #765f80;
+            --accent-color: #8952a1;
+            --accent-text: #ffffff;
+            --border-color: #ddc8e4;
+        }
+        [data-theme="forest"] {
+            --page-bg: #f2f7f1;
+            --surface-bg: #ffffff;
+            --text-color: #243a2a;
+            --muted-color: #607764;
+            --accent-color: #39734a;
+            --accent-text: #ffffff;
+            --border-color: #c6d8c7;
+        }
+        [data-theme="sunrise"] {
+            --page-bg: #fff7ef;
+            --surface-bg: #ffffff;
+            --text-color: #493222;
+            --muted-color: #81644b;
+            --accent-color: #c65f2b;
+            --accent-text: #ffffff;
+            --border-color: #ead1bc;
+        }
+        body {
+            margin: 0;
+            padding: 1rem;
+            background: var(--page-bg);
+            color: var(--text-color);
+            font-family: Arial, sans-serif;
+        }
+        a { color: var(--accent-color); }
+        button, select, input {
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 0.4rem 0.6rem;
+            font: inherit;
+        }
+        button {
+            background: var(--accent-color);
+            color: var(--accent-text);
+            cursor: pointer;
+        }
+        nav {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+        }
+        .side-menu { position: relative; }
+        .side-menu summary { cursor: pointer; color: var(--accent-color); }
+        .menu-panel {
+            position: absolute;
+            z-index: 2;
+            right: 0;
+            min-width: 220px;
+            padding: 1rem;
+            background: var(--surface-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            box-shadow: 0 4px 12px #0002;
+        }
+        .menu-panel a { display: block; padding: 0.35rem 0; }
+        .menu-panel label { display: block; margin: 0.75rem 0 0.35rem; }
+        .menu-panel form { margin: 0.5rem 0 0; }
+        hr, table, td, th { border-color: var(--border-color); }
+        article, .task-card { background: var(--surface-bg); color: var(--text-color); }
+    </style>
+</head>
+<body data-theme="{{ current_theme|default:'tide' }}">
+    <nav>
+        <strong>Mawj</strong>
+        {% if user.is_authenticated %}
+            <details class="side-menu">
+                <summary>Menu</summary>
+                <div class="menu-panel">
+                    <a href="{% url 'task_list' %}">Tasks</a>
+                    <a href="{% url 'journal_list' %}">Journal</a>
+                    <a href="{% url 'calendar' %}">Calendar</a>
+                    <a href="{% url 'profile' %}">Profile</a>
+                    <form method="post" action="{% url 'theme_update' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                        <label for="theme-select">Theme</label>
+                        <select id="theme-select" name="theme">
+                            {% for value, label in theme_choices %}
+                                <option value="{{ value }}" {% if value == current_theme %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit">Apply</button>
+                    </form>
+                    <form method="post" action="{% url 'logout' %}">
+                        {% csrf_token %}
+                        <button type="submit">Logout</button>
+                    </form>
+                </div>
+            </details>
+        {% endif %}
+    </nav>
+    <hr>
+    {% block content %}{% endblock %}
+</body>
+</html>

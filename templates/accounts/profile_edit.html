@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Edit Profile - Mawj{% endblock %}
+{% block content %}
+<h1>Edit profile</h1>
+<p>Username: {{ request.user.username }}</p>
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Save changes</button>
+    <a href="{% url 'profile' %}">Cancel</a>
+</form>
+{% endblock %}

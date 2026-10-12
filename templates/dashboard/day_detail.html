@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}{{ selected_date|date:"F j, Y" }} - Mawj{% endblock %}
+{% block content %}
+<h1>{{ selected_date|date:"F j, Y" }}</h1>
+<p><a href="{% url 'calendar_month' year=selected_date.year month=selected_date.month %}">Back to calendar</a></p>
+
+<h2>Journal</h2>
+{% for entry in entries %}
+    <article style="border: 1px solid #999; padding: 10px; margin-bottom: 10px;">
+        <p><small>{{ entry.created_at|date:"H:i" }}</small></p>
+        <p>{{ entry.clean_text|default:entry.raw_text|linebreaksbr }}</p>
+        <a href="{% url 'journal_detail' entry.pk %}">Open entry</a>
+    </article>
+{% empty %}
+    <p>No journal entry for this date.</p>
+{% endfor %}
+
+<h2>Tasks</h2>
+<ul>
+    {% for task in tasks %}
+        <li>
+            {{ task.title }} -
+            {% if task.status == "done" %}Completed{% else %}Pending{% endif %}
+            {% if task.start_time %}({{ task.start_time|time:"H:i" }}){% endif %}
+        </li>
+    {% empty %}
+        <li>No tasks for this date.</li>
+    {% endfor %}
+</ul>
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Journal Entry - Mawj{% endblock %}
+{% block content %}
+<h1>Journal Entry</h1>
+
+{% if messages %}
+    <ul>{% for message in messages %}<li>{{ message }}</li>{% endfor %}</ul>
+{% endif %}
+
+<p><small>{{ entry.created_at|date:"Y-m-d H:i" }}</small></p>
+
+<h3>Organized text</h3>
+<p style="white-space: pre-wrap;">{{ entry.clean_text }}</p>
+
+<h3>Suggested tasks</h3>
+{% for s in pending %}
+    <div style="border: 1px solid #999; padding: 10px; margin-bottom: 10px;">
+        <strong>{{ s.title }}</strong>
+        (priority: {{ s.priority }}{% if s.date %}, date: {{ s.date|date:"Y-m-d" }}{% endif %}{% if s.start_time %}, at {{ s.start_time|time:"H:i" }}{% endif %}{% if s.estimated_duration %}, {{ s.estimated_duration }} min{% endif %})
+        <form method="post" action="{% url 'suggestion_accept' s.pk %}" style="display: inline;">
+            {% csrf_token %}<button type="submit">Add to my tasks</button>
+        </form>
+        <form method="post" action="{% url 'suggestion_dismiss' s.pk %}" style="display: inline;">
+            {% csrf_token %}<button type="submit">Dismiss</button>
+        </form>
+    </div>
+{% empty %}
+    <p>No pending suggestions.</p>
+{% endfor %}
+
+<p><a href="{% url 'journal_list' %}">Back to journal</a></p>
+{% endblock %}

@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Delete Entry - Mawj{% endblock %}
+{% block content %}
+<h1>Delete Journal Entry</h1>
+<p>Are you sure you want to delete this entry?</p>
+<form method="post">
+    {% csrf_token %}
+    <button type="submit">Yes, delete</button>
+    <a href="{% url 'journal_detail' entry.pk %}">Cancel</a>
+</form>
+{% endblock %}

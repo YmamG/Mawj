@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}New Entry - Mawj{% endblock %}
+{% block content %}
+<h1>New Journal Entry</h1>
+{% if sends_to_cloud %}
+<p><strong>Privacy:</strong> your text is sent to {{ provider }} to organize it.</p>
+{% endif %}
+{% if provider == "demo" %}
+<p>Tip: in demo mode, any line starting with "-" becomes a task suggestion.</p>
+{% endif %}
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Save</button>
+    <a href="{% url 'journal_list' %}">Cancel</a>
+</form>
+{% endblock %}
