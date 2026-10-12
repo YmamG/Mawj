@@ -1,5 +1,6 @@
 import json
-from datetime import date, time
+from datetime import date, time, timedelta
+from django.utils import timezone
 from unittest.mock import MagicMock, patch
 
 from django.contrib.auth import get_user_model
@@ -111,7 +112,9 @@ class JournalAIFlowTests(TestCase):
 
     @override_settings(AI_PROVIDER="gemini")
     def test_ai_suggestions_are_saved_with_details_but_no_task_yet(self):
-        body = {"candidates": [{"content": {"parts": [{"text": json.dumps(GOOD)}]}}]}
+        good = json.loads(json.dumps(GOOD))
+        good["suggestions"][0]["date"] = (timezone.localdate() + timedelta(days=1)).isoformat()
+        body = {"candidates": [{"content": {"parts": [{"text": json.dumps(good)}]}}]}
         with patch.dict("os.environ", {"GEMINI_API_KEY": "k"}), \
                 patch("ai.provider.requests.post", return_value=fake_response(200, body)):
             r = self.client.post(reverse("journal_create"), {"raw_text": "raw"}, follow=True)
@@ -122,6 +125,7 @@ class JournalAIFlowTests(TestCase):
         self.assertEqual((s.priority, s.estimated_duration), ("high", 20))
         self.assertEqual(Task.objects.count(), 0)
         self.assertContains(r, "10:30")
+        self.assertEqual(s.date, timezone.localdate() + timedelta(days=1))
 
     @override_settings(AI_PROVIDER="claude")
     def test_ai_failure_still_saves_the_entry(self):

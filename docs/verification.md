@@ -87,3 +87,12 @@ Limitations remain: no production deployment or live AI provider test; reminders
 - In an isolated file-backed database, API signup followed by login from two separate Python processes succeeded, including after logout. Original Django signup followed by original Django login from another process also succeeded. This verifies restart persistence in the tested checkout, not the user's Windows database.
 - Updated launcher started both services, printed the active database path/account count and reached both readiness endpoints. Old `/accounts/signup/` and `/accounts/login/` URLs returned 302 to the new port-3000 routes; the API returned 200.
 - Automatic browser opening is implemented for Windows via Python's standard webbrowser module; execution was not exercised on the Linux validation host. No user database was moved, replaced, or deleted.
+
+## Chart, task scheduling, journal and theme fixes (2026-10-12)
+
+- Final full Django suite: **88 tests passed**. A previous journal fixture used a historical date; it was updated to a future date while retaining time/detail assertions to match the new past-date rule.
+- Next.js production build and TypeScript checking passed.
+- Chromium verified that the empty-state Add task button scrolls/focuses the form, the date picker rejects past dates, first/middle/last monthly chart tips are fully inside the scroll region, natural Arabic/English demo notes yield suggestions, and reanalysis preserves accepted suggestions.
+- Ember/Midnight settings persisted after reload; footer attribution and GitHub links appeared in both interfaces. Desktop (1280) and mobile (390) layouts passed without document overflow. An intermediate check found long usernames overflowing the mobile profile; wrapping them fixed the issue.
+- Both client and server reject new past schedules; existing unchanged overdue records can still be edited. API acceptance cannot bypass these rules.
+- Browser checks used generated fictional validation accounts in the local development database. These temporary accounts were removed after the run. No real credentials were used. Live AI remains untested; simulation and provider modes are now visible in the journal UI.

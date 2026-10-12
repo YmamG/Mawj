@@ -123,3 +123,16 @@ class ExtraTaskFeaturesTests(TestCase):
                 self.assertEqual(sum(row["total"] for row in chart), 3)
                 self.assertEqual(sum(row["completed"] for row in chart), 2)
                 self.assertEqual(response.context["percentage"], 67)
+
+    def test_past_schedules_rejected_but_existing_overdue_tasks_can_be_edited(self):
+        yesterday = (self.today - timedelta(days=1)).isoformat()
+        for data in [{"date": yesterday}, {"deadline": "2000-01-01T12:00"}]:
+            response = self.client.post(reverse("task_create"), {"title": "Past", **data})
+            self.assertEqual(response.status_code, 200)
+            self.assertTrue(response.context["form"].errors)
+        old = Task.objects.create(user=self.user, title="Old", date=self.today-timedelta(days=2))
+        response = self.client.post(reverse("task_update", args=[old.pk]), {"title": "Renamed", "date": old.date.isoformat()})
+        self.assertEqual(response.status_code, 302)
+        response = self.client.post(reverse("task_update", args=[old.pk]), {"title": "Renamed", "date": yesterday})
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("date", response.context["form"].errors)

@@ -40,13 +40,21 @@ def manual_provider(text):
 def demo_provider(text):
     """Fake 'AI' for testing. Lines starting with '-' or '*' become suggestions."""
     suggestions = []
-    for line in text.splitlines():
+    # Explicit bullets or intent phrases only; this is a labeled local simulation.
+    intent = re.compile(r"(?:\b(?:I\s+)?(?:need to|want to|have to|plan to|should)\s+|(?:أبغى|ابغى|أبي|ابي|أحتاج|احتاج|لازم|ودي|ناوي)\s+)", re.IGNORECASE)
+    for line in re.split(r"[\n.!؟]+", text):
         line = line.strip()
         if line.startswith(("-", "*")):
-            title = line.lstrip("-* ").strip()
+            candidates = [line.lstrip("-* ").strip()]
+        else:
+            matches = list(intent.finditer(line))
+            candidates = [line[match.end():matches[index + 1].start() if index + 1 < len(matches) else len(line)].strip(" ,،؛") for index, match in enumerate(matches)]
+        for title in candidates:
             if title:
-                suggestions.append(_clean_suggestion({"title": title}))
-    return {"clean_text": text.strip(), "suggestions": [s for s in suggestions if s]}
+                item = _clean_suggestion({"title": title})
+                if item and item["title"] not in {s["title"] for s in suggestions}:
+                    suggestions.append(item)
+    return {"clean_text": text.strip(), "suggestions": suggestions[:20]}
 
 
 # ---------------------------------------------------------------- shared AI logic
@@ -65,7 +73,8 @@ Use today's date (given below) to turn words like "tomorrow" into a real date. U
 
 
 def _build_user_message(text):
-    return f"Today's date: {date.today().isoformat()}\n\nJournal text:\n{text}"
+    from django.utils import timezone
+    return f"Today's date: {timezone.localdate().isoformat()}\n\nJournal text:\n{text}"
 
 
 def _clean_suggestion(item):
@@ -252,7 +261,19 @@ def _provider_name():
 
 
 def process_journal(text):
-    return PROVIDERS[_provider_name()](text)
+    from django.utils import timezone
+    result = PROVIDERS[_provider_name()](text)
+    adjusted = False
+    for suggestion in result["suggestions"]:
+        when = suggestion.get("date")
+        clock = suggestion.get("start_time")
+        if when and (when < timezone.localdate() or (when == timezone.localdate() and clock and clock < timezone.localtime().time().replace(tzinfo=None))):
+            suggestion["date"] = None
+            suggestion["start_time"] = None
+            adjusted = True
+    if adjusted:
+        result["warning"] = "Past suggested dates were removed. Choose a current or future date in your task list."
+    return result
 
 
 # ---------------------------------------------------------------- task suggestions

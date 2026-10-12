@@ -258,7 +258,7 @@ export default function Home() {
             <div className="palette-showcase">
               <ThemePicker />
               <span>
-                Three moods. One familiar space.
+                Five moods. One familiar space.
                 <br />
                 <small>Try the colors—this page changes with you.</small>
               </span>
@@ -291,7 +291,16 @@ export default function Home() {
         <div>
           <Link href="/privacy">Privacy</Link>
           <Link href="/about">About Mawj</Link>
-          <span>Made for your everyday.</span>
+          <span>
+            Made by{" "}
+            <a
+              href="https://github.com/ymamggg-jpg"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Ymam
+            </a>
+          </span>
         </div>
       </footer>
     </>

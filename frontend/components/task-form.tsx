@@ -73,6 +73,12 @@ export default function TaskForm({
       setBusy(false);
     }
   }
+  const today = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Riyadh",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
   const field = (
     name: keyof typeof values,
     label: string,
@@ -90,7 +96,15 @@ export default function TaskForm({
         onChange={(event) => update(name, event.target.value)}
         required={name === "title"}
         maxLength={name === "title" ? 200 : undefined}
-        min={name === "estimated_duration" ? 1 : undefined}
+        min={
+          name === "estimated_duration"
+            ? 1
+            : name === "date"
+              ? task?.date && task.date < today
+                ? task.date
+                : today
+              : undefined
+        }
         max={name === "estimated_duration" ? 1440 : undefined}
         aria-invalid={!!error?.fields[name]}
       />

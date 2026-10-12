@@ -56,6 +56,13 @@ class TaskForm(forms.ModelForm):
 
     def clean(self):
         data = super().clean()
+        if data.get("date") and data.get("start_time"):
+            from datetime import datetime
+            from django.utils import timezone
+            scheduled = timezone.make_aware(datetime.combine(data["date"], data["start_time"]))
+            unchanged = self.instance.pk and data["date"] == self.instance.date and data["start_time"] == self.instance.start_time
+            if scheduled < timezone.now() and not unchanged:
+                self.add_error("start_time", "Choose a start time that has not passed.")
         if data.get("repeat") and not data.get("date"):
             self.add_error("date", "Choose a date for a repeating task.")
         if data.get("reminder_at"):
@@ -67,3 +74,21 @@ class TaskForm(forms.ModelForm):
             if data["reminder_at"] != original and data["reminder_at"] <= timezone.now():
                 self.add_error("reminder_at", "Choose a future reminder time.")
         return data
+
+    def clean_date(self):
+        from django.utils import timezone
+        value = self.cleaned_data.get("date")
+        original = self.instance.date if self.instance.pk else None
+        if value and value < timezone.localdate() and value != original:
+            raise forms.ValidationError("Choose today or a future date.")
+        return value
+
+    def clean_deadline(self):
+        from django.utils import timezone
+        value = self.cleaned_data.get("deadline")
+        original = self.instance.deadline if self.instance.pk else None
+        if original:
+            original = original.replace(second=0, microsecond=0)
+        if value and value < timezone.now() and value != original:
+            raise forms.ValidationError("Choose a future deadline.")
+        return value

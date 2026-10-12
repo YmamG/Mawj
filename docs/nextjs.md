@@ -51,7 +51,7 @@ If using ZIP, retain your previous `db.sqlite3` and `media/` before following th
 
 ## Themes
 
-The supplied palettes become **Grove** (`dad7cd/a3b18a/588157/3a5a40/344e41`), **Petal** (`cdb4db/ffc8dd/ffafcc/bde0fe/a2d2ff`) and **Dusk** (`22223b/4a4e69/9a8c98/c9ada7/f2e9e4`). The green link was duplicated; it represents one theme. Neutral surfaces and dark readable text complement the exact palette tokens. Browser theme selection uses localStorage; authenticated theme selection is saved in preferences. Existing theme values map to the new themes in the API without deleting old preferences.
+The supplied palettes become **Grove** (`dad7cd/a3b18a/588157/3a5a40/344e41`), **Petal** (`cdb4db/ffc8dd/ffafcc/bde0fe/a2d2ff`) **Dusk** (`22223b/4a4e69/9a8c98/c9ada7/f2e9e4`), **Ember** (`250902/38040e/640d14/800e13/ad2831`) and **Midnight** (`7c9eb2/52528c/372554/231123/000000`). The green link was duplicated; it represents one theme. Neutral surfaces and dark readable text complement the exact palette tokens. Browser theme selection uses localStorage; authenticated theme selection is saved in preferences. Existing theme values map to the new themes in the API without deleting old preferences.
 
 DM Sans and Fraunces are served from npm-installed local font files. Phosphor supplies consistent icons. No external font calls, image services or tracking scripts are required.
 
@@ -81,3 +81,11 @@ The launcher now prints the exact project/database path and saved account count,
 Accounts persist in `db.sqlite3`; stopping the server or logging out does not delete them. A fresh project download is a different database unless existing data is preserved. Always restart with `node scripts/dev.mjs` from the same checkout. If login fails, verify the same startup database path and account count before/after restart, and use your username rather than display name or email. API login trims accidental spaces around the username, while preserving password characters exactly. Never delete or replace a database to troubleshoot login. To diagnose a user-specific issue, share only the startup path/count and error text, never passwords or database contents.
 
 The launcher deliberately uses its local backend; custom `DJANGO_URL` values are for separately managed Next startup/production builds, not the local two-service launcher.
+
+## Recent usability fixes
+
+Chart hover/focus labels stay inside the scrollable chart, including the first/last columns. Empty-state Add a task opens the inline form, scrolls it into view and focuses the title. Both new palettes persist to the account. Made by Ymam appears in both landing and workspace footers and links to https://github.com/ymamggg-jpg.
+
+New or changed task schedules must be today/future in Riyadh time; start times and deadlines cannot be newly set in the past. Existing unchanged overdue schedules may remain while editing other fields. Historical tasks remain visible in reports. Past AI-proposed schedules are removed before saving suggestions; accepting older pending suggestions also validates the schedule.
+
+Journal mode is visible even before writing. Demo remains an explicitly labeled local rule-based simulation: bullets and explicit English/Arabic intent phrases produce suggestions. It does not infer actions from every paragraph or replace a cloud model. Find next steps re-analyzes an existing entry without recreating accepted/dismissed suggestions. Provider errors are displayed and leave saved entries intact. Live provider operation still requires the operator's configured credentials and model access; no live API call was tested here.

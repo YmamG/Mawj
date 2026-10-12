@@ -116,3 +116,28 @@ class ApiTests(TestCase):
             self.assertEqual(self.client.get("/accounts/login/")["Location"], "http://127.0.0.1:3000/login")
         with override_settings(FRONTEND_URL=""):
             self.assertEqual(self.client.get("/")["Location"], "/tasks/")
+
+    def test_new_themes_and_natural_journal_reanalysis(self):
+        for theme in ("ember", "midnight"):
+            self.assertEqual(self.post("theme/", {"theme": theme}).status_code, 200)
+            self.assertEqual(self.client.get("/api/session/").json()["user"]["theme"], theme)
+        response = self.post("journal/", {"raw_text": "Today I need to review my notes. أبغى أجهز العرض"})
+        self.assertEqual(response.status_code, 201)
+        entry = response.json()
+        self.assertEqual(entry["pending_count"], 2)
+        self.post(f"suggestions/{entry['suggestions'][0]['id']}/", {"action": "accept"})
+        updated = self.post(f"journal/{entry['id']}/", {"action": "analyze"}).json()
+        self.assertEqual(updated["pending_count"], 1)
+        self.assertEqual(len(updated["suggestions"]), 2)
+        self.assertEqual(Task.objects.filter(user=self.user).count(), 1)
+
+    def test_past_dates_cannot_bypass_api_or_suggestion_acceptance(self):
+        past = timezone.localdate() - timedelta(days=1)
+        response = self.post("tasks/", {"title": "Past", "date": past.isoformat()})
+        self.assertEqual(response.status_code, 400)
+        entry = JournalEntry.objects.create(user=self.user, raw_text="Older note")
+        suggestion = TaskSuggestion.objects.create(user=self.user, entry=entry, title="Old suggestion", date=past)
+        self.assertEqual(self.post(f"suggestions/{suggestion.pk}/", {"action": "accept"}).status_code, 400)
+        suggestion.refresh_from_db()
+        self.assertEqual(suggestion.status, "pending")
+        self.assertEqual(Task.objects.filter(user=self.user).count(), 0)

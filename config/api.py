@@ -117,7 +117,7 @@ def signup(request):
     if not form.is_valid():
         return invalid(form)
     user = form.save()
-    if data.get("theme") in ("petal", "grove", "dusk"):
+    if data.get("theme") in ("petal", "grove", "dusk", "ember", "midnight"):
         UserPreferences.objects.create(user=user, theme=data["theme"])
     login(request, user)
     return JsonResponse({"user": account_data(user), "csrf": get_token(request)}, status=201)
@@ -252,7 +252,7 @@ def journals(request):
             for item in result["suggestions"]:
                 TaskSuggestion.objects.create(user=request.user, entry=entry, **item)
         data = entry_data(entry, detail=True)
-        data["warning"] = warning
+        data["warning"] = warning or result.get("warning", "")
         return JsonResponse(data, status=201)
     queryset = JournalEntry.objects.filter(user=request.user).annotate(pending_count=Count("suggestions", filter=Q(suggestions__status="pending")))
     query = request.GET.get("q", "").strip()
@@ -269,6 +269,22 @@ def journal(request, pk):
         if data.get("action") == "delete":
             entry.delete()
             return JsonResponse({"ok": True})
+        if data.get("action") == "analyze":
+            try:
+                result = process_journal(entry.raw_text)
+            except AIProviderError as error:
+                return JsonResponse({"error": str(error)}, status=422)
+            with transaction.atomic():
+                decided = {item.title.casefold() for item in entry.suggestions.exclude(status="pending")}
+                entry.clean_text = result["clean_text"]
+                entry.save(update_fields=["clean_text"])
+                entry.suggestions.filter(status="pending").delete()
+                for item in result["suggestions"]:
+                    if item["title"].casefold() not in decided:
+                        TaskSuggestion.objects.create(user=request.user, entry=entry, **item)
+            response = entry_data(entry, detail=True)
+            response["warning"] = result.get("warning", "")
+            return JsonResponse(response)
         form = JournalEntryForm(data, instance=entry)
         if not form.is_valid():
             return invalid(form)
@@ -287,6 +303,10 @@ def suggestion(request, pk):
         return JsonResponse({"error": "Choose accept or dismiss."}, status=400)
     with transaction.atomic():
         instance = get_object_or_404(TaskSuggestion, pk=pk, user=request.user)
+        if instance.status == "pending" and action == "accept":
+            form = TaskForm({"title": instance.title, "date": instance.date, "start_time": instance.start_time, "priority": instance.priority, "estimated_duration": instance.estimated_duration})
+            if not form.is_valid():
+                return invalid(form)
         # Claim the pending row before creating its task so repeat requests cannot duplicate it.
         updated = TaskSuggestion.objects.filter(pk=pk, user=request.user, status="pending").update(status="accepted" if action == "accept" else "dismissed")
         if updated and action == "accept":

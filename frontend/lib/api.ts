@@ -1,4 +1,4 @@
-export type Theme = "grove" | "petal" | "dusk";
+export type Theme = "grove" | "petal" | "dusk" | "ember" | "midnight";
 export type User = {
   id: number;
   username: string;

@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
@@ -105,6 +105,17 @@ export default function Application() {
   const [notice, setNotice] = useState("");
   const [formTask, setFormTask] = useState<Task | null | undefined>(undefined);
   const [deleteTask, setDeleteTask] = useState<Task | null>(null);
+  const taskFormRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (formTask === undefined) return;
+    taskFormRef.current?.scrollIntoView({
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+        ? "instant"
+        : "smooth",
+      block: "start",
+    });
+    document.getElementById("task-title")?.focus({ preventScroll: true });
+  }, [formTask]);
   const [version, setVersion] = useState(0);
   const endpoint =
     section === "profile"
@@ -394,19 +405,21 @@ export default function Application() {
           </section>
         )}
         {formTask !== undefined && session && (
-          <TaskForm
-            key={formTask?.id || "new"}
-            task={formTask}
-            provider={session.provider}
-            sendsToCloud={session.sends_to_cloud}
-            onSaved={() => {
-              setFormTask(undefined);
-              refresh()
-                .then(() => setNotice("Task saved. Ready when you are."))
-                .catch((error) => setError(error.message));
-            }}
-            onClose={() => setFormTask(undefined)}
-          />
+          <div ref={taskFormRef} className="task-form-anchor">
+            <TaskForm
+              key={formTask?.id || "new"}
+              task={formTask}
+              provider={session.provider}
+              sendsToCloud={session.sends_to_cloud}
+              onSaved={() => {
+                setFormTask(undefined);
+                refresh()
+                  .then(() => setNotice("Task saved. Ready when you are."))
+                  .catch((error) => setError(error.message));
+              }}
+              onClose={() => setFormTask(undefined)}
+            />
+          </div>
         )}
         {loading ? (
           <div aria-label="Loading your space" role="status">
@@ -679,7 +692,17 @@ export default function Application() {
         )}
       </main>
       <footer className="app-footer">
-        <span>A little clarity, every day.</span>
+        <span>
+          Made by{" "}
+          <a
+            href="https://github.com/ymamggg-jpg"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Ymam
+          </a>{" "}
+          · A little clarity, every day.
+        </span>
         <div>
           <Link href="/privacy">Privacy</Link> ·{" "}
           <Link href="/about">About Mawj</Link>

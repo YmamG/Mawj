@@ -5,6 +5,8 @@ const themes: { id: Theme; label: string; description: string }[] = [
   { id: "grove", label: "Grove", description: "Quiet greens" },
   { id: "petal", label: "Petal", description: "Soft pinks & blues" },
   { id: "dusk", label: "Dusk", description: "Warm evening tones" },
+  { id: "ember", label: "Ember", description: "Deep crimson" },
+  { id: "midnight", label: "Midnight", description: "Ink & twilight" },
 ];
 const ThemeContext = createContext<{
   theme: Theme;

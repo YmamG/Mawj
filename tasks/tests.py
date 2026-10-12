@@ -1,3 +1,5 @@
+from datetime import timedelta
+from django.utils import timezone
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
@@ -22,8 +24,8 @@ class TaskViewTests(TestCase):
 
     def test_create_assigns_request_user_and_list_is_private(self):
         r = self.client.post(reverse("task_create"), {
-            "title": "Alice task", "description": "d", "date": "2026-10-05",
-            "start_time": "09:00", "deadline": "2026-10-05T17:00",
+            "title": "Alice task", "description": "d", "date": (timezone.localdate() + timedelta(days=1)).isoformat(),
+            "start_time": "09:00", "deadline": (timezone.localdate() + timedelta(days=1)).isoformat() + "T17:00",
             "estimated_duration": 45, "priority": "high"})
         self.assertEqual(r.status_code, 302)
         t = Task.objects.get(title="Alice task")

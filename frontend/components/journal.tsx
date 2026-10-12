@@ -82,6 +82,28 @@ export default function Journal({
       setBusy(false);
     }
   }
+  async function analyze() {
+    if (!entry) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const updated = await api<Entry>(`/journal/${entry.id}/`, {
+        action: "analyze",
+      });
+      setEntry(updated);
+      await refresh();
+      onNotice(
+        updated.warning ||
+          (updated.pending_count
+            ? "Next steps ready. Review them before adding to your tasks."
+            : "No explicit next steps found. Try describing what you need or want to do."),
+      );
+    } catch (error) {
+      setError(error as ApiError);
+    } finally {
+      setBusy(false);
+    }
+  }
   async function remove() {
     setBusy(true);
     setError(null);
@@ -99,6 +121,19 @@ export default function Journal({
   }
   return (
     <>
+      <aside
+        className="banner journal-mode"
+        aria-label="Journal suggestion mode"
+      >
+        <Sparkle size={17} />
+        <span>
+          {sendsToCloud
+            ? `Journal AI: ${provider}. Your text is sent to this provider when analyzed.`
+            : provider === "demo"
+              ? "Journal suggestions: Demo (local simulation). Write “أبغى…” / “I need to…” or a bullet list to find next steps."
+              : "Journal AI is off (manual mode). Your text is saved without suggestions."}
+        </span>
+      </aside>
       {error && (
         <div role="alert" className="banner error">
           {error.message}
@@ -138,7 +173,7 @@ export default function Journal({
               : sendsToCloud
                 ? `Your text is sent to ${provider} for organization and task suggestions.`
                 : provider === "demo"
-                  ? "Demo mode: start a line with - or * to make a simulated task suggestion."
+                  ? "Demo mode (local simulation): use bullets or phrases like “I need to…” or “أبغى…” to find task suggestions."
                   : "Manual mode: your text stays as written, without AI suggestions."}
           </p>
           <form onSubmit={save}>
@@ -226,6 +261,21 @@ export default function Journal({
                 </div>
               </div>
             )}
+            <p className="field-help">
+              {sendsToCloud
+                ? `AI provider: ${provider}. Analyzing sends this entry to the provider.`
+                : provider === "demo"
+                  ? "Demo mode: local rule-based suggestions, not a live AI model."
+                  : "Manual mode: AI is off."}
+            </p>
+            <button
+              className="button secondary"
+              disabled={busy || provider === "manual"}
+              onClick={analyze}
+            >
+              <Sparkle size={16} />{" "}
+              {busy ? "Finding next steps…" : "Find next steps"}
+            </button>
             <p className="journal-text">{entry.clean_text}</p>
             <h3 className="section-label">
               <Sparkle size={17} /> A few possible next steps

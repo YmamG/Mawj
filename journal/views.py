@@ -91,6 +91,11 @@ def suggestion_accept(request, pk):
     """The human approves: only now is a real Task created."""
     suggestion = get_object_or_404(TaskSuggestion, pk=pk, user=request.user)
     if suggestion.status == "pending":
+        from tasks.forms import TaskForm
+        form = TaskForm({"title": suggestion.title, "date": suggestion.date, "start_time": suggestion.start_time, "priority": suggestion.priority, "estimated_duration": suggestion.estimated_duration})
+        if not form.is_valid():
+            messages.error(request, "This suggestion has a past schedule. Add it manually with today or a future date.")
+            return redirect("journal_detail", pk=suggestion.entry_id)
         Task.objects.create(
             user=request.user,
             title=suggestion.title,
