@@ -1,3 +1,5 @@
+from django.core.paginator import Paginator
+from django.db.models import Q
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
@@ -15,6 +17,7 @@ from .models import Task
 def _form_context(form, page_title):
     return {
         "form": form,
+        "show_details": form.is_bound or bool(form.instance.pk),
         "page_title": page_title,
         "provider": settings.AI_PROVIDER,
         "sends_to_cloud": settings.AI_PROVIDER in CLOUD_PROVIDERS,
@@ -39,14 +42,37 @@ def _suggest_for_form(request, page_title, task=None):
         except AIProviderError as error:
             messages.warning(request, f"AI could not help: {error}")
     form = TaskForm(initial=data.dict(), instance=task)
-    return render(request, "tasks/task_form.html", _form_context(form, page_title))
+    context = _form_context(form, page_title)
+    context["show_details"] = True
+    return render(request, "tasks/task_form.html", context)
 
 
 @login_required
 def task_list(request):
     """Show only the logged-in user's tasks."""
     tasks = Task.objects.filter(user=request.user)
-    return render(request, "tasks/task_list.html", {"tasks": tasks})
+    query = request.GET.get("q", "").strip()
+    status = request.GET.get("status", "")
+    priority = request.GET.get("priority", "")
+    if query:
+        tasks = tasks.filter(Q(title__icontains=query) | Q(description__icontains=query))
+    if status in dict(Task.STATUS_CHOICES):
+        tasks = tasks.filter(status=status)
+    else:
+        status = ""
+    if priority in dict(Task.PRIORITY_CHOICES):
+        tasks = tasks.filter(priority=priority)
+    else:
+        priority = ""
+    tasks = tasks.order_by("status", "date", "start_time", "-created_at", "pk")
+    page = Paginator(tasks, 10).get_page(request.GET.get("page"))
+    params = request.GET.copy()
+    params.pop("page", None)
+    return render(request, "tasks/task_list.html", {
+        "tasks": page, "page_obj": page, "query": query, "status": status,
+        "priority": priority, "pagination_query": params.urlencode(),
+        "status_choices": Task.STATUS_CHOICES, "priority_choices": Task.PRIORITY_CHOICES,
+    })
 
 
 @login_required

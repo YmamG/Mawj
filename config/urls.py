@@ -1,8 +1,10 @@
+from dashboard.views import achievements
 from django.contrib import admin
 from django.shortcuts import redirect
 from django.urls import include, path
 
 urlpatterns = [
+    path("achievements/", achievements, name="achievements"),
     path("admin/", admin.site.urls),
     path("", lambda request: redirect("task_list")),
     path("accounts/", include("accounts.urls")),

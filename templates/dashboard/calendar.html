@@ -9,6 +9,7 @@
     <a href="{% url 'calendar_month' year=next_month.year month=next_month.month %}">Next month</a>
 </p>
 
+<div class="table-scroll" role="region" aria-label="Monthly calendar" tabindex="0">
 <table>
     <thead>
         <tr>
@@ -39,4 +40,5 @@
         {% endfor %}
     </tbody>
 </table>
+</div>
 {% endblock %}

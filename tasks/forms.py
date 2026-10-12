@@ -36,5 +36,15 @@ class TaskForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields["priority"].required = False
         # Lets the edit form pre-fill the datetime-local input correctly
         self.fields["deadline"].input_formats = ["%Y-%m-%dT%H:%M"]
+
+    def clean_priority(self):
+        return self.cleaned_data.get("priority") or "medium"
+
+    def clean_estimated_duration(self):
+        duration = self.cleaned_data.get("estimated_duration")
+        if duration is not None and not 1 <= duration <= 1440:
+            raise forms.ValidationError("Enter a duration between 1 and 1440 minutes.")
+        return duration

@@ -79,3 +79,73 @@ class SignupTests(TestCase):
             "username": "sara", "password1": "Str0ng-pass!9", "password2": "Str0ng-pass!9"})
         self.assertRedirects(r, reverse("task_list"))
         self.assertEqual(self.client.get(reverse("task_list")).status_code, 200)
+
+
+class SimpleTaskFormTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user("simple")
+        self.client.force_login(self.user)
+
+    def test_title_only_saves_with_default_priority(self):
+        response = self.client.post(reverse("task_create"), {"title": "One thing"})
+        self.assertEqual(response.status_code, 302)
+        task = Task.objects.get(user=self.user)
+        self.assertEqual(task.priority, "medium")
+        self.assertIsNone(task.date)
+
+    def test_details_collapsed_initially_and_open_for_errors(self):
+        response = self.client.get(reverse("task_create"))
+        self.assertNotContains(response, 'class="task-details" open')
+        response = self.client.post(reverse("task_create"), {"title": "Task", "estimated_duration": "wrong"})
+        self.assertContains(response, 'class="task-details" open')
+        self.assertEqual(Task.objects.count(), 0)
+
+
+class TaskFilteringTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user("filters")
+        self.other = User.objects.create_user("private")
+        self.client.force_login(self.user)
+        for index in range(12):
+            Task.objects.create(user=self.user, title=f"Study {index}", status="done", priority="high")
+        Task.objects.create(user=self.user, title="Shopping", priority="low")
+        Task.objects.create(user=self.other, title="Study private", status="done", priority="high")
+
+    def test_combined_filters_pagination_and_privacy(self):
+        response = self.client.get(reverse("task_list"), {"q": "Study", "status": "done", "priority": "high"})
+        self.assertEqual(response.context["page_obj"].paginator.count, 12)
+        self.assertEqual(len(response.context["tasks"]), 10)
+        self.assertNotContains(response, "Study private")
+        self.assertContains(response, "q=Study")
+        response = self.client.get(reverse("task_list"), {"q": "Study", "page": 2})
+        self.assertEqual(len(response.context["tasks"]), 2)
+
+    def test_no_results_and_invalid_query_parameters(self):
+        response = self.client.get(reverse("task_list"), {"q": "unmatched"})
+        self.assertContains(response, "No tasks match your filters")
+        response = self.client.get(reverse("task_list"), {"status": "bad", "priority": "bad", "page": "bad"})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["page_obj"].paginator.count, 13)
+
+    def test_duration_limits(self):
+        for value in ("0", "-1", "1441"):
+            response = self.client.post(reverse("task_create"), {"title": "Invalid", "estimated_duration": value})
+            self.assertEqual(response.status_code, 200)
+            self.assertTrue(response.context["form"].errors)
+        self.assertFalse(Task.objects.filter(title="Invalid").exists())
+        self.assertEqual(self.client.post(reverse("task_create"), {"title": "Valid", "estimated_duration": "1440"}).status_code, 302)
+
+
+class DemoDataTests(TestCase):
+    def test_seed_is_repeatable_and_preserves_existing_data(self):
+        from io import StringIO
+        from unittest.mock import patch
+        from django.core.management import call_command
+        with patch.dict("os.environ", {"MAWJ_DEMO_PASSWORD": "Fictional-Only!93"}):
+            call_command("seed_demo", stdout=StringIO())
+            call_command("seed_demo", stdout=StringIO())
+        user = User.objects.get(username="mawj_demo")
+        self.assertTrue(user.check_password("Fictional-Only!93"))
+        self.assertEqual(Task.objects.filter(user=user).count(), 13)
+        self.assertEqual(user.journal_entries.count(), 2)
+        self.assertEqual(user.task_suggestions.filter(status="pending").count(), 2)

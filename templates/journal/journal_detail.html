@@ -9,6 +9,7 @@
 
 <p><small>{{ entry.created_at|date:"Y-m-d H:i" }}</small></p>
 
+<p><a href="{% url 'journal_update' entry.pk %}">Edit entry</a></p>
 <h3>Organized text</h3>
 <p style="white-space: pre-wrap;">{{ entry.clean_text }}</p>
 

@@ -2,6 +2,7 @@ import calendar
 from datetime import date, timedelta
 
 from django.contrib.auth.decorators import login_required
+from django.db.models import Q
 from django.http import Http404
 from django.shortcuts import redirect, render
 from django.utils import timezone
@@ -93,4 +94,35 @@ def day_detail(request, year, month, day):
         "selected_date": selected_date,
         "entries": entries,
         "tasks": tasks,
+    })
+
+@login_required
+def achievements(request):
+    today = timezone.localdate()
+    period = request.GET.get("period", "week")
+    if period not in ("week", "month", "year"):
+        period = "week"
+    if period == "week":
+        start = today - timedelta(days=(today.weekday() + 1) % 7)
+        end = start + timedelta(days=7)
+    elif period == "month":
+        start = today.replace(day=1)
+        end = (start + timedelta(days=32)).replace(day=1)
+    else:
+        start = today.replace(month=1, day=1)
+        end = start.replace(year=start.year + 1)
+    tasks = Task.objects.filter(user=request.user).filter(
+        Q(date__gte=start, date__lt=end)
+        | Q(date__isnull=True, created_at__date__gte=start, created_at__date__lt=end)
+    )
+    total = tasks.count()
+    completed = tasks.filter(status="done").count()
+    return render(request, "dashboard/achievements.html", {
+        "period": period,
+        "start": start,
+        "last_day": end - timedelta(days=1),
+        "total": total,
+        "completed": completed,
+        "remaining": total - completed,
+        "percentage": round(completed * 100 / total) if total else 0,
     })

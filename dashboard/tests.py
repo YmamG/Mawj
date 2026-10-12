@@ -56,3 +56,56 @@ class CalendarViewTests(TestCase):
         self.client.logout()
         response = self.client.get(reverse("calendar"))
         self.assertEqual(response.status_code, 302)
+
+class AchievementTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user("progress")
+        self.other = get_user_model().objects.create_user("other")
+        self.client.force_login(self.user)
+
+    def test_periods_boundaries_and_privacy(self):
+        from datetime import date
+        from unittest.mock import patch
+
+        for scheduled, status in [
+            (date(2026, 10, 11), "done"),
+            (date(2026, 10, 17), "todo"),
+            (date(2026, 10, 18), "done"),
+            (date(2026, 10, 1), "todo"),
+            (date(2026, 1, 1), "done"),
+            (date(2025, 12, 31), "done"),
+            (date(2027, 1, 1), "done"),
+        ]:
+            Task.objects.create(user=self.user, title="Task", date=scheduled, status=status)
+        Task.objects.create(user=self.other, title="Private", date=date(2026, 10, 11), status="done")
+        with patch("dashboard.views.timezone.localdate", return_value=date(2026, 10, 12)):
+            for period, total, completed, percentage in [
+                ("week", 2, 1, 50), ("month", 4, 2, 50), ("year", 5, 3, 60),
+            ]:
+                with self.subTest(period=period):
+                    response = self.client.get(reverse("achievements"), {"period": period})
+                    self.assertEqual(response.status_code, 200)
+                    self.assertEqual(response.context["total"], total)
+                    self.assertEqual(response.context["completed"], completed)
+                    self.assertEqual(response.context["percentage"], percentage)
+                    self.assertContains(response, f"{percentage}%")
+
+    def test_undated_tasks_use_local_creation_date(self):
+        from datetime import date, datetime, timezone as datetime_timezone
+        from unittest.mock import patch
+
+        task = Task.objects.create(user=self.user, title="Undated", status="done")
+        # Sunday in Riyadh, still Saturday in UTC.
+        Task.objects.filter(pk=task.pk).update(created_at=datetime(2026, 10, 10, 22, tzinfo=datetime_timezone.utc))
+        with patch("dashboard.views.timezone.localdate", return_value=date(2026, 10, 12)):
+            response = self.client.get(reverse("achievements"))
+        self.assertEqual(response.context["completed"], 1)
+        self.assertEqual(response.context["percentage"], 100)
+
+    def test_empty_invalid_period_and_login(self):
+        response = self.client.get(reverse("achievements"), {"period": "invalid"})
+        self.assertEqual(response.context["period"], "week")
+        self.assertEqual(response.context["percentage"], 0)
+        self.assertContains(response, "No tasks in this period yet")
+        self.client.logout()
+        self.assertEqual(self.client.get(reverse("achievements")).status_code, 302)

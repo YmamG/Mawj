@@ -42,6 +42,19 @@
             --accent-text: #ffffff;
             --border-color: #ead1bc;
         }
+        * { box-sizing: border-box; }
+        input, select, textarea { max-width: 100%; }
+        textarea { width: 100%; font: inherit; border: 1px solid var(--border-color); border-radius: 4px; padding: .6rem; }
+        p, h3 { overflow-wrap: anywhere; }
+        .filter-bar { display: flex; align-items: center; flex-wrap: wrap; gap: .6rem; margin: 1rem 0; }
+        .pagination { justify-content: flex-start; gap: 1rem; margin: 1rem 0; flex-wrap: wrap; }
+        .table-scroll { overflow-x: auto; }
+        .task-details { margin: 1rem 0; }
+        .task-details summary { cursor: pointer; }
+        @media (max-width: 480px) {
+            .filter-bar { align-items: stretch; flex-direction: column; }
+            .menu-panel { min-width: 0; width: min(220px, 85vw); }
+        }
         body {
             margin: 0;
             padding: 1rem;
@@ -96,6 +109,7 @@
                     <a href="{% url 'task_list' %}">Tasks</a>
                     <a href="{% url 'journal_list' %}">Journal</a>
                     <a href="{% url 'calendar' %}">Calendar</a>
+                    <a href="{% url 'achievements' %}">Achievements</a>
                     <a href="{% url 'profile' %}">Profile</a>
                     <form method="post" action="{% url 'theme_update' %}">
                         {% csrf_token %}

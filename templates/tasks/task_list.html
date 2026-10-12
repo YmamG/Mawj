@@ -1,5 +1,6 @@
 {% extends "base.html" %}
-{% block title %}My Tasks - Mawj{% endblock %}
+{% block title %}My Tasks - Mawj{% include "pagination.html" %}
+{% endblock %}
 {% block content %}
     <h1>My Tasks</h1>
 
@@ -13,6 +14,16 @@
 
     <p><a href="{% url 'task_create' %}">+ Add Task</a></p>
 
+    <form method="get" class="filter-bar">
+        <label for="task-search">Search tasks</label>
+        <input id="task-search" name="q" value="{{ query }}" type="search" placeholder="Title or description">
+        <label for="task-status">Status</label>
+        <select id="task-status" name="status"><option value="">All statuses</option>{% for value, label in status_choices %}<option value="{{ value }}" {% if status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+        <label for="task-priority">Priority</label>
+        <select id="task-priority" name="priority"><option value="">All priorities</option>{% for value, label in priority_choices %}<option value="{{ value }}" {% if priority == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+        <button type="submit">Filter</button><a href="{% url 'task_list' %}">Clear filters</a>
+    </form>
+    <p>{{ page_obj.paginator.count }} task{{ page_obj.paginator.count|pluralize }}</p>
     {% for task in tasks %}
         <div class="task-card" style="border: 1px solid #999; padding: 10px; margin-bottom: 10px;">
             <h3>{{ task.title }}</h3>
@@ -43,6 +54,7 @@
             </form>
         </div>
     {% empty %}
-        <p>You have no tasks yet.</p>
+        {% if query or status or priority %}<p>No tasks match your filters. Try another search or clear the filters.</p>{% else %}<p>You have no tasks yet.</p>{% endif %}
     {% endfor %}
+{% include "pagination.html" %}
 {% endblock %}

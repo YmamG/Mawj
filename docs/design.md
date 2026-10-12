@@ -1,0 +1,101 @@
+# Design
+
+## Final ERD
+
+```mermaid
+erDiagram
+    USER ||--o{ TASK : owns
+    USER ||--o{ JOURNAL_ENTRY : writes
+    USER ||--o{ TASK_SUGGESTION : owns
+    USER ||--o| USER_PREFERENCES : has
+    JOURNAL_ENTRY ||--o{ TASK_SUGGESTION : contains
+    USER {
+        integer id PK
+        string username UK
+        string password_hash
+    }
+    TASK {
+        integer id PK
+        integer user_id FK
+        string title
+        text description "optional"
+        date date "nullable"
+        time start_time "nullable"
+        datetime deadline "nullable"
+        integer estimated_duration "nullable"
+        string priority
+        string status
+        datetime completed_at "nullable"
+        datetime created_at
+    }
+    JOURNAL_ENTRY {
+        integer id PK
+        integer user_id FK
+        text raw_text
+        text clean_text "optional"
+        datetime created_at
+    }
+    TASK_SUGGESTION {
+        integer id PK
+        integer user_id FK
+        integer entry_id FK
+        string title
+        date date "nullable"
+        time start_time "nullable"
+        string priority
+        integer estimated_duration "nullable"
+        string status
+    }
+    USER_PREFERENCES {
+        integer id PK
+        integer user_id FK,UK
+        string display_name "optional"
+        string theme
+    }
+```
+
+Every task/entry/suggestion has exactly one owner. Preferences are optional until first needed, then unique per user. All foreign keys use CASCADE. An accepted task is independent of its originating suggestion; removing a journal does not remove that task. The duplicated suggestion owner supports ownership checks, but the view must keep it consistent with the entry owner; this consistency is not a database constraint. Django owns username uniqueness and password hashing. The model defaults and choice fields represent priority/status; form validation enforces allowed task values and duration bounds. No category or many-to-many relationship is added without a workflow need.
+
+## Wireframes
+
+- Tasks: heading → search/status/priority controls → Add Task → cards with edit/delete/complete → pagination.
+- Add Task: title → optional date → collapsible optional details → Save / AI suggestion / Cancel. AI results open the details for review.
+- Journal: search → New Entry → date, excerpt and pending count on each entry → open/edit/delete → pagination.
+- Journal detail: saved text → pending suggestions → accept/dismiss. Edit explains how obsolete suggestions are handled.
+- Achievements: week/month/year tabs → date range → percentage and progress → completed/remaining/total → metric explanation.
+
+### Simple screen wireframes
+
+```text
+TASKS                              ADD TASK
++----------------------------+     +----------------------------+
+| Mawj                  Menu |     | Mawj                  Menu |
+| My Tasks      [+ Add Task] |     | Add Task                   |
+| Search [_________________] |     | Title [__________________] |
+| Status [All] Priority [All]|     | Date  [optional__________] |
+| [Filter]  Clear filters    |     | > Additional details       |
+| Task title / status       |     | [Save] [AI suggestion]     |
+| [Edit] [Delete] [Complete] |     | Cancel                     |
+| Previous   Page 1   Next   |     +----------------------------+
++----------------------------+
+
+JOURNAL                            ACHIEVEMENTS
++----------------------------+     +----------------------------+
+| My Journal    [+ New Entry]|     | Achievements               |
+| Search [________] [Search] |     | [Week] [Month] [Year]      |
+| Date / saved text excerpt |     | Selected date range        |
+| 2 pending suggestions     |     |            50%             |
+| Open / Edit / Delete      |     | [========        ]         |
+| Date / another excerpt    |     | Completed Remaining Total  |
+| 0 pending suggestions     |     |     6         6      12    |
+| Previous / Next           |     | How this is calculated     |
++----------------------------+     +----------------------------+
+```
+
+## Journeys
+
+1. Sign up → create a journal with action lines → inspect suggestions → accept one → find it in Tasks → mark done → inspect achievements.
+2. Add a task with only a title → optionally request AI suggestions → review → save → search/filter → edit or delete with confirmation.
+3. Edit a journal → pending suggestions are dismissed → previously accepted tasks remain → delete entry after reviewing consequences.
+
+Responsive design wraps controls on narrow screens; wide calendar content scrolls in its own labeled region. Forms use associated labels, and period navigation identifies the selected link. Visual/mobile checks are recorded separately from automated tests.

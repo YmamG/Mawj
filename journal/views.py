@@ -1,3 +1,6 @@
+from django.core.paginator import Paginator
+from django.db import transaction
+from django.db.models import Count, Q
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
@@ -14,8 +17,19 @@ from .models import JournalEntry, TaskSuggestion
 
 @login_required
 def journal_list(request):
-    entries = JournalEntry.objects.filter(user=request.user)
-    return render(request, "journal/journal_list.html", {"entries": entries})
+    entries = JournalEntry.objects.filter(user=request.user).annotate(
+        pending_count=Count("suggestions", filter=Q(suggestions__status="pending")),
+    ).order_by("-created_at", "-pk")
+    query = request.GET.get("q", "").strip()
+    if query:
+        entries = entries.filter(Q(raw_text__icontains=query) | Q(clean_text__icontains=query))
+    page = Paginator(entries, 10).get_page(request.GET.get("page"))
+    params = request.GET.copy()
+    params.pop("page", None)
+    return render(request, "journal/journal_list.html", {
+        "entries": page, "page_obj": page, "query": query,
+        "pagination_query": params.urlencode(),
+    })
 
 
 @login_required
@@ -100,3 +114,20 @@ def suggestion_dismiss(request, pk):
         suggestion.status = "dismissed"
         suggestion.save()
     return redirect("journal_detail", pk=suggestion.entry_id)
+
+
+@login_required
+def journal_update(request, pk):
+    entry = get_object_or_404(JournalEntry, pk=pk, user=request.user)
+    form = JournalEntryForm(request.POST if request.method == "POST" else None, instance=entry)
+    if request.method == "POST" and form.is_valid():
+        with transaction.atomic():
+            updated = form.save(commit=False)
+            updated.clean_text = updated.raw_text
+            updated.save()
+            updated.suggestions.filter(status="pending").update(status="dismissed")
+        messages.success(request, "Journal entry updated. Old pending suggestions were dismissed; existing tasks are unchanged.")
+        return redirect("journal_detail", pk=entry.pk)
+    return render(request, "journal/journal_form.html", {
+        "form": form, "editing": True, "entry": entry,
+    })

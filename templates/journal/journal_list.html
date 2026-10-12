@@ -1,5 +1,6 @@
 {% extends "base.html" %}
-{% block title %}Journal - Mawj{% endblock %}
+{% block title %}Journal - Mawj{% include "pagination.html" %}
+{% endblock %}
 {% block content %}
 <h1>My Journal</h1>
 
@@ -9,14 +10,22 @@
 
 <p><a href="{% url 'journal_create' %}">+ New Entry</a></p>
 
+<form method="get" class="filter-bar">
+    <label for="journal-search">Search journal</label>
+    <input id="journal-search" name="q" value="{{ query }}" type="search">
+    <button type="submit">Search</button><a href="{% url 'journal_list' %}">Clear search</a>
+</form>
 {% for entry in entries %}
     <div style="border: 1px solid #999; padding: 10px; margin-bottom: 10px;">
         <p><small>{{ entry.created_at|date:"Y-m-d H:i" }}</small></p>
         <p>{{ entry.clean_text|truncatechars:150 }}</p>
+        <p>{{ entry.pending_count }} pending suggestion{{ entry.pending_count|pluralize }}</p>
         <a href="{% url 'journal_detail' entry.pk %}">Open</a>
+        <a href="{% url 'journal_update' entry.pk %}">Edit</a>
         <a href="{% url 'journal_delete' entry.pk %}">Delete</a>
     </div>
 {% empty %}
-    <p>No journal entries yet.</p>
+    {% if query %}<p>No entries match your search.</p>{% else %}<p>No journal entries yet.</p>{% endif %}
 {% endfor %}
+{% include "pagination.html" %}
 {% endblock %}

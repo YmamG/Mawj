@@ -1,7 +1,8 @@
 {% extends "base.html" %}
-{% block title %}New Entry - Mawj{% endblock %}
+{% block title %}{% if editing %}Edit Entry{% else %}New Entry{% endif %} - Mawj{% endblock %}
 {% block content %}
-<h1>New Journal Entry</h1>
+<h1>{% if editing %}Edit Journal Entry{% else %}New Journal Entry{% endif %}</h1>
+{% if editing %}<p>Editing saves your text as written and dismisses old pending suggestions. Tasks already accepted remain in your task list.</p>{% endif %}
 {% if sends_to_cloud %}
 <p><strong>Privacy:</strong> your text is sent to {{ provider }} to organize it.</p>
 {% endif %}

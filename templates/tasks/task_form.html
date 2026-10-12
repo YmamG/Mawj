@@ -9,7 +9,18 @@
 
     <form method="post">
         {% csrf_token %}
-        {{ form.as_p }}
+        {{ form.non_field_errors }}
+        <p>{{ form.title.errors }}{{ form.title.label_tag }} {{ form.title }}</p>
+        <p>{{ form.date.errors }}{{ form.date.label_tag }} {{ form.date }} <small>(optional)</small></p>
+        <details class="task-details" {% if show_details %}open{% endif %}>
+            <summary>Additional details (optional)</summary>
+            <p>{{ form.description.errors }}{{ form.description.label_tag }} {{ form.description }}</p>
+            <p>{{ form.priority.errors }}{{ form.priority.label_tag }} {{ form.priority }}</p>
+            <p>{{ form.estimated_duration.errors }}{{ form.estimated_duration.label_tag }} {{ form.estimated_duration }}</p>
+            <p>{{ form.start_time.errors }}{{ form.start_time.label_tag }} {{ form.start_time }}</p>
+            <p>{{ form.deadline.errors }}{{ form.deadline.label_tag }} {{ form.deadline }}</p>
+        </details>
+        <p><small>AI can suggest priority and duration. Review the suggestion before saving.</small></p>
         <button type="submit">Save</button>
         <button type="submit" name="suggest" value="1">Suggest priority &amp; duration with AI</button>
         <a href="{% url 'task_list' %}">Cancel</a>

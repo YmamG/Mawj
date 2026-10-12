@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Achievements - Mawj{% endblock %}
+{% block content %}
+<style>
+    .achievement-page { max-width: 760px; margin: 2rem auto; }
+    .period-tabs { display: flex; flex-wrap: wrap; gap: .6rem; margin: 1.5rem 0; }
+    .period-tabs a { padding: .7rem 1rem; border: 1px solid var(--border-color); border-radius: 8px; text-decoration: none; }
+    .period-tabs a[aria-current="page"] { background: var(--accent-color); color: var(--accent-text); }
+    .achievement-card { padding: 1.5rem; border: 1px solid var(--border-color); border-radius: 12px; background: var(--surface-bg); }
+    .achievement-rate { font-size: 3rem; margin: .5rem 0; font-weight: bold; }
+    .achievement-card progress { width: 100%; height: 1.2rem; accent-color: var(--accent-color); }
+    .achievement-counts { display: flex; flex-wrap: wrap; gap: 2rem; }
+    .achievement-counts dt { color: var(--muted-color); }
+    .achievement-counts dd { font-size: 1.7rem; margin: .5rem 0; }
+</style>
+<section class="achievement-page">
+    <h1>Achievements</h1>
+    <p>See your progress, one task at a time.</p>
+    <nav class="period-tabs" aria-label="Achievement period">
+        <a href="?period=week" {% if period == "week" %}aria-current="page"{% endif %}>This week</a>
+        <a href="?period=month" {% if period == "month" %}aria-current="page"{% endif %}>This month</a>
+        <a href="?period=year" {% if period == "year" %}aria-current="page"{% endif %}>This year</a>
+    </nav>
+    <p>{{ start|date:"j M Y" }} – {{ last_day|date:"j M Y" }}</p>
+    <div class="achievement-card">
+        {% if total %}
+            <p class="achievement-rate">{{ percentage }}%</p>
+            <p>{{ completed }} of {{ total }} tasks completed</p>
+            <progress value="{{ completed }}" max="{{ total }}" aria-label="Task completion">{{ percentage }}%</progress>
+        {% else %}
+            <p>No tasks in this period yet.</p>
+            <a href="{% url 'task_create' %}">Add your first task</a>
+        {% endif %}
+        <dl class="achievement-counts">
+            <div><dt>Completed</dt><dd>{{ completed }}</dd></div>
+            <div><dt>Remaining</dt><dd>{{ remaining }}</dd></div>
+            <div><dt>Total tasks</dt><dd>{{ total }}</dd></div>
+        </dl>
+    </div>
+    <p><small>Completion is based on tasks scheduled in this period. Tasks without a date use their creation date. Weeks start on Sunday.</small></p>
+</section>
+{% endblock %}
