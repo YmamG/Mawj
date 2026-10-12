@@ -14,6 +14,11 @@
         <p>{{ form.date.errors }}{{ form.date.label_tag }} {{ form.date }} <small>(optional)</small></p>
         <details class="task-details" {% if show_details %}open{% endif %}>
             <summary>Additional details (optional)</summary>
+            <p>{{ form.category.errors }}{{ form.category.label_tag }} {{ form.category }}</p>
+            <p>{{ form.repeat.errors }}{{ form.repeat.label_tag }} {{ form.repeat }}</p>
+            <p><small>Completing a repeating task creates its next occurrence. Missed dates are skipped. Undoing completion keeps the next occurrence.</small></p>
+            <p>{{ form.reminder_at.errors }}{{ form.reminder_at.label_tag }} {{ form.reminder_at }}</p>
+            <p><small>Reminders appear inside Mawj when you visit after the chosen time. No email or push notification is sent.</small></p>
             <p>{{ form.description.errors }}{{ form.description.label_tag }} {{ form.description }}</p>
             <p>{{ form.priority.errors }}{{ form.priority.label_tag }} {{ form.priority }}</p>
             <p>{{ form.estimated_duration.errors }}{{ form.estimated_duration.label_tag }} {{ form.estimated_duration }}</p>

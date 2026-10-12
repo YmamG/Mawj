@@ -66,6 +66,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'accounts.context_processors.theme_choices',
+                'tasks.context_processors.reminders',
             ],
         },
     },
@@ -129,3 +130,7 @@ TIME_ZONE = 'Asia/Riyadh'
 
 # AI provider: 'demo' (fake, no internet) or 'manual' (no AI). Real ones come later.
 AI_PROVIDER = os.environ.get('AI_PROVIDER', 'demo')
+
+# Private profile images are served by the authenticated avatar view.
+MEDIA_ROOT = BASE_DIR / "media"
+MEDIA_URL = "/media/"

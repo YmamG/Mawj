@@ -2,6 +2,11 @@
 {% block title %}Profile - Mawj{% endblock %}
 {% block content %}
 <h1>Profile</h1>
+{% if preferences.avatar %}
+    <img class="profile-avatar" src="{% url 'avatar' %}" alt="Your profile photo" width="96" height="96">
+{% else %}
+    <div class="default-avatar" role="img" aria-label="Default profile avatar">{{ profile_user.username|first|upper }}</div>
+{% endif %}
 <p><a href="{% url 'profile_edit' %}">Edit profile</a></p>
 
 <h2>Account</h2>

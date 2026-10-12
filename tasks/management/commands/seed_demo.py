@@ -43,6 +43,8 @@ class Command(BaseCommand):
                 user=user, title=f"Demo: Study session {index + 1}",
                 description="Fictional sample task for the Mawj demonstration.",
                 date=today, priority=("low", "medium", "high")[index % 3],
+                category=("study", "personal", "work")[index % 3],
+                repeat="daily" if index == 11 else "",
                 estimated_duration=30, status="done" if done else "todo",
                 completed_at=timezone.now() if done else None,
             )

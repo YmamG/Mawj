@@ -12,3 +12,11 @@
 10. Describe limitations and next improvements: validate demand with students, improve AI value based on feedback, and optionally add charts. No commercial traction or live AI verification is claimed.
 
 Before submission: run checks, confirm instructor repository access, choose the exact submitted revision, and rehearse the same workflow. The instructor determines presentation length. Be ready to explain every assisted code change yourself.
+
+## Extra-feature demonstration
+
+- Edit Profile, upload a fictional PNG/JPEG, then remove it to restore the default avatar.
+- Add a task dated today with Study category and Daily repeat. Complete it and show the next dated occurrence. Undo and re-complete: no second successor is created.
+- Show the Today/Overdue/Completed today tabs and the category filter in Tasks.
+- Choose a reminder a few minutes in the future. After its time passes, reload the site, open Today, and dismiss it. Explain that these are in-app reminders, not external notifications.
+- Switch the achievement chart week/month/year; expand View chart data and compare the exact totals.

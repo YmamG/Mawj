@@ -5,6 +5,7 @@
 ```mermaid
 erDiagram
     USER ||--o{ TASK : owns
+    TASK o|--o| TASK : next_occurrence
     USER ||--o{ JOURNAL_ENTRY : writes
     USER ||--o{ TASK_SUGGESTION : owns
     USER ||--o| USER_PREFERENCES : has
@@ -23,6 +24,11 @@ erDiagram
         time start_time "nullable"
         datetime deadline "nullable"
         integer estimated_duration "nullable"
+        string category "optional"
+        string repeat "optional"
+        integer previous_occurrence_id FK,UK "nullable"
+        datetime reminder_at "nullable"
+        boolean reminder_dismissed
         string priority
         string status
         datetime completed_at "nullable"
@@ -49,12 +55,13 @@ erDiagram
     USER_PREFERENCES {
         integer id PK
         integer user_id FK,UK
+        string avatar "optional file path"
         string display_name "optional"
         string theme
     }
 ```
 
-Every task/entry/suggestion has exactly one owner. Preferences are optional until first needed, then unique per user. All foreign keys use CASCADE. An accepted task is independent of its originating suggestion; removing a journal does not remove that task. The duplicated suggestion owner supports ownership checks, but the view must keep it consistent with the entry owner; this consistency is not a database constraint. Django owns username uniqueness and password hashing. The model defaults and choice fields represent priority/status; form validation enforces allowed task values and duration bounds. No category or many-to-many relationship is added without a workflow need.
+Every task/entry/suggestion has exactly one owner. Preferences are optional until first needed, then unique per user. All foreign keys use CASCADE. An accepted task is independent of its originating suggestion; removing a journal does not remove that task. The duplicated suggestion owner supports ownership checks, but the view must keep it consistent with the entry owner; this consistency is not a database constraint. Django owns username uniqueness and password hashing. The model defaults and choice fields represent priority/status; form validation enforces allowed task values and duration bounds. Task categories use a small fixed choice set. The optional unique self-reference permits at most one generated next occurrence per task; SET_NULL preserves successors if the predecessor is removed. Uploaded avatar paths are stored in preferences; image bytes remain outside the database. No many-to-many relationship is needed.
 
 ## Wireframes
 
@@ -99,3 +106,10 @@ JOURNAL                            ACHIEVEMENTS
 3. Edit a journal → pending suggestions are dismissed → previously accepted tasks remain → delete entry after reviewing consequences.
 
 Responsive design wraps controls on narrow screens; wide calendar content scrolls in its own labeled region. Forms use associated labels, and period navigation identifies the selected link. Visual/mobile checks are recorded separately from automated tests.
+
+## Additional journeys
+
+- Profile → upload photo → inspect private resized avatar → remove → default avatar returns.
+- Add task → optional category/repeat/reminder → complete → successor created once → inspect Today sections and category filters.
+- Open a page after reminder time → reminder banner → Today → dismiss reminder.
+- Achievements → choose period → compare completed/remaining bars → expand exact data table.

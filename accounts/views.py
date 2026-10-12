@@ -1,7 +1,7 @@
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
-from django.http import HttpResponseBadRequest
+from django.http import HttpResponseBadRequest, FileResponse, Http404
 from django.shortcuts import redirect, render
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
@@ -30,6 +30,7 @@ def profile(request):
     preferences, _ = UserPreferences.objects.get_or_create(user=request.user)
     context = {
         "profile_user": request.user,
+        "preferences": preferences,
         "display_name": preferences.display_name,
         "journal_count": JournalEntry.objects.filter(user=request.user).count(),
         "total_tasks": user_tasks.count(),
@@ -43,7 +44,7 @@ def profile(request):
 def profile_edit(request):
     preferences, _ = UserPreferences.objects.get_or_create(user=request.user)
     if request.method == "POST":
-        form = ProfileEditForm(request.POST, user=request.user, preferences=preferences)
+        form = ProfileEditForm(request.POST, request.FILES, user=request.user, preferences=preferences)
         if form.is_valid():
             form.save()
             return redirect("profile")
@@ -71,3 +72,17 @@ def theme_update(request):
     ):
         return redirect(return_to)
     return redirect("task_list")
+
+
+@login_required
+def avatar(request):
+    preferences = UserPreferences.objects.filter(user=request.user).first()
+    if not preferences or not preferences.avatar:
+        raise Http404("No profile photo.")
+    try:
+        response = FileResponse(preferences.avatar.open("rb"), content_type="image/png")
+    except FileNotFoundError:
+        raise Http404("No profile photo.")
+    response["Cache-Control"] = "private, no-store"
+    response["X-Content-Type-Options"] = "nosniff"
+    return response

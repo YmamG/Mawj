@@ -4,7 +4,7 @@ Executed 2026-10-12. Local demo mode; fictional records only. No live AI calls w
 
 | Scenario | Expected | Actual | Status / method |
 |---|---|---|---|
-| Existing + new regression suite | All tests complete successfully | Final complete suite: 63 tests passed, including demo seed and journal edit checks | PASS, Django tests |
+| Existing + new regression suite | All tests complete successfully | Final complete suite: 77 tests passed, including avatars, categories, recurrence, reminders, Today and chart checks | PASS, Django tests |
 | Fresh dependency installation | Empty venv installs root requirements | Python 3.12 / Django 6.1.2 / requests 2.34.2 installed | PASS, clean source copy without `.git`, venv, DB or caches; not a remote clone |
 | Fresh schema | Migrations build an empty SQLite database | All migrations applied; system check has no issues | PASS, fresh-copy commands |
 | Migration consistency | No uncommitted model changes require migration | `makemigrations --check --dry-run`: no changes | PASS |
@@ -50,3 +50,19 @@ Record actual results, not anticipated passes:
 - SQLite/development DEBUG configuration is not a production deployment.
 - Duration rules are enforced on task forms; direct database writes may bypass them.
 - Journal edits are saved as written; AI is not rerun on edit.
+
+## Extra-feature verification (2026-10-12)
+
+| Scenario | Expected | Actual | Status / method |
+|---|---|---|---|
+| Avatar default/upload/remove | Default avatar; resized private image; default restored | PNG/JPEG resized/re-encoded, delivery restricted, old files removed on commit | PASS, Django + Chromium |
+| Invalid image/type/size | Reject invalid/non-PNG-JPEG files, >2 MB and >4096 dimensions | Form errors verified; no unwanted replacement | PASS, Django |
+| Recurrence | One next daily/weekly occurrence, missed dates skipped; repeated undo/complete does not duplicate | Dates/details/reminders copied correctly; stop repetition supported | PASS, Django + Chromium daily workflow |
+| Categories | Only matching owned category tasks displayed | Seeded Study filter and private isolation verified | PASS, Django + Chromium |
+| Today sections | Correct today/undated, overdue, completed today; no cross-user records | Membership/counts verified; direct completion available | PASS, Django + Chromium |
+| Reminder due/dismiss/reset | Only due incomplete tasks; owner-only POST dismissal; reschedule re-enables | Visibility, access and persistence verified | PASS, Django + Chromium; isolated fixture moved time into past |
+| Chart | Bucket totals match summary for all periods | Week/month/year counts match known dataset; exact data table accessible | PASS, Django + Chromium |
+| New migrations | Upgrade existing schema and create from empty database | Main DB migrated; clean-copy empty DB migrated successfully | PASS |
+| Extra UI at mobile/desktop | No document overflow at 375/1280 px | Today, task form/list, profile/edit and month chart passed; screenshots reviewed | PASS, Chromium + manual screenshot review |
+
+This second clean source copy reused the validated installed interpreter/dependencies and verified new migrations from an empty database. It was not a fresh remote Git clone. Browser-generated data and uploads stayed in the isolated copy. A first run-server command from `/tmp` failed due to the wrong working directory; running from the documented project directory succeeded. Actual phone/manual acceptance and live provider checks remain pending as noted above.

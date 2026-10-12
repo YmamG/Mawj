@@ -2,7 +2,8 @@ import calendar
 from datetime import date, timedelta
 
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q
+from django.db.models import Q, Count
+from django.db.models.functions import Coalesce, TruncDate
 from django.http import Http404
 from django.shortcuts import redirect, render
 from django.utils import timezone
@@ -117,8 +118,35 @@ def achievements(request):
     )
     total = tasks.count()
     completed = tasks.filter(status="done").count()
+    summaries = tasks.order_by().annotate(
+        report_date=Coalesce("date", TruncDate("created_at")),
+    ).values("report_date").annotate(
+        total=Count("pk"), completed=Count("pk", filter=Q(status="done")),
+    )
+    if period == "year":
+        buckets = {month: {"label": calendar.month_abbr[month], "total": 0, "completed": 0} for month in range(1, 13)}
+        for row in summaries:
+            bucket = buckets[row["report_date"].month]
+            bucket["total"] += row["total"]
+            bucket["completed"] += row["completed"]
+    else:
+        buckets = {}
+        day = start
+        while day < end:
+            buckets[day] = {"label": day.strftime("%d %b"), "total": 0, "completed": 0}
+            day += timedelta(days=1)
+        for row in summaries:
+            buckets[row["report_date"]].update(total=row["total"], completed=row["completed"])
+    chart = list(buckets.values())
+    largest = max((row["total"] for row in chart), default=0) or 1
+    for row in chart:
+        row["height"] = round(row["total"] * 160 / largest)
+        row["completed_height"] = round(row["completed"] * 160 / largest)
+        row["remaining_height"] = row["height"] - row["completed_height"]
+        row["remaining"] = row["total"] - row["completed"]
     return render(request, "dashboard/achievements.html", {
         "period": period,
+        "chart": chart,
         "start": start,
         "last_day": end - timedelta(days=1),
         "total": total,

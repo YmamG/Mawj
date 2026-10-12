@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Today - Mawj{% endblock %}
+{% block content %}
+<h1>Today</h1>
+<p>{{ current_date|date:"l, j M Y" }}</p>
+{% if messages %}<ul>{% for message in messages %}<li>{{ message }}</li>{% endfor %}</ul>{% endif %}
+<p><a href="{% url 'task_create' %}">+ Add Task</a></p>
+{% if reminders %}
+<section aria-label="Due task reminders">
+    <h2>Reminders</h2>
+    <p>These are in-app reminders. They appear when you open Mawj after the scheduled time.</p>
+    {% for task in reminders %}
+        <article class="reminder-banner">
+            <a href="{% url 'task_update' task.pk %}">{{ task.title }}</a> — {{ task.reminder_at|date:"j M Y H:i" }}
+            <form method="post" action="{% url 'reminder_dismiss' task.pk %}">{% csrf_token %}<button type="submit">Dismiss reminder</button></form>
+        </article>
+    {% endfor %}
+    {% if due_reminder_count > 20 %}<p>Showing the oldest 20 reminders. Dismiss them to reveal the next ones.</p>{% endif %}
+</section>
+{% endif %}
+<nav class="section-tabs" aria-label="Today task sections">
+    <a href="?section=today" {% if section == "today" %}aria-current="page"{% endif %}>Today &amp; undated ({{ today_count }})</a>
+    <a href="?section=overdue" {% if section == "overdue" %}aria-current="page"{% endif %}>Overdue ({{ overdue_count }})</a>
+    <a href="?section=completed" {% if section == "completed" %}aria-current="page"{% endif %}>Completed today ({{ completed_count }})</a>
+</nav>
+{% for task in tasks %}{% include "tasks/task_card.html" %}{% empty %}<p>No tasks in this section.</p>{% endfor %}
+{% include "pagination.html" %}
+{% endblock %}
