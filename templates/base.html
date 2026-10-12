@@ -146,6 +146,7 @@
         {% endif %}
     </nav>
     <hr>
+    {% if frontend_url %}<aside class="reminder-banner">You are viewing the original Django interface. <a href="{{ frontend_url }}">Open the new Mawj website</a></aside>{% endif %}
     {% if due_reminder_count %}<aside class="reminder-banner" aria-label="Reminders">{{ due_reminder_count }} task reminder{{ due_reminder_count|pluralize }} ready. <a href="{% url 'today' %}">View reminders</a></aside>{% endif %}
     {% block content %}{% endblock %}
 </body>

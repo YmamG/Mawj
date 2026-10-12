@@ -80,3 +80,10 @@ This second clean source copy reused the validated installed interpreter/depende
 Saved visual previews: [Grove](previews/landing-grove.png), [Petal](previews/landing-petal.png), [Dusk](previews/landing-dusk.png), [mobile](previews/landing-mobile.png). These contain illustrative landing content only, not private user data.
 
 Limitations remain: no production deployment or live AI provider test; reminders are in-app on visits; repetition advances on completion; real-device manual acceptance and instructor scope approval are still pending. The original Django screens remain available on port 8000.
+
+## Startup/account troubleshooting checks (2026-10-12)
+
+- 19 targeted API/account/signup tests passed after username normalization and frontend bookmark redirects. Password spaces remain significant; username-edge spaces are trimmed.
+- In an isolated file-backed database, API signup followed by login from two separate Python processes succeeded, including after logout. Original Django signup followed by original Django login from another process also succeeded. This verifies restart persistence in the tested checkout, not the user's Windows database.
+- Updated launcher started both services, printed the active database path/account count and reached both readiness endpoints. Old `/accounts/signup/` and `/accounts/login/` URLs returned 302 to the new port-3000 routes; the API returned 200.
+- Automatic browser opening is implemented for Windows via Python's standard webbrowser module; execution was not exercised on the Linux validation host. No user database was moved, replaced, or deleted.

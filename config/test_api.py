@@ -95,3 +95,24 @@ class ApiTests(TestCase):
         self.assertEqual(self.client.post("/api/tasks/", "bad-json", content_type="application/json").status_code, 400)
         self.assertEqual(self.post("tasks/", []).status_code, 400)
         self.assertEqual(self.client.get("/api/auth/login/").status_code, 405)
+
+    def test_login_trims_username_but_preserves_password_spaces(self):
+        self.client.logout()
+        self.assertEqual(self.post("auth/login/", {"username": " api-user ", "password": "12345678"}).status_code, 200)
+        self.client.logout()
+        get_user_model().objects.create_user("space-password", password=" spaced password ")
+        self.assertEqual(self.post("auth/login/", {"username": "space-password", "password": " spaced password "}).status_code, 200)
+        self.client.logout()
+        self.assertEqual(self.post("auth/login/", {"username": "space-password", "password": "spaced password"}).status_code, 400)
+
+    def test_frontend_launcher_directs_the_original_home_to_next(self):
+        from django.test import override_settings
+        with override_settings(FRONTEND_URL="http://127.0.0.1:3000"):
+            response = self.client.get("/")
+            self.assertEqual(response.status_code, 302)
+            self.assertEqual(response["Location"], "http://127.0.0.1:3000")
+            self.assertContains(self.client.get("/tasks/"), "Open the new Mawj website")
+            self.assertEqual(self.client.get("/accounts/signup/")["Location"], "http://127.0.0.1:3000/signup")
+            self.assertEqual(self.client.get("/accounts/login/")["Location"], "http://127.0.0.1:3000/login")
+        with override_settings(FRONTEND_URL=""):
+            self.assertEqual(self.client.get("/")["Location"], "/tasks/")

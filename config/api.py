@@ -103,7 +103,7 @@ def session(request):
 @endpoint(("POST",), public=True)
 def signin(request):
     data = payload(request)
-    user = authenticate(request, username=data.get("username", ""), password=data.get("password", ""))
+    user = authenticate(request, username=str(data.get("username") or "").strip(), password=data.get("password", ""))
     if user is None:
         return JsonResponse({"error": "The username or password is incorrect."}, status=400)
     login(request, user)

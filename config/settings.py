@@ -29,6 +29,7 @@ DEBUG = True
 ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1,[::1]").split(",")
 CSRF_TRUSTED_ORIGINS = os.environ.get("DJANGO_CSRF_TRUSTED_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000").split(",")
 CSRF_FAILURE_VIEW = "config.api.csrf_failure"
+FRONTEND_URL = os.environ.get("MAWJ_FRONTEND_URL", "").rstrip("/")
 
 
 # Application definition
@@ -68,6 +69,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'accounts.context_processors.theme_choices',
+                'accounts.context_processors.frontend_link',
                 'tasks.context_processors.reminders',
             ],
         },

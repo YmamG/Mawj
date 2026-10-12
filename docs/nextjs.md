@@ -73,3 +73,11 @@ npm run build --prefix frontend
 ```
 
 After building, use `npm run start --prefix frontend` alongside Django to validate production startup. See `docs/verification.md` for executed results. Manual real-device acceptance remains a separate student submission step.
+
+## Account persistence and old bookmarks
+
+The launcher now prints the exact project/database path and saved account count, and pins its local Next proxy to that same Django checkout. On Windows it opens the new interface automatically after both landing and API readiness succeed (`--no-browser` disables this). With the launcher active, old port-8000 home/login/signup links redirect to the corresponding new frontend pages; other original pages display a link to the new site. Django-only startup retains its original routes.
+
+Accounts persist in `db.sqlite3`; stopping the server or logging out does not delete them. A fresh project download is a different database unless existing data is preserved. Always restart with `node scripts/dev.mjs` from the same checkout. If login fails, verify the same startup database path and account count before/after restart, and use your username rather than display name or email. API login trims accidental spaces around the username, while preserving password characters exactly. Never delete or replace a database to troubleshoot login. To diagnose a user-specific issue, share only the startup path/count and error text, never passwords or database contents.
+
+The launcher deliberately uses its local backend; custom `DJANGO_URL` values are for separately managed Next startup/production builds, not the local two-service launcher.
