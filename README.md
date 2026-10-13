@@ -12,6 +12,8 @@ Features: Django accounts and private records; task CRUD with title-only quick e
 
 A redesigned landing page and full Next.js workspace now sit in front of the Django app. Choose Grove, Petal, Dusk, Ember or Midnight, or switch the whole interface to Arabic; all tasks, journals, profiles, photos, reminders and reports use the same Django data. See [Next.js setup](docs/nextjs.md) for one-time setup and the single `node scripts/dev.mjs` startup command. Use port **3000** for the new interface; port 8000 retains the original Django screens.
 
+To test on a phone connected to the same Wi-Fi, stop the server and run `node scripts/dev.mjs --lan`. Open the printed **Phone on the same Wi-Fi** address on the phone. See [phone access](docs/nextjs.md#phone-access-on-the-same-wi-fi) for Windows networking details.
+
 ## Original Django-only setup
 
 Validated with Python 3.12.14, Django 6.1.2, requests 2.34.2 and Pillow 12.3.0 on Linux. SQLite is included with Python. Use the root `manage.py`; `myproject/` is a legacy scaffold and is not the active application.

@@ -2,6 +2,7 @@ import { spawn, spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { networkInterfaces } from 'node:os';
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const python = join(root, '.venv', process.platform === 'win32' ? 'Scripts/python.exe' : 'bin/python');
@@ -11,6 +12,11 @@ if (!existsSync(python) || !existsSync(next)) {
   process.exit(1);
 }
 const website = 'http://127.0.0.1:3000';
+const lan = process.argv.includes('--lan');
+const phoneSites = Object.entries(networkInterfaces()).flatMap(([name, rows]) =>
+  (rows || []).filter(row => row.family === 'IPv4' && !row.internal)
+    .map(row => ({ name, url: `http://${row.address}:3000` })),
+);
 const environment = { ...process.env, DJANGO_URL: 'http://127.0.0.1:8000', MAWJ_FRONTEND_URL: website };
 // Both services always use this checkout; an old backend override must not split account data.
 const status = spawnSync(python, ['-c', `import os, django, json
@@ -18,18 +24,23 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 django.setup()
 from django.conf import settings
 from django.contrib.auth import get_user_model
-print(json.dumps({"database": str(settings.DATABASES["default"]["NAME"]), "accounts": get_user_model().objects.count()}))`], { cwd: root, env: environment, encoding: 'utf8' });
+print(json.dumps({"database": str(settings.DATABASES["default"]["NAME"]), "accounts": get_user_model().objects.count(), "trusted_origins": settings.CSRF_TRUSTED_ORIGINS}))`], { cwd: root, env: environment, encoding: 'utf8' });
 if (status.status !== 0) {
   console.error('The database is not ready. Run .venv Python with manage.py migrate first.');
   console.error(status.stderr);
   process.exit(1);
 }
 const saved = JSON.parse(status.stdout);
+if (lan) {
+  environment.DJANGO_CSRF_TRUSTED_ORIGINS = [...new Set([
+    ...saved.trusted_origins, website, 'http://localhost:3000', ...phoneSites.map(site => site.url),
+  ])].join(',');
+}
 console.log(`Project: ${root}\nDatabase: ${saved.database}\nSaved accounts: ${saved.accounts}`);
 if (saved.accounts === 0) console.log('This copy has no accounts yet. If you used Mawj before, keep your original db.sqlite3 and use its project folder; a new download has a separate database.');
 const children = [
   spawn(python, ['manage.py', 'runserver', '127.0.0.1:8000', '--noreload'], { cwd: root, env: environment, stdio: 'inherit' }),
-  spawn(process.execPath, [next, 'dev', '--hostname', '127.0.0.1', '--port', '3000'], { cwd: join(root, 'frontend'), env: environment, stdio: 'inherit' }),
+  spawn(process.execPath, [next, 'dev', '--hostname', lan ? '0.0.0.0' : '127.0.0.1', '--port', '3000'], { cwd: join(root, 'frontend'), env: environment, stdio: 'inherit' }),
 ];
 let stopping = false;
 let attempts = 0;
@@ -47,6 +58,10 @@ const readiness = setInterval(async () => {
     if (landing.ok && data && Object.hasOwn(data, 'user')) {
       clearInterval(readiness);
       console.log(`New interface ready: ${website} (port 8000 is the original interface).`);
+      if (lan) {
+        for (const site of phoneSites) console.log(`Phone on the same Wi-Fi (${site.name}): ${site.url}`);
+        if (!phoneSites.length) console.log('No network address found. Connect this computer and your phone to the same Wi-Fi, then restart.');
+      }
       if (process.platform === 'win32' && !process.argv.includes('--no-browser')) {
         const opener = spawn(python, ['-m', 'webbrowser', website], { cwd: root, stdio: 'ignore' });
         opener.on('error', () => console.log(`Open ${website} in your browser.`));

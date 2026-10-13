@@ -101,3 +101,11 @@ The Arabic/English button in the appearance controls switches interface labels, 
 Clicking a calendar day opens its tasks and full journal text in a dialog. Tasks with no scheduled date appear on their local creation day. Journal and task deletion confirmations open in the center of the viewport, retain focus within the native dialog, and support Cancel/Escape.
 
 For persistent local AI settings, copy root `.env.example` to `.env` and configure one provider locally. The launcher loads this file on every startup; the process environment overrides it. The uploaded older provider's cloud prompts and request functions match the current implementation; restoring those functions would not resolve missing provider configuration. No live AI reliability is implied by demo or mocked checks.
+
+## Phone access on the same Wi-Fi
+
+Stop earlier servers, then run `node scripts/dev.mjs --lan`. The launcher binds only Next.js to `0.0.0.0:3000` and prints `Phone on the same Wi-Fi (adapter): http://<address>:3000` after readiness succeeds. Use the address for the Wi-Fi adapter on the phone; do not enter `0.0.0.0` or `127.0.0.1` on the phone. Keep the terminal open. If Windows prompts for network access, permit Node on the private network. Both devices must be on the same reachable LAN; router client isolation and local firewalls are outside the launcher.
+
+The LAN launcher adds the computer's explicit local IPv4 origins to Django CSRF trusted origins while preserving configured origins, so phone sign-in and mutations can work. Django stays on loopback behind the Next proxy. Next `allowedDevOrigins` includes loopback and the computer's local IPv4 addresses to permit development HMR requests. No wildcard origin is used. Starting without `--lan` retains loopback-only frontend binding.
+
+Phone browser sessions are separate; sign in with the same saved account. The database is unchanged. After a network address changes, restart the launcher to refresh addresses.
