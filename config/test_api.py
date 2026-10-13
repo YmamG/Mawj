@@ -105,17 +105,13 @@ class ApiTests(TestCase):
         self.client.logout()
         self.assertEqual(self.post("auth/login/", {"username": "space-password", "password": "spaced password"}).status_code, 400)
 
-    def test_frontend_launcher_directs_the_original_home_to_next(self):
+    def test_django_home_does_not_depend_on_an_old_next_frontend_setting(self):
         from django.test import override_settings
         with override_settings(FRONTEND_URL="http://127.0.0.1:3000"):
             response = self.client.get("/")
-            self.assertEqual(response.status_code, 302)
-            self.assertEqual(response["Location"], "http://127.0.0.1:3000")
-            self.assertContains(self.client.get("/tasks/"), "Open the new Mawj website")
-            self.assertEqual(self.client.get("/accounts/signup/")["Location"], "http://127.0.0.1:3000/signup")
-            self.assertEqual(self.client.get("/accounts/login/")["Location"], "http://127.0.0.1:3000/login")
-        with override_settings(FRONTEND_URL=""):
-            self.assertEqual(self.client.get("/")["Location"], "/tasks/")
+            self.assertEqual(response.status_code, 200)
+            self.assertContains(response, 'static/web/app.js')
+            self.assertNotIn('Location', response.headers)
 
     def test_new_themes_and_natural_journal_reanalysis(self):
         for theme in ("ember", "midnight"):

@@ -1,3 +1,7 @@
+# Demonstration for the Django template edition
+
+Open the root on Django port 8000, then use `/app/today/` and the navigation. The core demonstration below applies to the shared models/business behavior. Next.js-specific instructions later in this file are historical references to `main`; this branch does not require Node.
+
 # Demonstration
 
 1. Run the README setup, choose an invented password for `mawj_demo`, and sign in. No real personal information is needed.

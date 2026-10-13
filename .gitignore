@@ -10,3 +10,5 @@ frontend/*.tsbuildinfo
 .env
 .env.local
 frontend/.env.local
+
+.venv

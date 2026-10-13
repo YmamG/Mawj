@@ -1,3 +1,7 @@
+# Historical Next.js setup
+
+This document describes the `main` branch. On `django-templates`, use README.md and [the Django edition guide](django-edition.md); do not run npm/Node commands from this historical guide.
+
 # Next.js interface and Django API
 
 The new frontend lives in `frontend/`. It adds a public landing page and a full workspace while retaining Django models, forms, authentication and existing HTML routes. Data is real Django data; only landing-page preview examples are illustrative.

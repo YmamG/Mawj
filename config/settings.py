@@ -38,6 +38,7 @@ FRONTEND_URL = os.environ.get("MAWJ_FRONTEND_URL", "").rstrip("/")
 # Application definition
 
 INSTALLED_APPS = [
+    "web",
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -141,3 +142,7 @@ AI_PROVIDER = os.environ.get('AI_PROVIDER', 'demo')
 # Private profile images are served by the authenticated avatar view.
 MEDIA_ROOT = BASE_DIR / "media"
 MEDIA_URL = "/media/"
+
+STATICFILES_DIRS = [BASE_DIR / "static"]
+
+FRONTEND_URL = ""
