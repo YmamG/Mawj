@@ -1,4 +1,5 @@
 "use client";
+import { useLanguage } from "@/components/language";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -7,6 +8,8 @@ import { Brand } from "./brand";
 import { ThemePicker, useTheme } from "./theme";
 import { api, ApiError, Session } from "@/lib/api";
 export default function Auth({ signup = false }: { signup?: boolean }) {
+  const { t: translate, language } = useLanguage();
+
   const router = useRouter();
   const { theme } = useTheme();
   const [show, setShow] = useState(false);
@@ -44,7 +47,7 @@ export default function Auth({ signup = false }: { signup?: boolean }) {
     autoComplete = "",
   ) => (
     <div className="field">
-      <label htmlFor={name}>{label}</label>
+      <label htmlFor={name}>{translate(label)}</label>
       <div className={type === "password" ? "password-field" : ""}>
         <input
           id={name}
@@ -61,7 +64,9 @@ export default function Auth({ signup = false }: { signup?: boolean }) {
           <button
             type="button"
             className="icon-button"
-            aria-label={show ? "Hide passwords" : "Show passwords"}
+            aria-label={
+              show ? translate("Hide passwords") : translate("Show passwords")
+            }
             onClick={() => setShow(!show)}
           >
             {show ? <EyeSlash /> : <Eye />}
@@ -80,69 +85,89 @@ export default function Auth({ signup = false }: { signup?: boolean }) {
       <aside className="auth-story">
         <Brand />
         <div>
-          <p className="eyebrow">Your space, your pace</p>
+          <p className="eyebrow">{translate("Your space, your pace")}</p>
           <h1>
-            A quieter mind.
-            <br />A little more <em>flow.</em>
+            {" "}
+            {translate("A quieter mind.")} <br />
+            {translate("A little more")} <em>{translate("flow.")}</em>
           </h1>
           <p>
-            Write what’s on your mind. Find your next small step. Let the
-            progress follow.
+            {" "}
+            {translate(
+              "Write what’s on your mind. Find your next small step. Let the progress follow.",
+            )}{" "}
           </p>
         </div>
         <p className="auth-footnote">
-          You don’t have to do it all. Just start somewhere.
+          {" "}
+          {translate("You don’t have to do it all. Just start somewhere.")}{" "}
         </p>
       </aside>
       <section className="auth-side">
         <div className="auth-form">
           <ThemePicker />
-          <h2>{signup ? "Make yourself at home." : "Welcome back."}</h2>
+          <h2>
+            {signup
+              ? translate("Make yourself at home.")
+              : translate("Welcome back.")}
+          </h2>
           <p>
             {signup
-              ? "Just a username and password. A space that’s yours."
-              : "Your thoughts and plans are right where you left them."}
+              ? translate("Just a username and password. A space that’s yours.")
+              : translate(
+                  "Your thoughts and plans are right where you left them.",
+                )}
           </p>
           {error && (
             <div role="alert" className="banner error">
-              {error.message}
+              {translate(error.message)}
             </div>
           )}
           <form onSubmit={submit}>
-            {field("username", "Username", "text", "username")}
+            {field("username", translate("Username"), "text", "username")}
             {field(
               signup ? "password1" : "password",
-              "Password",
+              translate("Password"),
               "password",
               signup ? "new-password" : "current-password",
             )}
             {signup && (
               <>
                 <p className="field-help" style={{ marginBottom: 18 }}>
-                  At least 8 characters. No special character rules.
+                  {" "}
+                  {translate(
+                    "At least 8 characters. No special character rules.",
+                  )}{" "}
                 </p>
                 {field(
                   "password2",
-                  "Confirm password",
+                  translate("Confirm password"),
                   "password",
                   "new-password",
                 )}
               </>
             )}
             <button className="button" disabled={busy}>
-              {busy ? "A moment…" : signup ? "Create my account" : "Come on in"}
+              {busy
+                ? translate("A moment…")
+                : signup
+                  ? translate("Create my account")
+                  : translate("Come on in")}
               <ArrowUpRight size={17} />
             </button>
           </form>
           <p className="auth-switch">
-            {signup ? "Already have a space?" : "New here?"}{" "}
+            {signup
+              ? translate("Already have a space?")
+              : translate("New here?")}{" "}
             <Link href={signup ? "/login" : "/signup"}>
-              {signup ? "Log in" : "Create an account"}
+              {signup ? translate("Log in") : translate("Create an account")}
             </Link>
           </p>
           <p className="tiny">
-            By using Mawj, you acknowledge our{" "}
-            <Link href="/privacy">privacy information</Link>.
+            {" "}
+            {translate("By using Mawj, you acknowledge our")}{" "}
+            <Link href="/privacy">{translate("privacy information")}</Link>.
           </p>
         </div>
       </section>

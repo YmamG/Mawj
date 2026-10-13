@@ -1,11 +1,12 @@
 "use client";
 import { createContext, useContext, useEffect, useState } from "react";
+import { LanguageToggle, useLanguage } from "./language";
 import type { Theme } from "@/lib/api";
 const themes: { id: Theme; label: string; description: string }[] = [
   { id: "grove", label: "Grove", description: "Quiet greens" },
   { id: "petal", label: "Petal", description: "Soft pinks & blues" },
   { id: "dusk", label: "Dusk", description: "Warm evening tones" },
-  { id: "ember", label: "Ember", description: "Deep crimson" },
+  { id: "ember", label: "Ember", description: "Warm crimson" },
   { id: "midnight", label: "Midnight", description: "Ink & twilight" },
 ];
 const ThemeContext = createContext<{
@@ -37,24 +38,33 @@ export function ThemePicker({
 }: {
   onChange?: (theme: Theme) => void;
 }) {
+  const { t: translate, language } = useLanguage();
+
   const { theme, setTheme } = useTheme();
   return (
-    <div className="theme-picker" role="group" aria-label="Choose a theme">
-      {themes.map((item) => (
-        <button
-          key={item.id}
-          className={`theme-dot ${item.id}`}
-          aria-label={`${item.label} theme: ${item.description}`}
-          title={item.label}
-          aria-pressed={theme === item.id}
-          onClick={() => {
-            setTheme(item.id);
-            onChange?.(item.id);
-          }}
-        >
-          <span />
-        </button>
-      ))}
+    <div className="appearance-controls">
+      <div
+        className="theme-picker"
+        role="group"
+        aria-label={translate("Choose a theme")}
+      >
+        {themes.map((item) => (
+          <button
+            key={item.id}
+            className={`theme-dot ${item.id}`}
+            aria-label={`${translate(item.label)}: ${translate(item.description)}`}
+            title={translate(item.label)}
+            aria-pressed={theme === item.id}
+            onClick={() => {
+              setTheme(item.id);
+              onChange?.(item.id);
+            }}
+          >
+            <span />
+          </button>
+        ))}
+      </div>
+      <LanguageToggle />
     </div>
   );
 }

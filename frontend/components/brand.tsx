@@ -1,5 +1,9 @@
+"use client";
+import { useLanguage } from "@/components/language";
 import Link from "next/link";
 export function Wave({ className = "" }: { className?: string }) {
+  const { t: translate, language } = useLanguage();
+
   return (
     <svg
       className={className}
@@ -17,11 +21,14 @@ export function Wave({ className = "" }: { className?: string }) {
   );
 }
 export function Brand({ href = "/" }: { href?: string }) {
+  const { t: translate, language } = useLanguage();
+
   return (
-    <Link href={href} className="brand" aria-label="Mawj home">
+    <Link href={href} className="brand" aria-label={translate("Mawj home")}>
       <Wave />
       <span>
-        mawj<span className="brand-period">.</span>
+        {language === "ar" ? "موج" : "mawj"}
+        <span className="brand-period">.</span>
       </span>
     </Link>
   );

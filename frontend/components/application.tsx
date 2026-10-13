@@ -1,4 +1,5 @@
 "use client";
+import { useLanguage } from "@/components/language";
 import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -29,10 +30,11 @@ import {
   Page,
   Report as ReportData,
   Theme,
-  formatDate,
+  formatDate as formatDateBase,
 } from "@/lib/api";
 import { Brand } from "./brand";
 import { ThemePicker, useTheme } from "./theme";
+import Dialog from "./dialog";
 import TaskForm from "./task-form";
 import TaskList from "./task-list";
 import Report from "./report";
@@ -91,6 +93,12 @@ const copy: Record<
   },
 };
 export default function Application() {
+  const { t: translate, language } = useLanguage();
+  const formatDate = (
+    value: string | null,
+    options?: Intl.DateTimeFormatOptions,
+  ) => formatDateBase(value, options, language);
+
   const router = useRouter();
   const pathname = usePathname();
   const search = useSearchParams();
@@ -138,7 +146,7 @@ export default function Application() {
     setFormTask(undefined);
     setDeleteTask(null);
     if (!navigation.some((item) => item.id === section)) {
-      setError("This page could not be found. Choose a page above.");
+      setError(translate("This page could not be found. Choose a page above."));
       setLoading(false);
       return;
     }
@@ -210,7 +218,7 @@ export default function Application() {
           ? changed.next_date
             ? `A little win. Next occurrence: ${formatDate(changed.next_date)}.`
             : "A little win. Task completed."
-          : "Task reopened.",
+          : translate("Task reopened."),
       );
     } catch (error) {
       setError((error as Error).message);
@@ -236,7 +244,9 @@ export default function Application() {
       );
     } catch (error) {
       setError(
-        "Theme changed locally, but could not be saved to your account. Please try again.",
+        translate(
+          "Theme changed locally, but could not be saved to your account. Please try again.",
+        ),
       );
     }
   }
@@ -256,34 +266,39 @@ export default function Application() {
     ) : (
       <div className="empty-state">
         <Plant />
-        <h3>A little open space.</h3>
+        <h3>{translate("A little open space.")}</h3>
         <p>
           {section === "tasks" && parameters
-            ? "No tasks match these filters. Try another search."
-            : "Nothing here just yet. Add a small step, or enjoy a little breathing room."}
+            ? translate("No tasks match these filters. Try another search.")
+            : translate(
+                "Nothing here just yet. Add a small step, or enjoy a little breathing room.",
+              )}
         </p>
         <button className="button secondary" onClick={() => setFormTask(null)}>
-          <Plus size={16} /> Add a task
+          <Plus size={16} /> {translate("Add a task")}{" "}
         </button>
       </div>
     );
   const paging =
     data && "pages" in data && data.pages > 1 ? (
-      <nav className="pagination" aria-label="Pagination">
+      <nav className="pagination" aria-label={translate("Pagination")}>
         <button
           disabled={data.page <= 1}
           onClick={() => query({ page: String(data.page - 1) })}
         >
-          Previous
+          {" "}
+          {translate("Previous")}{" "}
         </button>
         <span>
-          Page {data.page} of {data.pages}
+          {" "}
+          {translate("Page")} {data.page} {translate("of")} {data.pages}
         </span>
         <button
           disabled={data.page >= data.pages}
           onClick={() => query({ page: String(data.page + 1) })}
         >
-          Next
+          {" "}
+          {translate("Next")}{" "}
         </button>
       </nav>
     ) : null;
@@ -308,7 +323,7 @@ export default function Application() {
           )}
           <button
             className="icon-button"
-            aria-label="Log out"
+            aria-label={translate("Log out")}
             onClick={() =>
               perform(
                 () => api("/auth/logout/", {}),
@@ -321,7 +336,7 @@ export default function Application() {
           </button>
         </div>
       </header>
-      <nav className="app-nav" aria-label="Your workspace">
+      <nav className="app-nav" aria-label={translate("Your workspace")}>
         {navigation.map((item) => (
           <Link
             key={item.id}
@@ -329,30 +344,30 @@ export default function Application() {
             aria-current={section === item.id ? "page" : undefined}
           >
             <item.icon />
-            {item.label}
+            {translate(item.label)}
           </Link>
         ))}
       </nav>
       <main id="main" className="app-main">
         <header className="page-heading">
           <div>
-            <p className="eyebrow">{meta.eyebrow}</p>
-            <h1>{meta.title}</h1>
-            <p>{meta.description}</p>
+            <p className="eyebrow">{translate(meta.eyebrow)}</p>
+            <h1>{translate(meta.title)}</h1>
+            <p>{translate(meta.description)}</p>
           </div>
           {["today", "tasks"].includes(section) && (
             <button className="button" onClick={() => setFormTask(null)}>
-              <Plus size={16} /> Add a task
+              <Plus size={16} /> {translate("Add a task")}{" "}
             </button>
           )}
         </header>
         {notice && (
           <div className="banner success" role="status">
             <Check size={16} />
-            {notice}
+            {translate(notice)}
             <button
               className="icon-button"
-              aria-label="Dismiss message"
+              aria-label={translate("Dismiss message")}
               onClick={() => setNotice("")}
             >
               <X />
@@ -361,7 +376,7 @@ export default function Application() {
         )}
         {error && (
           <div className="banner error" role="alert">
-            {error}
+            {translate(error)}
             <button
               className="text-link"
               style={{ marginLeft: "auto", border: 0, background: "none" }}
@@ -371,38 +386,52 @@ export default function Application() {
                   .catch((error) => setError(error.message))
               }
             >
-              Try again
+              {" "}
+              {translate("Try again")}{" "}
             </button>
           </div>
         )}
         {deleteTask && (
-          <section className="confirm-box" aria-label="Confirm task deletion">
-            <p>
-              Delete “{deleteTask.title}”? This cannot be undone. Later
-              repeating occurrences remain.
-            </p>
-            <div className="form-actions">
-              <button
-                className="button danger"
-                disabled={busy}
-                onClick={() =>
-                  perform(
-                    () => api(`/tasks/${deleteTask.id}/`, { action: "delete" }),
-                    "Task deleted.",
-                    () => setDeleteTask(null),
-                  )
-                }
-              >
-                Delete task
-              </button>
-              <button
-                className="button secondary"
-                onClick={() => setDeleteTask(null)}
-              >
-                Keep it
-              </button>
-            </div>
-          </section>
+          <Dialog
+            title={translate("Confirm task deletion")}
+            onClose={() => setDeleteTask(null)}
+          >
+            <section className="confirm-box">
+              <p>
+                {" "}
+                {translate("Delete “")}
+                {deleteTask.title}
+                {translate(
+                  "”? This cannot be undone. Later repeating occurrences remain.",
+                )}{" "}
+              </p>
+              <div className="form-actions">
+                <button
+                  className="button danger"
+                  disabled={busy}
+                  onClick={() =>
+                    perform(
+                      () =>
+                        api(`/tasks/${deleteTask.id}/`, { action: "delete" }),
+                      translate("Task deleted."),
+                      () => setDeleteTask(null),
+                    )
+                  }
+                >
+                  {" "}
+                  {translate("Delete task")}{" "}
+                </button>
+                <button
+                  className="button secondary"
+                  data-cancel
+                  onClick={() => setDeleteTask(null)}
+                >
+                  {" "}
+                  {translate("Keep it")}{" "}
+                </button>
+              </div>
+            </section>
+          </Dialog>
         )}
         {formTask !== undefined && session && (
           <div ref={taskFormRef} className="task-form-anchor">
@@ -414,7 +443,9 @@ export default function Application() {
               onSaved={() => {
                 setFormTask(undefined);
                 refresh()
-                  .then(() => setNotice("Task saved. Ready when you are."))
+                  .then(() =>
+                    setNotice(translate("Task saved. Ready when you are.")),
+                  )
                   .catch((error) => setError(error.message));
               }}
               onClose={() => setFormTask(undefined)}
@@ -422,7 +453,7 @@ export default function Application() {
           </div>
         )}
         {loading ? (
-          <div aria-label="Loading your space" role="status">
+          <div aria-label={translate("Loading your space")} role="status">
             <div className="skeleton heading" />
             <div className="skeleton" />
             <div className="skeleton" />
@@ -436,15 +467,21 @@ export default function Application() {
                 <>
                   <div className="stats-row">
                     <div className="stat">
-                      <span className="stat-label">Today & undated</span>
+                      <span className="stat-label">
+                        {translate("Today & undated")}
+                      </span>
                       <strong>{today.counts.today}</strong>
                     </div>
                     <div className="stat">
-                      <span className="stat-label">A little overdue</span>
+                      <span className="stat-label">
+                        {translate("A little overdue")}
+                      </span>
                       <strong>{today.counts.overdue}</strong>
                     </div>
                     <div className="stat">
-                      <span className="stat-label">Completed today</span>
+                      <span className="stat-label">
+                        {translate("Completed today")}
+                      </span>
                       <strong>{today.counts.completed}</strong>
                     </div>
                   </div>
@@ -453,12 +490,12 @@ export default function Application() {
                       <div
                         className="segmented"
                         role="group"
-                        aria-label="Task sections"
+                        aria-label={translate("Task sections")}
                       >
                         {[
-                          ["today", "Your next steps"],
-                          ["overdue", "Overdue"],
-                          ["completed", "Small wins"],
+                          ["today", translate("Your next steps")],
+                          ["overdue", translate("Overdue")],
+                          ["completed", translate("Small wins")],
                         ].map(([value, label]) => (
                           <button
                             key={value}
@@ -467,7 +504,7 @@ export default function Application() {
                             }
                             onClick={() => query({ section: value, page: "1" })}
                           >
-                            {label}
+                            {translate(label)}
                           </button>
                         ))}
                       </div>
@@ -478,22 +515,26 @@ export default function Application() {
                       <div className="welcome-note">
                         <Notebook size={24} />
                         <h3>
-                          A thought worth
-                          <br />
-                          making room for.
+                          {" "}
+                          {translate("A thought worth")} <br />{" "}
+                          {translate("making room for.")}{" "}
                         </h3>
                         <p>
-                          You don’t have to organize your thoughts before you
-                          write them down. Start anywhere.
+                          {" "}
+                          {translate(
+                            "You don’t have to organize your thoughts before you write them down. Start anywhere.",
+                          )}{" "}
                         </p>
                         <Link href="/app/journal" className="text-link">
-                          Open your journal <ArrowUpRight size={15} />
+                          {" "}
+                          {translate("Open your journal")}{" "}
+                          <ArrowUpRight size={15} />
                         </Link>
                       </div>
                       {today.reminders.length > 0 ? (
                         <section>
                           <h3 className="section-label">
-                            <Bell size={15} /> A gentle reminder{" "}
+                            <Bell size={15} /> {translate("A gentle reminder")}{" "}
                             <span>{today.reminder_count}</span>
                           </h3>
                           {today.reminders.map((task) => (
@@ -504,20 +545,26 @@ export default function Application() {
                                   className="tiny"
                                   style={{ display: "block" }}
                                 >
-                                  Due {formatDate(task.reminder_at)}
+                                  {" "}
+                                  {translate("Due")}{" "}
+                                  {formatDate(task.reminder_at)}
                                 </small>
                               </span>
                               <button
                                 className="icon-button"
                                 disabled={busy}
-                                aria-label={`Dismiss reminder for ${task.title}`}
+                                aria-label={
+                                  language === "ar"
+                                    ? `إخفاء تذكير ${task.title}`
+                                    : `Dismiss reminder for ${task.title}`
+                                }
                                 onClick={() =>
                                   perform(
                                     () =>
                                       api(`/tasks/${task.id}/`, {
                                         action: "dismiss",
                                       }),
-                                    "Reminder dismissed.",
+                                    translate("Reminder dismissed."),
                                   )
                                 }
                               >
@@ -527,21 +574,27 @@ export default function Application() {
                           ))}
                           {today.reminder_count > 20 && (
                             <p className="field-help">
-                              Showing the oldest 20. Dismiss them to see the
-                              rest.
+                              {" "}
+                              {translate(
+                                "Showing the oldest 20. Dismiss them to see the rest.",
+                              )}{" "}
                             </p>
                           )}
                         </section>
                       ) : (
                         <div className="welcome-note">
                           <Plant size={23} />
-                          <h3>A pace that’s yours.</h3>
+                          <h3>{translate("A pace that’s yours.")}</h3>
                           <p>
-                            Progress doesn’t have to be loud. A single finished
-                            task counts.
+                            {" "}
+                            {translate(
+                              "Progress doesn’t have to be loud. A single finished task counts.",
+                            )}{" "}
                           </p>
                           <Link href="/app/achievements" className="text-link">
-                            See your progress <ArrowUpRight size={15} />
+                            {" "}
+                            {translate("See your progress")}{" "}
+                            <ArrowUpRight size={15} />
                           </Link>
                         </div>
                       )}
@@ -553,57 +606,65 @@ export default function Application() {
                 <>
                   <form className="filters" onSubmit={filters}>
                     <label className="search-field">
-                      <span className="sr-only">Search tasks</span>
+                      <span className="sr-only">
+                        {translate("Search tasks")}
+                      </span>
                       <MagnifyingGlass size={16} />
                       <input
                         name="q"
-                        placeholder="Find a task…"
+                        placeholder={translate("Find a task…")}
                         defaultValue={search.get("q") || ""}
                       />
                     </label>
                     <select
                       name="status"
-                      aria-label="Status"
+                      aria-label={translate("Status")}
                       defaultValue={search.get("status") || ""}
                     >
-                      <option value="">All statuses</option>
-                      <option value="todo">To do</option>
-                      <option value="done">Completed</option>
+                      <option value="">{translate("All statuses")}</option>
+                      <option value="todo">{translate("To do")}</option>
+                      <option value="done">{translate("Completed")}</option>
                     </select>
                     <select
                       name="category"
-                      aria-label="Category"
+                      aria-label={translate("Category")}
                       defaultValue={search.get("category") || ""}
                     >
-                      <option value="">All categories</option>
-                      <option value="study">Study</option>
-                      <option value="personal">Personal</option>
-                      <option value="work">Work</option>
-                      <option value="uncategorized">Uncategorized</option>
+                      <option value="">{translate("All categories")}</option>
+                      <option value="study">{translate("Study")}</option>
+                      <option value="personal">{translate("Personal")}</option>
+                      <option value="work">{translate("Work")}</option>
+                      <option value="uncategorized">
+                        {translate("Uncategorized")}
+                      </option>
                     </select>
                     <select
                       name="priority"
-                      aria-label="Priority"
+                      aria-label={translate("Priority")}
                       defaultValue={search.get("priority") || ""}
                     >
-                      <option value="">All priorities</option>
-                      <option value="high">High</option>
-                      <option value="medium">Medium</option>
-                      <option value="low">Low</option>
+                      <option value="">{translate("All priorities")}</option>
+                      <option value="high">{translate("High")}</option>
+                      <option value="medium">{translate("Medium")}</option>
+                      <option value="low">{translate("Low")}</option>
                     </select>
                     <button className="button secondary" type="submit">
-                      Find
+                      {" "}
+                      {translate("Find")}{" "}
                     </button>
                     {parameters && (
                       <Link href="/app/tasks" className="text-link">
-                        Clear
+                        {" "}
+                        {translate("Clear")}{" "}
                       </Link>
                     )}
                   </form>
                   <p className="section-label">
-                    Your list{" "}
+                    {" "}
+                    {translate("Your list")}{" "}
                     <span>
-                      {taskData.total} task{taskData.total === 1 ? "" : "s"}
+                      {taskData.total}{" "}
+                      {translate(taskData.total === 1 ? "task" : "tasks")}
                     </span>
                   </p>
                   {taskList(taskData.results)}
@@ -614,18 +675,23 @@ export default function Application() {
                 <>
                   <form className="filters" onSubmit={filters}>
                     <label className="search-field">
-                      <span className="sr-only">Search your journal</span>
+                      <span className="sr-only">
+                        {translate("Search your journal")}
+                      </span>
                       <MagnifyingGlass size={16} />
                       <input
                         name="q"
-                        placeholder="Find a thought…"
+                        placeholder={translate("Find a thought…")}
                         defaultValue={search.get("q") || ""}
                       />
                     </label>
-                    <button className="button secondary">Search</button>
+                    <button className="button secondary">
+                      {translate("Search")}
+                    </button>
                     {parameters && (
                       <Link href="/app/journal" className="text-link">
-                        Clear
+                        {" "}
+                        {translate("Clear")}{" "}
                       </Link>
                     )}
                   </form>
@@ -644,12 +710,12 @@ export default function Application() {
                   <div
                     className="segmented"
                     role="group"
-                    aria-label="Progress period"
+                    aria-label={translate("Progress period")}
                   >
                     {[
-                      ["week", "This week"],
-                      ["month", "This month"],
-                      ["year", "This year"],
+                      ["week", translate("This week")],
+                      ["month", translate("This month")],
+                      ["year", translate("This year")],
                     ].map(([value, label]) => (
                       <button
                         key={value}
@@ -658,7 +724,7 @@ export default function Application() {
                         }
                         onClick={() => query({ period: value })}
                       >
-                        {label}
+                        {translate(label)}
                       </button>
                     ))}
                   </div>
@@ -693,19 +759,21 @@ export default function Application() {
       </main>
       <footer className="app-footer">
         <span>
-          Made by{" "}
+          {" "}
+          {translate("Made by")}{" "}
           <a
             href="https://github.com/ymamggg-jpg"
             target="_blank"
             rel="noopener noreferrer"
           >
-            Ymam
+            {" "}
+            {translate("Ymam")}{" "}
           </a>{" "}
-          · A little clarity, every day.
+          {translate("· A little clarity, every day.")}{" "}
         </span>
         <div>
-          <Link href="/privacy">Privacy</Link> ·{" "}
-          <Link href="/about">About Mawj</Link>
+          <Link href="/privacy">{translate("Privacy")}</Link> ·{" "}
+          <Link href="/about">{translate("About Mawj")}</Link>
         </div>
       </footer>
     </div>

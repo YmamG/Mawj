@@ -47,13 +47,15 @@ If using ZIP, retain your previous `db.sqlite3` and `media/` before following th
 - Next proxies `/api/…` to Django on the server. API URLs retain the trailing slash; the rewrite adds it to avoid the Next/Django normalization redirect loop.
 - Django session cookies and CSRF remain active. Every mutation is POST with a CSRF token from `/api/session/`. Sign-in/sign-up rotate the token. Records are filtered by the authenticated owner; images use authenticated private delivery. No tokens or AI credentials enter browser bundles.
 - Existing forms validate API submissions. Existing task completion behavior generates repeating occurrences. Reports share `dashboard/reports.py` between the API and legacy pages. API suggestion acceptance claims the pending row transactionally before creating a task, protecting repeat submissions.
-- Search, filtering and pagination are server-side. Success, loading, empty and failure states are visible; deletion requires an inline confirmation.
+- Search, filtering and pagination are server-side. Success, loading, empty and failure states are visible; deletion opens a centered modal confirmation with keyboard cancellation.
 
 ## Themes
 
 The supplied palettes become **Grove** (`dad7cd/a3b18a/588157/3a5a40/344e41`), **Petal** (`cdb4db/ffc8dd/ffafcc/bde0fe/a2d2ff`) **Dusk** (`22223b/4a4e69/9a8c98/c9ada7/f2e9e4`), **Ember** (`250902/38040e/640d14/800e13/ad2831`) and **Midnight** (`7c9eb2/52528c/372554/231123/000000`). The green link was duplicated; it represents one theme. Neutral surfaces and dark readable text complement the exact palette tokens. Browser theme selection uses localStorage; authenticated theme selection is saved in preferences. Existing theme values map to the new themes in the API without deleting old preferences.
 
-DM Sans and Fraunces are served from npm-installed local font files. Phosphor supplies consistent icons. No external font calls, image services or tracking scripts are required.
+Ember uses light cream surfaces with crimson accents. The theme submitted on login is saved to the account, so the login choice survives entry into the workspace.
+
+DM Sans, Noto Sans Arabic and Fraunces are served from npm-installed local font files. Phosphor supplies consistent icons. No external font calls, image services or tracking scripts are required.
 
 ## Configuration
 
@@ -89,3 +91,11 @@ Chart hover/focus labels stay inside the scrollable chart, including the first/l
 New or changed task schedules must be today/future in Riyadh time; start times and deadlines cannot be newly set in the past. Existing unchanged overdue schedules may remain while editing other fields. Historical tasks remain visible in reports. Past AI-proposed schedules are removed before saving suggestions; accepting older pending suggestions also validates the schedule.
 
 Journal mode is visible even before writing. Demo remains an explicitly labeled local rule-based simulation: bullets and explicit English/Arabic intent phrases produce suggestions. It does not infer actions from every paragraph or replace a cloud model. Find next steps re-analyzes an existing entry without recreating accepted/dismissed suggestions. Provider errors are displayed and leave saved entries intact. Live provider operation still requires the operator's configured credentials and model access; no live API call was tested here.
+
+## Arabic and day details
+
+The Arabic/English button in the appearance controls switches interface labels, notices and Gregorian date formatting. Arabic uses RTL layout and locally hosted Arabic fonts. The preference is stored in localStorage and a non-secret `mawj-language` cookie, which also makes the server render the matching initial language. User-written tasks and journals are preserved verbatim. Native form validation follows the request's `X-Mawj-Language` header without changing other requests.
+
+Clicking a calendar day opens its tasks and full journal text in a dialog. Tasks with no scheduled date appear on their local creation day. Journal and task deletion confirmations open in the center of the viewport, retain focus within the native dialog, and support Cancel/Escape.
+
+For persistent local AI settings, copy root `.env.example` to `.env` and configure one provider locally. The launcher loads this file on every startup; the process environment overrides it. The uploaded older provider's cloud prompts and request functions match the current implementation; restoring those functions would not resolve missing provider configuration. No live AI reliability is implied by demo or mocked checks.

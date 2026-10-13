@@ -13,6 +13,7 @@ from django.http import JsonResponse, Http404
 from django.middleware.csrf import get_token
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from django.utils.translation import override as locale_override
 from django.views.csrf import csrf_failure as django_csrf_failure
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.cache import never_cache
@@ -46,7 +47,8 @@ def endpoint(methods=("GET",), public=False):
             if not public and not request.user.is_authenticated:
                 return JsonResponse({"error": "Please sign in."}, status=401)
             try:
-                return function(request, *args, **kwargs)
+                with locale_override("ar" if request.headers.get("X-Mawj-Language") == "ar" else "en"):
+                    return function(request, *args, **kwargs)
             except (json.JSONDecodeError, UnicodeDecodeError, TypeError, ValueError):
                 return JsonResponse({"error": "Invalid request."}, status=400)
             except Http404:
@@ -106,6 +108,10 @@ def signin(request):
     user = authenticate(request, username=str(data.get("username") or "").strip(), password=data.get("password", ""))
     if user is None:
         return JsonResponse({"error": "The username or password is incorrect."}, status=400)
+    if data.get("theme") in ("petal", "grove", "dusk", "ember", "midnight"):
+        preferences, _ = UserPreferences.objects.get_or_create(user=user)
+        preferences.theme = data["theme"]
+        preferences.save(update_fields=["theme"])
     login(request, user)
     return JsonResponse({"user": account_data(user), "csrf": get_token(request)})
 
@@ -328,11 +334,14 @@ def month(request):
         return JsonResponse({"error": "Choose a valid month."}, status=400)
     entries = JournalEntry.objects.filter(user=request.user, created_at__year=year, created_at__month=month)
     entry_dates = set(entries.values_list("created_at__date", flat=True))
-    queryset = Task.objects.filter(user=request.user, date__year=year, date__month=month)
-    summaries = {row["date"]: row for row in queryset.order_by().values("date").annotate(total=Count("pk"), completed=Count("pk", filter=Q(status="done")))}
+    from django.db.models.functions import Coalesce, TruncDate
+    start = date(year, month, 1)
+    end = (start + timedelta(days=32)).replace(day=1)
+    queryset = Task.objects.filter(user=request.user).filter(Q(date__gte=start, date__lt=end) | Q(date__isnull=True, created_at__date__gte=start, created_at__date__lt=end))
+    summaries = {row["calendar_date"]: row for row in queryset.order_by().annotate(calendar_date=Coalesce("date", TruncDate("created_at"))).values("calendar_date").annotate(total=Count("pk"), completed=Count("pk", filter=Q(status="done")))}
     days = []
     for day in range(1, calendar.monthrange(year, month)[1] + 1):
         current = date(year, month, day)
         counts = summaries.get(current, {})
         days.append({"date": current, "day": day, "total": counts.get("total", 0), "completed": counts.get("completed", 0), "has_journal": current in entry_dates})
-    return JsonResponse({"year": year, "month": month, "days": days, "tasks": [task_data(task) for task in queryset], "entries": [entry_data(entry) for entry in entries]})
+    return JsonResponse({"year": year, "month": month, "days": days, "tasks": [{**task_data(task), "calendar_date": task.date or timezone.localtime(task.created_at).date()} for task in queryset], "entries": [entry_data(entry) for entry in entries]})

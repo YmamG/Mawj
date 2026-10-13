@@ -1,4 +1,5 @@
 "use client";
+import { useLanguage } from "@/components/language";
 import { useState } from "react";
 import { Sparkle, X } from "@phosphor-icons/react";
 import { api, ApiError, Task, localInput } from "@/lib/api";
@@ -15,6 +16,8 @@ export default function TaskForm({
   onSaved: () => void;
   onClose: () => void;
 }) {
+  const { t: translate, language } = useLanguage();
+
   const [values, setValues] = useState({
     title: task?.title || "",
     date: task?.date || "",
@@ -66,7 +69,7 @@ export default function TaskForm({
           result.estimated_duration?.toString() || old.estimated_duration,
       }));
       setExpanded(true);
-      setMessage("Suggestion ready. Review it before saving.");
+      setMessage(translate("Suggestion ready. Review it before saving."));
     } catch (error) {
       setError(error as ApiError);
     } finally {
@@ -87,7 +90,8 @@ export default function TaskForm({
   ) => (
     <div className="field">
       <label htmlFor={"task-" + name}>
-        {label} {optional && <small>· optional</small>}
+        {translate(label)}{" "}
+        {optional && <small>{translate("· optional")}</small>}
       </label>
       <input
         id={"task-" + name}
@@ -119,7 +123,7 @@ export default function TaskForm({
     choices: string[][],
   ) => (
     <div className="field">
-      <label htmlFor={"task-" + name}>{label}</label>
+      <label htmlFor={"task-" + name}>{translate(label)}</label>
       <select
         id={"task-" + name}
         value={values[name]}
@@ -127,7 +131,7 @@ export default function TaskForm({
       >
         {choices.map(([value, text]) => (
           <option key={value} value={value}>
-            {text}
+            {translate(text)}
           </option>
         ))}
       </select>
@@ -139,10 +143,14 @@ export default function TaskForm({
   return (
     <section className="compose-panel">
       <header className="compose-heading">
-        <h2>{task ? "A little adjustment." : "One small step."}</h2>
+        <h2>
+          {task
+            ? translate("A little adjustment.")
+            : translate("One small step.")}
+        </h2>
         <button
           className="icon-button"
-          aria-label="Close task form"
+          aria-label={translate("Close task form")}
           onClick={onClose}
         >
           <X />
@@ -150,7 +158,7 @@ export default function TaskForm({
       </header>
       {error && (
         <div role="alert" className="banner error">
-          {error.message}
+          {translate(error.message)}
         </div>
       )}
       {message && (
@@ -160,18 +168,24 @@ export default function TaskForm({
       )}
       <form onSubmit={save}>
         <div className="form-grid">
-          {field("title", "What would you like to do?", "text", false)}
-          {field("date", "When?", "date")}
+          {field(
+            "title",
+            translate("What would you like to do?"),
+            "text",
+            false,
+          )}
+          {field("date", translate("When?"), "date")}
         </div>
         <details
           className="optional-details"
           open={expanded}
           onToggle={(event) => setExpanded(event.currentTarget.open)}
         >
-          <summary>A little more detail, if you need it</summary>
+          <summary>{translate("A little more detail, if you need it")}</summary>
           <div className="field">
             <label htmlFor="task-description">
-              Notes <small>· optional</small>
+              {" "}
+              {translate("Notes")} <small>{translate("· optional")}</small>
             </label>
             <textarea
               id="task-description"
@@ -180,45 +194,61 @@ export default function TaskForm({
             />
           </div>
           <div className="form-grid">
-            {select("category", "Category", [
-              ["", "Uncategorized"],
-              ["study", "Study"],
-              ["personal", "Personal"],
-              ["work", "Work"],
+            {select("category", translate("Category"), [
+              ["", translate("Uncategorized")],
+              ["study", translate("Study")],
+              ["personal", translate("Personal")],
+              ["work", translate("Work")],
             ])}
-            {select("priority", "Priority", [
-              ["low", "Low"],
-              ["medium", "Medium"],
-              ["high", "High"],
+            {select("priority", translate("Priority"), [
+              ["low", translate("Low")],
+              ["medium", translate("Medium")],
+              ["high", translate("High")],
             ])}
             {field(
               "estimated_duration",
-              "Time you might need (minutes)",
+              translate("Time you might need (minutes)"),
               "number",
             )}
-            {field("start_time", "Start time", "time")}
-            {field("deadline", "Deadline · Riyadh time", "datetime-local")}
-            {select("repeat", "Repeat", [
-              ["", "Does not repeat"],
-              ["daily", "Daily"],
-              ["weekly", "Weekly"],
+            {field("start_time", translate("Start time"), "time")}
+            {field(
+              "deadline",
+              translate("Deadline · Riyadh time"),
+              "datetime-local",
+            )}
+            {select("repeat", translate("Repeat"), [
+              ["", translate("Does not repeat")],
+              ["daily", translate("Daily")],
+              ["weekly", translate("Weekly")],
             ])}
           </div>
           <p className="field-help">
-            Completing a repeating task creates its next date. Missed dates are
-            skipped; undo keeps the next occurrence.
+            {" "}
+            {translate(
+              "Completing a repeating task creates its next date. Missed dates are skipped; undo keeps the next occurrence.",
+            )}{" "}
           </p>
           <div style={{ marginTop: 18 }}>
-            {field("reminder_at", "Remind me · Riyadh time", "datetime-local")}
+            {field(
+              "reminder_at",
+              translate("Remind me · Riyadh time"),
+              "datetime-local",
+            )}
           </div>
           <p className="field-help">
-            Reminders appear when you open Mawj after the chosen time. No email
-            or push notifications.
+            {" "}
+            {translate(
+              "Reminders appear when you open Mawj after the chosen time. No email or push notifications.",
+            )}{" "}
           </p>
         </details>
         <div className="form-actions">
           <button className="button" disabled={busy}>
-            {busy ? "A moment…" : task ? "Save changes" : "Add task"}
+            {busy
+              ? translate("A moment…")
+              : task
+                ? translate("Save changes")
+                : translate("Add task")}
           </button>
           <button
             type="button"
@@ -226,16 +256,19 @@ export default function TaskForm({
             disabled={busy}
             onClick={suggest}
           >
-            <Sparkle size={17} /> Suggest priority & time
+            <Sparkle size={17} /> {translate("Suggest priority & time")}{" "}
           </button>
           <button type="button" className="text-link" onClick={onClose}>
-            Cancel
+            {" "}
+            {translate("Cancel")}{" "}
           </button>
         </div>
         <p className="field-help" style={{ marginTop: 13 }}>
           {sendsToCloud
-            ? `AI sends the title and notes to ${provider}.`
-            : `${provider === "demo" ? "Demo suggestions are simulated." : "AI is off."} Nothing is saved until you choose Add task.`}
+            ? language === "ar"
+              ? `يُرسل العنوان والملاحظات إلى ${provider}.`
+              : `AI sends the title and notes to ${provider}.`
+            : `${provider === "demo" ? translate("Demo suggestions are simulated.") : translate("AI is off.")} Nothing is saved until you choose Add task.`}
         </p>
       </form>
     </section>

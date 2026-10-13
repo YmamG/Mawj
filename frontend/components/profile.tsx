@@ -1,4 +1,5 @@
 "use client";
+import { useLanguage } from "@/components/language";
 import { useState } from "react";
 import { Camera, ArrowUpRight } from "@phosphor-icons/react";
 import { api, ApiError, User, Theme } from "@/lib/api";
@@ -12,18 +13,20 @@ export function Avatar({
   large?: boolean;
   version?: number;
 }) {
+  const { t: translate, language } = useLanguage();
+
   return user.has_avatar ? (
     <img
       className={`avatar ${large ? "large" : ""}`}
       src={`/api/profile/avatar/?v=${version}`}
-      alt="Your profile photo"
+      alt={translate("Your profile photo")}
       width={large ? 90 : 38}
       height={large ? 90 : 38}
     />
   ) : (
     <span
       className={`avatar ${large ? "large" : ""}`}
-      aria-label="Default profile avatar"
+      aria-label={translate("Default profile avatar")}
     >
       {(user.display_name || user.username).slice(0, 1).toUpperCase()}
     </span>
@@ -38,6 +41,8 @@ export default function Profile({
   onSaved: (user: User) => void;
   onTheme: (theme: Theme) => void;
 }) {
+  const { t: translate, language } = useLanguage();
+
   const [error, setError] = useState<ApiError | null>(null);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
@@ -53,7 +58,9 @@ export default function Profile({
       const result = await api<User>("/profile/", new FormData(form));
       onSaved(result);
       setVersion(Date.now());
-      setNotice("Your space feels a little more like you. Changes saved.");
+      setNotice(
+        translate("Your space feels a little more like you. Changes saved."),
+      );
       form.reset();
     } catch (error) {
       setError(error as ApiError);
@@ -64,7 +71,7 @@ export default function Profile({
   const field = (name: keyof User, label: string, type = "text") => (
     <div className="field">
       <label htmlFor={"profile-" + name}>
-        {label} <small>· optional</small>
+        {translate(label)} <small>{translate("· optional")}</small>
       </label>
       <input
         id={"profile-" + name}
@@ -86,29 +93,29 @@ export default function Profile({
         <p>@{user.username}</p>
         <dl>
           <div>
-            <dt>Tasks completed</dt>
+            <dt>{translate("Tasks completed")}</dt>
             <dd>{user.stats.completed}</dd>
           </div>
           <div>
-            <dt>Pages written</dt>
+            <dt>{translate("Pages written")}</dt>
             <dd>{user.stats.journals}</dd>
           </div>
           <div>
-            <dt>Tasks planned</dt>
+            <dt>{translate("Tasks planned")}</dt>
             <dd>{user.stats.tasks}</dd>
           </div>
         </dl>
       </aside>
       <section className="surface profile-form">
-        <h3>A few things about you.</h3>
+        <h3>{translate("A few things about you.")}</h3>
         {error && (
           <div role="alert" className="banner error">
-            {error.message}
+            {translate(error.message)}
           </div>
         )}
         {notice && (
           <div role="status" className="banner">
-            {notice}
+            {translate(notice)}
           </div>
         )}
         <form onSubmit={submit} key={version}>
@@ -116,7 +123,7 @@ export default function Profile({
             <Avatar user={user} large version={version} />
             <div className="photo-controls">
               <label htmlFor="avatar">
-                <Camera size={14} /> Your profile photo
+                <Camera size={14} /> {translate("Your profile photo")}{" "}
               </label>
               <input
                 id="avatar"
@@ -124,34 +131,41 @@ export default function Profile({
                 name="avatar"
                 accept="image/png,image/jpeg"
               />
-              <small>PNG or JPG · up to 2 MB · max 4096 × 4096</small>
+              <small>
+                {translate("PNG or JPG · up to 2 MB · max 4096 × 4096")}
+              </small>
               {error?.fields.avatar && (
                 <p className="field-error">{error.fields.avatar.join(" ")}</p>
               )}
               {user.has_avatar && (
                 <label className="field-help">
-                  <input type="checkbox" name="remove_avatar" /> Remove photo
-                  and use default
+                  <input type="checkbox" name="remove_avatar" />{" "}
+                  {translate("Remove photo and use default")}{" "}
                 </label>
               )}
             </div>
           </div>
           <div className="form-grid">
-            {field("display_name", "What should we call you?")}
-            {field("email", "Email", "email")}
-            {field("first_name", "First name")}
-            {field("last_name", "Last name")}
+            {field("display_name", translate("What should we call you?"))}
+            {field("email", translate("Email"), "email")}
+            {field("first_name", translate("First name"))}
+            {field("last_name", translate("Last name"))}
           </div>
           <p className="field-help">
-            Your username stays the same: {user.username}
+            {" "}
+            {translate("Your username stays the same:")} {user.username}
           </p>
-          <h3 style={{ marginTop: 30, marginBottom: 5 }}>Set the mood.</h3>
+          <h3 style={{ marginTop: 30, marginBottom: 5 }}>
+            {translate("Set the mood.")}
+          </h3>
           <p className="field-help">
-            You’re using {theme}. Choose a palette that feels right.
+            {" "}
+            {translate("You’re using")} {translate(theme)}{" "}
+            {translate(". Choose a palette that feels right.")}{" "}
           </p>
           <ThemePicker onChange={onTheme} />
           <button className="button" disabled={busy}>
-            {busy ? "Saving…" : "Save my changes"}
+            {busy ? translate("Saving…") : translate("Save my changes")}
             <ArrowUpRight size={16} />
           </button>
         </form>

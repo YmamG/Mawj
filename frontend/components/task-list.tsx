@@ -1,4 +1,5 @@
 "use client";
+import { useLanguage } from "@/components/language";
 import {
   Check,
   PencilSimple,
@@ -9,7 +10,7 @@ import {
   CalendarBlank,
 } from "@phosphor-icons/react";
 import type { Task } from "@/lib/api";
-import { formatDate } from "@/lib/api";
+import { formatDate as formatDateBase } from "@/lib/api";
 export default function TaskList({
   tasks,
   busy,
@@ -23,13 +24,19 @@ export default function TaskList({
   onEdit: (task: Task) => void;
   onDelete: (task: Task) => void;
 }) {
+  const { t: translate, language } = useLanguage();
+  const formatDate = (
+    value: string | null,
+    options?: Intl.DateTimeFormatOptions,
+  ) => formatDateBase(value, options, language);
+
   return (
     <div className="task-list">
       {tasks.map((task) => (
         <article key={task.id} className="task-row">
           <button
             className="task-check"
-            aria-label={`${task.status === "done" ? "Reopen" : "Complete"} ${task.title}`}
+            aria-label={`${task.status === "done" ? translate("Reopen") : translate("Complete")} ${task.title}`}
             aria-pressed={task.status === "done"}
             disabled={busy}
             onClick={() => onToggle(task)}
@@ -43,7 +50,9 @@ export default function TaskList({
               {task.title}
             </span>
             <div className="task-metadata">
-              {task.category && <span className="tag">{task.category}</span>}
+              {task.category && (
+                <span className="tag">{translate(task.category)}</span>
+              )}
               <span>
                 <CalendarBlank size={11} />
                 {formatDate(task.date)}
@@ -52,22 +61,21 @@ export default function TaskList({
               {task.estimated_duration && (
                 <span>
                   <Clock size={11} />
-                  {task.estimated_duration} min
+                  {task.estimated_duration} {translate("min")}{" "}
                 </span>
               )}
               {task.priority === "high" && (
-                <span className="tag high">High priority</span>
+                <span className="tag high">{translate("High priority")}</span>
               )}
               {task.repeat && (
                 <span>
                   <Repeat size={11} />
-                  {task.repeat}
+                  {translate(task.repeat)}
                 </span>
               )}
               {task.reminder_at && !task.reminder_dismissed && (
                 <span title={`Reminder ${formatDate(task.reminder_at)}`}>
-                  <Bell size={11} />
-                  Reminder
+                  <Bell size={11} /> {translate("Reminder")}{" "}
                 </span>
               )}
             </div>
@@ -75,14 +83,14 @@ export default function TaskList({
           <div className="task-actions">
             <button
               className="icon-button"
-              aria-label={`Edit ${task.title}`}
+              aria-label={`${language === "ar" ? "تعديل" : "Edit"} ${task.title}`}
               onClick={() => onEdit(task)}
             >
               <PencilSimple />
             </button>
             <button
               className="icon-button danger"
-              aria-label={`Delete ${task.title}`}
+              aria-label={`${language === "ar" ? "حذف" : "Delete"} ${task.title}`}
               onClick={() => onDelete(task)}
             >
               <Trash />

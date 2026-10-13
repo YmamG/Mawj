@@ -1,4 +1,5 @@
 "use client";
+import { useLanguage } from "@/components/language";
 import { useState } from "react";
 import {
   ArrowLeft,
@@ -10,7 +11,14 @@ import {
   X,
   ArrowUpRight,
 } from "@phosphor-icons/react";
-import { api, ApiError, Entry, Page, formatDate } from "@/lib/api";
+import Dialog from "./dialog";
+import {
+  api,
+  ApiError,
+  Entry,
+  Page,
+  formatDate as formatDateBase,
+} from "@/lib/api";
 export default function Journal({
   entries,
   provider,
@@ -24,6 +32,12 @@ export default function Journal({
   refresh: () => Promise<void>;
   onNotice: (text: string) => void;
 }) {
+  const { t: translate, language } = useLanguage();
+  const formatDate = (
+    value: string | null,
+    options?: Intl.DateTimeFormatOptions,
+  ) => formatDateBase(value, options, language);
+
   const [entry, setEntry] = useState<Entry | null>(null);
   const [compose, setCompose] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -57,7 +71,9 @@ export default function Journal({
       setCompose(false);
       setEditing(false);
       await refresh();
-      onNotice(saved.warning || "Your thoughts have a home. Entry saved.");
+      onNotice(
+        saved.warning || translate("Your thoughts have a home. Entry saved."),
+      );
     } catch (error) {
       setError(error as ApiError);
     } finally {
@@ -73,8 +89,10 @@ export default function Journal({
       await refresh();
       onNotice(
         action === "accept"
-          ? "Added to your tasks. One small step, ready when you are."
-          : "Suggestion dismissed.",
+          ? translate(
+              "Added to your tasks. One small step, ready when you are.",
+            )
+          : translate("Suggestion dismissed."),
       );
     } catch (error) {
       setError(error as ApiError);
@@ -95,8 +113,12 @@ export default function Journal({
       onNotice(
         updated.warning ||
           (updated.pending_count
-            ? "Next steps ready. Review them before adding to your tasks."
-            : "No explicit next steps found. Try describing what you need or want to do."),
+            ? translate(
+                "Next steps ready. Review them before adding to your tasks.",
+              )
+            : translate(
+                "No explicit next steps found. Try describing what you need or want to do.",
+              )),
       );
     } catch (error) {
       setError(error as ApiError);
@@ -112,7 +134,7 @@ export default function Journal({
       setEntry(null);
       setDeleting(false);
       await refresh();
-      onNotice("Entry deleted. Accepted tasks remain in your list.");
+      onNotice(translate("Entry deleted. Accepted tasks remain in your list."));
     } catch (error) {
       setError(error as ApiError);
     } finally {
@@ -123,20 +145,26 @@ export default function Journal({
     <>
       <aside
         className="banner journal-mode"
-        aria-label="Journal suggestion mode"
+        aria-label={translate("Journal suggestion mode")}
       >
         <Sparkle size={17} />
         <span>
           {sendsToCloud
-            ? `Journal AI: ${provider}. Your text is sent to this provider when analyzed.`
+            ? language === "ar"
+              ? `ذكاء اليوميات: ${provider}. يُرسل النص للمزوّد عند التحليل.`
+              : `Journal AI: ${provider}. Your text is sent to this provider when analyzed.`
             : provider === "demo"
-              ? "Journal suggestions: Demo (local simulation). Write “أبغى…” / “I need to…” or a bullet list to find next steps."
-              : "Journal AI is off (manual mode). Your text is saved without suggestions."}
+              ? translate(
+                  "Demo mode (local simulation): use bullets or phrases like “I need to…” or “أبغى…” to find task suggestions.",
+                )
+              : translate(
+                  "Journal AI is off (manual mode). Your text is saved without suggestions.",
+                )}
         </span>
       </aside>
       {error && (
         <div role="alert" className="banner error">
-          {error.message}
+          {translate(error.message)}
         </div>
       )}
       {!compose && !entry && (
@@ -148,17 +176,22 @@ export default function Journal({
               setText("");
             }}
           >
-            <Notebook size={17} /> A new page <ArrowUpRight size={16} />
+            <Notebook size={17} /> {translate("A new page")}{" "}
+            <ArrowUpRight size={16} />
           </button>
         </div>
       )}
       {compose ? (
         <section className="compose-panel">
           <header className="compose-heading">
-            <h2>{editing ? "Rewrite a little." : "What’s on your mind?"}</h2>
+            <h2>
+              {editing
+                ? translate("Rewrite a little.")
+                : translate("What’s on your mind?")}
+            </h2>
             <button
               className="icon-button"
-              aria-label="Close journal form"
+              aria-label={translate("Close journal form")}
               onClick={() => {
                 setCompose(false);
                 setEditing(false);
@@ -169,30 +202,41 @@ export default function Journal({
           </header>
           <p className="field-help" style={{ marginBottom: 18 }}>
             {editing
-              ? "Your revised text is saved as written. Old pending suggestions are dismissed; accepted tasks remain."
+              ? translate(
+                  "Your revised text is saved as written. Old pending suggestions are dismissed; accepted tasks remain.",
+                )
               : sendsToCloud
-                ? `Your text is sent to ${provider} for organization and task suggestions.`
+                ? language === "ar"
+                  ? `يُرسل نصك إلى ${provider} لترتيبه واقتراح المهام.`
+                  : `Your text is sent to ${provider} for organization and task suggestions.`
                 : provider === "demo"
-                  ? "Demo mode (local simulation): use bullets or phrases like “I need to…” or “أبغى…” to find task suggestions."
-                  : "Manual mode: your text stays as written, without AI suggestions."}
+                  ? translate(
+                      "Demo mode (local simulation): use bullets or phrases like “I need to…” or “أبغى…” to find task suggestions.",
+                    )
+                  : translate(
+                      "Manual mode: your text stays as written, without AI suggestions.",
+                    )}
           </p>
           <form onSubmit={save}>
             <div className="field">
-              <label htmlFor="journal-text">Your thoughts</label>
+              <label htmlFor="journal-text">{translate("Your thoughts")}</label>
               <textarea
                 id="journal-text"
+                dir="auto"
                 value={text}
                 onChange={(event) => setText(event.target.value)}
                 rows={9}
                 required
-                placeholder="A little about today…"
+                placeholder={translate("A little about today…")}
               />
               {error?.fields.raw_text && (
                 <p className="field-error">{error.fields.raw_text.join(" ")}</p>
               )}
             </div>
             <button className="button" disabled={busy}>
-              {busy ? "Finding a little clarity…" : "Save this page"}
+              {busy
+                ? translate("Finding a little clarity…")
+                : translate("Save this page")}
             </button>
           </form>
         </section>
@@ -205,7 +249,7 @@ export default function Journal({
               setDeleting(false);
             }}
           >
-            <ArrowLeft size={15} /> Back to your pages
+            <ArrowLeft size={15} /> {translate("Back to your pages")}{" "}
           </button>
           <article className="entry-detail">
             <header>
@@ -220,7 +264,7 @@ export default function Journal({
               <div className="task-actions">
                 <button
                   className="icon-button"
-                  aria-label="Edit journal entry"
+                  aria-label={translate("Edit journal entry")}
                   onClick={() => {
                     setText(entry.raw_text);
                     setEditing(true);
@@ -231,7 +275,7 @@ export default function Journal({
                 </button>
                 <button
                   className="icon-button danger"
-                  aria-label="Delete journal entry"
+                  aria-label={translate("Delete journal entry")}
                   onClick={() => setDeleting(true)}
                 >
                   <Trash />
@@ -239,34 +283,48 @@ export default function Journal({
               </div>
             </header>
             {deleting && (
-              <div className="confirm-box">
-                <p>
-                  Delete this entry and its suggestions? Accepted tasks stay in
-                  your list. This cannot be undone.
-                </p>
-                <div className="form-actions">
-                  <button
-                    className="button danger"
-                    disabled={busy}
-                    onClick={remove}
-                  >
-                    Delete entry
-                  </button>
-                  <button
-                    className="button secondary"
-                    onClick={() => setDeleting(false)}
-                  >
-                    Keep it
-                  </button>
+              <Dialog
+                title={translate("Delete journal entry")}
+                onClose={() => setDeleting(false)}
+              >
+                <div className="confirm-box">
+                  <p>
+                    {" "}
+                    {translate(
+                      "Delete this entry and its suggestions? Accepted tasks stay in your list. This cannot be undone.",
+                    )}{" "}
+                  </p>
+                  <div className="form-actions">
+                    <button
+                      className="button danger"
+                      disabled={busy}
+                      onClick={remove}
+                    >
+                      {" "}
+                      {translate("Delete entry")}{" "}
+                    </button>
+                    <button
+                      className="button secondary"
+                      data-cancel
+                      onClick={() => setDeleting(false)}
+                    >
+                      {" "}
+                      {translate("Keep it")}{" "}
+                    </button>
+                  </div>
                 </div>
-              </div>
+              </Dialog>
             )}
             <p className="field-help">
               {sendsToCloud
-                ? `AI provider: ${provider}. Analyzing sends this entry to the provider.`
+                ? language === "ar"
+                  ? `المزوّد: ${provider}. يُرسل نص هذه التدوينة إليه عند التحليل.`
+                  : `AI provider: ${provider}. Analyzing sends this entry to the provider.`
                 : provider === "demo"
-                  ? "Demo mode: local rule-based suggestions, not a live AI model."
-                  : "Manual mode: AI is off."}
+                  ? translate(
+                      "Demo mode: local rule-based suggestions, not a live AI model.",
+                    )
+                  : translate("Manual mode: AI is off.")}
             </p>
             <button
               className="button secondary"
@@ -274,11 +332,16 @@ export default function Journal({
               onClick={analyze}
             >
               <Sparkle size={16} />{" "}
-              {busy ? "Finding next steps…" : "Find next steps"}
+              {busy
+                ? translate("Finding next steps…")
+                : translate("Find next steps")}
             </button>
-            <p className="journal-text">{entry.clean_text}</p>
+            <p className="journal-text" dir="auto">
+              {entry.clean_text}
+            </p>
             <h3 className="section-label">
-              <Sparkle size={17} /> A few possible next steps
+              <Sparkle size={17} />{" "}
+              {translate("A few possible next steps")}{" "}
             </h3>
             {entry.suggestions
               ?.filter((item) => item.status === "pending")
@@ -287,7 +350,7 @@ export default function Journal({
                   <div>
                     <strong>{item.title}</strong>
                     <p>
-                      {item.priority} priority
+                      {item.priority} {translate("priority")}{" "}
                       {item.estimated_duration
                         ? ` · ${item.estimated_duration} min`
                         : ""}
@@ -300,11 +363,11 @@ export default function Journal({
                       disabled={busy}
                       onClick={() => suggestion(item.id, "accept")}
                     >
-                      <Check size={13} /> Add to tasks
+                      <Check size={13} /> {translate("Add to tasks")}{" "}
                     </button>
                     <button
                       className="icon-button"
-                      aria-label={`Dismiss ${item.title}`}
+                      aria-label={`${language === "ar" ? "رفض" : "Dismiss"} ${item.title}`}
                       disabled={busy}
                       onClick={() => suggestion(item.id, "dismiss")}
                     >
@@ -315,8 +378,10 @@ export default function Journal({
               ))}
             {!entry.suggestions?.some((item) => item.status === "pending") && (
               <p className="field-help">
-                No pending suggestions. Sometimes a page is just a page—and
-                that’s enough.
+                {" "}
+                {translate(
+                  "No pending suggestions. Sometimes a page is just a page—and that’s enough.",
+                )}{" "}
               </p>
             )}
           </article>
@@ -339,7 +404,7 @@ export default function Journal({
                 </span>
                 <h3>
                   {item.clean_text.split("\n")[0].slice(0, 65) ||
-                    "A page from your day"}
+                    translate("A page from your day")}
                 </h3>
                 <p>{item.clean_text}</p>
               </button>
@@ -348,7 +413,7 @@ export default function Journal({
                   <Sparkle size={12} />
                   {item.pending_count
                     ? `${item.pending_count} suggestion${item.pending_count === 1 ? "" : "s"} to review`
-                    : "A moment, captured"}
+                    : translate("A moment, captured")}
                 </span>
                 <button
                   className="icon-button"
@@ -364,10 +429,12 @@ export default function Journal({
       ) : (
         <div className="empty-state">
           <Notebook />
-          <h3>Your first page is waiting.</h3>
+          <h3>{translate("Your first page is waiting.")}</h3>
           <p>
-            Write a few words about your day. You don’t need a perfect place to
-            start.
+            {" "}
+            {translate(
+              "Write a few words about your day. You don’t need a perfect place to start.",
+            )}{" "}
           </p>
         </div>
       )}

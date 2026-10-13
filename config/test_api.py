@@ -141,3 +141,34 @@ class ApiTests(TestCase):
         suggestion.refresh_from_db()
         self.assertEqual(suggestion.status, "pending")
         self.assertEqual(Task.objects.filter(user=self.user).count(), 0)
+
+    def test_login_keeps_the_theme_selected_on_the_login_screen(self):
+        UserPreferences.objects.create(user=self.user, theme="grove")
+        self.client.logout()
+        response = self.post("auth/login/", {"username": "api-user", "password": "12345678", "theme": "ember"})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["user"]["theme"], "ember")
+        self.assertEqual(UserPreferences.objects.get(user=self.user).theme, "ember")
+
+    def test_calendar_includes_undated_tasks_and_full_journals_on_their_local_day(self):
+        local_day = timezone.localdate()
+        task = Task.objects.create(user=self.user, title="Unscheduled")
+        long_text = "A long personal note " * 40
+        entry = JournalEntry.objects.create(user=self.user, raw_text=long_text, clean_text=long_text)
+        private = Task.objects.create(user=self.other, title="Private unscheduled")
+        response = self.client.get(f"/api/calendar/?year={local_day.year}&month={local_day.month}").json()
+        tasks = {item["id"]: item for item in response["tasks"]}
+        self.assertIn(task.pk, tasks)
+        self.assertNotIn(private.pk, tasks)
+        self.assertEqual(tasks[task.pk]["calendar_date"], local_day.isoformat())
+        self.assertEqual(response["entries"][0]["clean_text"], long_text)
+        day = next(item for item in response["days"] if item["date"] == local_day.isoformat())
+        self.assertEqual(day["total"], 1)
+        self.assertTrue(day["has_journal"])
+
+    def test_arabic_validation_is_scoped_to_the_request(self):
+        response = self.client.post("/api/tasks/", data="{}", content_type="application/json", HTTP_X_MAWJ_LANGUAGE="ar")
+        self.assertEqual(response.status_code, 400)
+        self.assertNotEqual(response.json()["fields"]["title"][0], "This field is required.")
+        response = self.post("tasks/", {})
+        self.assertEqual(response.json()["fields"]["title"][0], "This field is required.")

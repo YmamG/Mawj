@@ -2513,19 +2513,19 @@ h2 em {
   --palette-3: #640d14;
   --palette-4: #800e13;
   --palette-5: #ad2831;
-  --bg: #250902;
-  --paper: #38040e;
-  --ink: #fff0e9;
-  --muted: #d9b4b0;
+  --bg: #fff7f4;
+  --paper: #fffefd;
+  --ink: #38040e;
+  --muted: #86595c;
   --accent: #ad2831;
-  --accent-ink: #fff4ef;
-  --soft: #4b0a12;
-  --soft-2: #800e13;
-  --line: #763138;
-  --blush: #640d14;
-  --shadow: #16000055;
-  --emphasis: #efaaa4;
-  color-scheme: dark;
+  --accent-ink: #fff9f6;
+  --soft: #f8e8e5;
+  --soft-2: #e7bab8;
+  --line: #ecd0cc;
+  --blush: #f2d0ca;
+  --shadow: #640d1410;
+  --emphasis: #800e13;
+  color-scheme: light;
 }
 .theme-dot.ember span {
   background: linear-gradient(135deg, #ad2831 50%, #250902 50%);
@@ -2602,4 +2602,140 @@ h2 em {
 .journal-mode {
   align-items: flex-start;
   line-height: 1.8;
+}
+
+.mawj-dialog {
+  width: min(560px, calc(100% - 32px));
+  max-height: 85dvh;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 24px;
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: 0 24px 90px #0004;
+}
+.mawj-dialog::backdrop {
+  background: #17122280;
+  backdrop-filter: blur(4px);
+}
+.mawj-dialog .confirm-box {
+  border: none;
+  background: none;
+  margin: 0;
+  padding: 0;
+}
+.mawj-dialog .day-detail {
+  margin: 0;
+  padding: 0;
+}
+.dialog-close {
+  float: inline-end;
+}
+.mawj-dialog h4 {
+  margin-top: 24px;
+  font-weight: 600;
+}
+.mawj-dialog .reminder-row {
+  align-items: flex-start;
+}
+.appearance-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.language-toggle {
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--paper);
+  color: var(--ink);
+  padding: 6px 9px;
+  min-height: 34px;
+  font-size: 11px;
+}
+html[dir="rtl"] body {
+  font-family: "DM Sans", Tahoma, Arial, sans-serif;
+}
+html[dir="rtl"] h1,
+html[dir="rtl"] h2,
+html[dir="rtl"] h3 {
+  letter-spacing: 0;
+  line-height: 1.5;
+}
+html[dir="rtl"] .entry-card button.entry-open,
+html[dir="rtl"] .calendar-day,
+html[dir="rtl"] .chart-table table {
+  text-align: start;
+}
+html[dir="rtl"] .task-metadata {
+  direction: rtl;
+}
+html[dir="rtl"] .brand {
+  direction: ltr;
+}
+html[dir="rtl"] .search-field svg {
+  left: auto;
+  right: 13px;
+}
+html[dir="rtl"] .search-field input:not([type="checkbox"]) {
+  padding-left: 13px;
+  padding-right: 38px;
+}
+html[dir="rtl"] .password-field .icon-button {
+  right: auto;
+  left: 5px;
+}
+html[dir="rtl"] .password-field input {
+  padding-right: 13px !important;
+  padding-left: 45px !important;
+}
+html[dir="rtl"] .journey .step-number {
+  right: auto;
+  left: 0;
+}
+html[dir="rtl"] .profile-card {
+  text-align: start;
+}
+@media (max-width: 520px) {
+  .app-header {
+    height: auto;
+    min-height: 85px;
+    padding-block: 14px;
+    flex-wrap: wrap;
+  }
+  .app-header-actions {
+    flex-wrap: wrap;
+  }
+  .header-actions {
+    flex-wrap: wrap;
+  }
+  .appearance-controls {
+    gap: 6px;
+  }
+  .landing-header {
+    height: auto;
+    min-height: 85px;
+    padding-block: 12px;
+  }
+  .landing-header .header-actions {
+    justify-content: flex-end;
+  }
+  .hero h1 {
+    font-size: 52px;
+  }
+  html[dir="rtl"] .hero h1 {
+    font-size: 46px;
+  }
+}
+
+html[dir="rtl"] body,
+html[dir="rtl"] h1,
+html[dir="rtl"] h2,
+html[dir="rtl"] h3 {
+  font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif;
+}
+html[dir="rtl"] .journey article {
+  padding-inline-start: 50px;
+  padding-inline-end: 0;
 }

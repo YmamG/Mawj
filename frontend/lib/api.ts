@@ -1,3 +1,4 @@
+import { getLanguage, translate } from "./i18n";
 export type Theme = "grove" | "petal" | "dusk" | "ember" | "midnight";
 export type User = {
   id: number;
@@ -18,6 +19,7 @@ export type Session = {
   sends_to_cloud: boolean;
 };
 export type Task = {
+  calendar_date?: string;
   id: number;
   title: string;
   description: string;
@@ -94,8 +96,9 @@ export async function api<T>(path: string, data?: unknown): Promise<T> {
       cache: "no-store",
       headers:
         data === undefined
-          ? {}
+          ? { "X-Mawj-Language": getLanguage() }
           : {
+              "X-Mawj-Language": getLanguage(),
               ...(multipart ? {} : { "Content-Type": "application/json" }),
               "X-CSRFToken": csrf,
             },
@@ -125,8 +128,13 @@ export async function api<T>(path: string, data?: unknown): Promise<T> {
   }
   if (!response.ok)
     throw new ApiError(
-      body.error || "We could not save this. Please try again.",
-      body.fields || {},
+      translate(body.error || "We could not save this. Please try again."),
+      Object.fromEntries(
+        Object.entries(body.fields || {}).map(([key, values]) => [
+          key,
+          (values as string[]).map((value) => translate(value)),
+        ]),
+      ),
       response.status,
     );
   if (body.csrf) csrf = body.csrf;
@@ -135,13 +143,14 @@ export async function api<T>(path: string, data?: unknown): Promise<T> {
 export const formatDate = (
   date: string | null,
   options: Intl.DateTimeFormatOptions = { month: "short", day: "numeric" },
+  locale = getLanguage(),
 ) =>
   date
-    ? new Intl.DateTimeFormat("en", {
+    ? new Intl.DateTimeFormat(locale === "ar" ? "ar-SA-u-ca-gregory" : "en", {
         ...options,
         timeZone: "Asia/Riyadh",
       }).format(new Date(date.length === 10 ? date + "T12:00:00+03:00" : date))
-    : "No date";
+    : translate("No date", locale);
 export const localInput = (value: string | null) => {
   if (!value) return "";
   const parts = new Intl.DateTimeFormat("en-CA", {

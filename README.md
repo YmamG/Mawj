@@ -6,11 +6,11 @@ Mawj helps people who write daily notes turn their intentions into a manageable 
 
 Unlike copying actions manually from notes, Mawj keeps journaling, reviewed task suggestions, and progress in one workflow. The audience and demand are hypotheses, not validated market research. A plausible first adoption model is a free student pilot; optional paid AI usage could follow only after user feedback and cost validation. No paying customers or demonstrated demand are claimed.
 
-Features: Django accounts and private records; task CRUD with title-only quick entry, optional scheduling and details, search/status/priority filters and pagination; journal create/read/edit/delete with search and annotated pending-suggestion counts; explicit suggestion acceptance/dismissal; calendar; weekly/monthly/yearly achievements with a chart and data table; Today/overdue/completed sections; daily/weekly repeating tasks; Study/Personal/Work categories; optional in-app reminders; profile photos and themes.
+Features: Django accounts and private records; task CRUD with title-only quick entry, optional scheduling and details, search/status/priority filters and pagination; journal create/read/edit/delete with search and annotated pending-suggestion counts; explicit suggestion acceptance/dismissal; calendar; weekly/monthly/yearly achievements with a chart and data table; Today/overdue/completed sections; daily/weekly repeating tasks; Study/Personal/Work categories; optional in-app reminders; profile photos, five themes and an English/Arabic interface.
 
 ## New Next.js interface
 
-A redesigned landing page and full Next.js workspace now sit in front of the Django app. Choose Grove, Petal, Dusk, Ember or Midnight; all tasks, journals, profiles, photos, reminders and reports use the same Django data. See [Next.js setup](docs/nextjs.md) for one-time setup and the single `node scripts/dev.mjs` startup command. Use port **3000** for the new interface; port 8000 retains the original Django screens.
+A redesigned landing page and full Next.js workspace now sit in front of the Django app. Choose Grove, Petal, Dusk, Ember or Midnight, or switch the whole interface to Arabic; all tasks, journals, profiles, photos, reminders and reports use the same Django data. See [Next.js setup](docs/nextjs.md) for one-time setup and the single `node scripts/dev.mjs` startup command. Use port **3000** for the new interface; port 8000 retains the original Django screens.
 
 ## Original Django-only setup
 
@@ -35,6 +35,8 @@ The demo creates 12 tasks dated today (6 completed), one previous-year task, two
 ## Configuration and AI
 
 The default `AI_PROVIDER=demo` is a **simulation**, not a live AI model: journal bullet lines and explicit English/Arabic intent phrases (such as `I need to…` or `أبغى…`) become rule-based suggestions. Journal mode is visible and Find next steps can re-analyze an entry without recreating accepted or dismissed actions. `manual` saves journal text without AI. The core app works without external credentials. Optional providers: `gemini` uses `GEMINI_API_KEY`, `openai` uses `OPENAI_API_KEY`, and `claude` uses `ANTHROPIC_API_KEY`. Optional model variables are `GEMINI_MODEL`, `OPENAI_MODEL`, and `CLAUDE_MODEL`. Configure secrets outside Git; never commit credentials. Check provider model availability before using live integrations. Title/description or journal text is sent to the selected external provider; the interface displays a notice. Live provider availability is not validated by mocked tests.
+
+To retain local AI settings after restarting the server, copy `.env.example` to `.env` in the project root and edit the provider and its key locally. Django reads this ignored file on startup; existing process environment variables take precedence. Never put a real key in `.env.example` or Git. Restart the launcher after changing configuration.
 
 `DJANGO_SECRET_KEY` overrides the development key. The default configuration uses DEBUG and is for local development; public deployment requires separate secure configuration (hosts, HTTPS, secret key, DEBUG off). Deployment is not part of this submission setup.
 

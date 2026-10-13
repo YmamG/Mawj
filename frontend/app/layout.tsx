@@ -1,10 +1,14 @@
+import { cookies } from "next/headers";
 import type { Metadata } from "next";
 import "@fontsource/dm-sans/400.css";
+import "@fontsource/noto-sans-arabic/400.css";
+import "@fontsource/noto-sans-arabic/600.css";
 import "@fontsource/dm-sans/500.css";
 import "@fontsource/dm-sans/600.css";
 import "@fontsource/dm-sans/700.css";
 import "@fontsource-variable/fraunces";
 import "./globals.css";
+import { LanguageProvider, SkipLink } from "@/components/language";
 import { ThemeProvider } from "@/components/theme";
 export const metadata: Metadata = {
   metadataBase: new URL(
@@ -22,14 +26,27 @@ export const metadata: Metadata = {
     images: ["/og.svg"],
   },
 };
-export default function Layout({ children }: { children: React.ReactNode }) {
+export default async function Layout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const language =
+    (await cookies()).get("mawj-language")?.value === "ar" ? "ar" : "en";
   return (
-    <html lang="en" data-theme="grove" suppressHydrationWarning>
+    <html
+      lang={language}
+      dir={language === "ar" ? "rtl" : "ltr"}
+      data-theme="grove"
+      suppressHydrationWarning
+    >
       <body>
-        <a href="#main" className="skip-link">
-          Skip to content
-        </a>
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          <LanguageProvider initialLanguage={language}>
+            <SkipLink />
+            {children}
+          </LanguageProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
