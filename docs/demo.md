@@ -9,7 +9,7 @@
 7. Open Achievements and change week/month/year. Explain scheduled-work completion and the 50% initial dataset (the earlier demo actions may change it).
 8. Edit a journal with pending suggestions; explain their dismissal. Delete a journal and show that accepted tasks remain.
 9. Explain USER→TASK and JOURNAL_ENTRY→TASK_SUGGESTION relationships, and trace a request through URLs, view, ORM and template.
-10. Describe limitations and next improvements: validate demand with students, improve AI value based on feedback, and optionally add charts. No commercial traction or live AI verification is claimed.
+10. Describe limitations and next improvements: validate demand with students, improve AI value based on feedback, and optionally add external reminders. No commercial traction or live AI verification is claimed.
 
 Before submission: run checks, confirm instructor repository access, choose the exact submitted revision, and rehearse the same workflow. The instructor determines presentation length. Be ready to explain every assisted code change yourself.
 
@@ -23,4 +23,4 @@ Before submission: run checks, confirm instructor repository access, choose the 
 
 ## Presenting the Next.js redesign
 
-Use the new interface on port 3000 after following `docs/nextjs.md`. Start with the public landing page and try Grove/Petal/Dusk. Sign in, show the Today workspace, then follow the same core demonstrations above through My tasks, Journal, Progress, Calendar and My space. Show that theme choice persists after reload and that all changes are real Django records, not landing mock data. The landing preview is explicitly illustrative. Existing Django HTML screens remain available separately.
+Use the new interface on port 3000 after following `docs/nextjs.md`. Start with the public landing page and try the five themes and Arabic/English switching. Sign in, show the Today workspace, then follow the same core demonstrations above through My tasks, Journal, Progress, Calendar and My space. Show that theme choice persists after reload and that all changes are real Django records, not landing mock data. The landing preview is explicitly illustrative. Existing Django HTML screens remain available separately.
