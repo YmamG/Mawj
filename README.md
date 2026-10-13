@@ -25,6 +25,28 @@ The helper prints the phone URL and allows its host. Permit Python on Windows pr
 
 Linux/macOS: create `.venv` with `python3 -m venv .venv`; use `.venv/bin/python` for the corresponding commands.
 
+## Connect a ZIP installation to Git once
+
+Stop the server first. Open PowerShell in the folder containing `manage.py` and `requirements.txt`. Git for Windows must be installed. The helper makes a sibling local backup (including DB, media and `.env`, excluding virtual environments/caches), then connects the folder to `django-templates` and installs the latest tracked code while preserving local data.
+
+```powershell
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/YmamG/Mawj/django-templates/scripts/connect_git.py" -OutFile "$env:TEMP\mawj-connect-git.py"
+.\.venv\Scripts\python.exe "$env:TEMP\mawj-connect-git.py"
+```
+
+If the folder already uses Git on the expected branch and origin, the helper reports that it is connected. An existing different branch/origin is left for review; do not force-reset local work.
+
+On future updates, stop the server and run:
+
+```powershell
+git pull --ff-only origin django-templates
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe manage.py migrate
+.\.venv\Scripts\python.exe manage.py runserver
+```
+
+If Git reports local edits/conflicts, inspect `git status` before proceeding. Keep the printed backup until you verify the updated site. The helper copies only remote tracked source; it does not upload local data.
+
 ## AI and fictional data
 
 `AI_PROVIDER=demo` is a clearly labeled local **simulation**. Journal bullet lines and certain intent phrases become suggestions; task priority/duration suggestions are fixed at medium/30 minutes. `manual` saves without AI. Optional `gemini`, `openai` or `claude` requires that provider's local credentials. Copy `.env.example` to `.env` and configure the provider privately; restart the server. Environment variables take precedence. No real key enters browser code, the example or Git. Live AI has not been verified with credentials.
