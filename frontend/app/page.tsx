@@ -264,9 +264,11 @@ export default function Home() {
               {translate("More personal. Less complicated.")}
             </p>
             <h2>
-              {" "}
-              {translate("A space that")} <br /> {translate("feels like")}{" "}
-              <em>{translate("you.")}</em>
+              {language === "ar" ? (
+                <>مساحة<br />تعبّر <em>عنك.</em></>
+              ) : (
+                <>A space that<br />feels like <em>you.</em></>
+              )}
             </h2>
             <p>
               {" "}
@@ -311,9 +313,11 @@ export default function Home() {
             {translate("One small step is a good start")}
           </p>
           <h2>
-            {" "}
-            {translate("Let’s make a little")} <br /> {translate("room for")}{" "}
-            <em>{translate("you.")}</em>
+            {language === "ar" ? (
+              <>امنح نفسك<br />مساحة <em>للراحة.</em></>
+            ) : (
+              <>Let’s make a little<br />room for <em>you.</em></>
+            )}
           </h2>
           <p>
             {" "}

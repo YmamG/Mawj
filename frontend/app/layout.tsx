@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import type { Metadata } from "next";
+import localFont from "next/font/local";
 import "@fontsource/dm-sans/400.css";
 import "@fontsource/noto-sans-arabic/400.css";
 import "@fontsource/noto-sans-arabic/600.css";
@@ -10,6 +11,15 @@ import "@fontsource-variable/fraunces";
 import "./globals.css";
 import { LanguageProvider, SkipLink } from "@/components/language";
 import { ThemeProvider } from "@/components/theme";
+const saudi = localFont({
+  src: [
+    { path: "./fonts/SaudiWeb-Regular.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/SaudiWeb-Bold.woff2", weight: "700", style: "normal" },
+  ],
+  variable: "--font-saudi",
+  display: "swap",
+  adjustFontFallback: false,
+});
 export const metadata: Metadata = {
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
@@ -38,6 +48,7 @@ export default async function Layout({
       lang={language}
       dir={language === "ar" ? "rtl" : "ltr"}
       data-theme="grove"
+      className={saudi.variable}
       suppressHydrationWarning
     >
       <body>

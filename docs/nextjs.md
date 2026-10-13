@@ -55,6 +55,8 @@ The supplied palettes become **Grove** (`dad7cd/a3b18a/588157/3a5a40/344e41`), *
 
 Ember uses light cream surfaces with crimson accents. The theme submitted on login is saved to the account, so the login choice survives entry into the workspace.
 
+Arabic headings use the owner-supplied Saudi Web font, loaded locally through `next/font/local` in regular and bold weights. Arabic interface copy uses Modern Standard Arabic; task and journal content stays as the user wrote it.
+
 DM Sans, Noto Sans Arabic and Fraunces are served from npm-installed local font files. Phosphor supplies consistent icons. No external font calls, image services or tracking scripts are required.
 
 ## Configuration

@@ -151,7 +151,7 @@ export default function Journal({
         <span>
           {sendsToCloud
             ? language === "ar"
-              ? `ذكاء اليوميات: ${provider}. يُرسل النص للمزوّد عند التحليل.`
+              ? `ذكاء اليوميات: ${provider}. يُرسل النص إلى المزوّد عند التحليل.`
               : `Journal AI: ${provider}. Your text is sent to this provider when analyzed.`
             : provider === "demo"
               ? translate(

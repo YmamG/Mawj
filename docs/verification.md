@@ -105,3 +105,10 @@ Limitations remain: no production deployment or live AI provider test; reminders
 - An intermediate SSR locale mismatch was fixed by reading a non-secret language cookie in the root layout and passing the initial locale into the client context. Translation rendering uses context-local locale rather than mutable server state.
 - The uploaded old ZIP was reviewed without executing its contents. Its cloud-provider prompts and HTTP request functions match the current provider; the current local demo additionally supports intent phrases. `.env` loading now preserves provider settings between launches. No live provider was exercised because no live credential was configured; simulated and mocked provider checks do not establish cloud reliability.
 - The three fictional `review_checks_` accounts created during browser review were removed afterward. These checks do not access the user's Windows database. No schema migration is required by this update.
+
+## Saudi headings and formal Arabic copy (2026-10-13)
+
+- Added the owner's supplied Saudi Web regular/bold WOFF2 assets through `next/font/local`. Browser font loading and computed heading styles confirmed Saudi was used; body copy retained Noto Sans Arabic.
+- Reviewed Arabic interface wording and replaced colloquial phrases with Modern Standard Arabic, including empty states, marketing examples, account prompts, notices and privacy text. Reworked two segmented landing headings to produce grammatical Arabic. User-authored records were not modified.
+- Next.js production build and TypeScript checks passed. Chromium checked landing, login, signup, about and privacy at 1280px and 390px: fonts loaded locally, no document overflow, and no browser runtime errors. Mobile landing screenshot was visually reviewed.
+- An initial browser run timed out against the development process after a production build; restarting the existing launcher resolved it. No backend behavior changed in this update, so the Django suite was not rerun.

@@ -2729,11 +2729,19 @@ html[dir="rtl"] .profile-card {
   }
 }
 
-html[dir="rtl"] body,
+html[dir="rtl"] body {
+  font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif;
+}
 html[dir="rtl"] h1,
 html[dir="rtl"] h2,
 html[dir="rtl"] h3 {
-  font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif;
+  font-family: var(--font-saudi), "Noto Sans Arabic", Tahoma, Arial, sans-serif;
+  font-weight: 400;
+  font-variation-settings: normal;
+}
+html[dir="rtl"] h1 em,
+html[dir="rtl"] h2 em {
+  font-style: normal;
 }
 html[dir="rtl"] .journey article {
   padding-inline-start: 50px;
