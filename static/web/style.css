@@ -2836,3 +2836,11 @@ html[dir="rtl"] .journey article {
     flex-wrap: wrap;
   }
 }
+
+/* The supplied Saudi Bold gives the Arabic wordmark its own consistent lettering. */
+html[lang="ar"] .brand > span {
+  font-family: var(--font-saudi), "Noto Sans Arabic", sans-serif;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1.25;
+}
