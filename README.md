@@ -1,12 +1,54 @@
-# Mawj — Django template edition
+# mawj
 
-Mawj helps students turn daily notes into reviewed tasks and track planned-work completion. The student audience and market demand remain hypotheses; a free student pilot is the proposed initial adoption model.
+**mawj (موج)** is a personal planning web application for students balancing study and daily responsibilities. It brings journals, reviewed task suggestions and progress reports into one workflow.
 
-This is the **`django-templates` branch**, a separate edition of the same project. `main` retains Next.js. This edition uses Django templates, CSS and plain JavaScript, with **one server and no Node.js/npm/React runtime**. The design, five palettes, Arabic/English, Saudi headings, account/profile/photo features, task and journal workflows, calendar, recurrence/reminders, reports and AI provider integration are retained.
+## Problem, audience and value
+
+Students can record intentions in daily notes without turning them into practical steps. mawj helps them review those intentions, choose tasks and see how much planned work remains. Its value over a plain note or separate checklist is the connected journey: **write → review suggestions → accept → complete → reflect**.
+
+The initial adoption model is a free student pilot. Audience demand and benefits are hypotheses, not validated market research; no commercial launch or paying customers are claimed. The core workflow can be demonstrated without an external AI service.
+
+## Features
+
+- Django accounts, saved sessions and owner-only access to tasks, journals and profile photos.
+- Task creation, editing, completion/reopening and confirmed deletion; search, status/category/priority filters and pagination.
+- Title-only quick entry with optional scheduling, duration, priority, category, daily/weekly recurrence and in-app reminders.
+- Journal creation, search, editing and deletion; suggestion analysis, explicit acceptance and dismissal.
+- Calendar days showing tasks and complete journal text, including undated tasks on their creation day.
+- Weekly, monthly and yearly reports with completion percentage, charts and a data table.
+- Editable profile, private PNG/JPEG avatar upload/removal, five themes and English/Arabic switching.
+- Locally served fonts, including Saudi for Arabic headings and the Arabic wordmark; responsive layouts and modal confirmations.
+
+## Technology and architecture
+
+This version uses **Python, Django, SQLite, Django templates, CSS and plain JavaScript**, with one development server. Node.js and npm are not required.
+
+Django renders the initial HTML and enforces authentication, ownership, validation and data persistence. JavaScript adds interactive forms, appearance controls and dialogs, and calls Django's session-authenticated API for changes. There is no frontend proxy or separate frontend server.
+
+| Path | Purpose |
+|---|---|
+| `manage.py`, `config/` | Django commands, settings, routes and API |
+| `accounts/` | Authentication, profile, preferences and private photos |
+| `tasks/` | Task models, forms, recurrence and reminders |
+| `journal/` | Journal entries and reviewed task suggestions |
+| `dashboard/reports.py` | Calendar-period summaries and chart calculations |
+| `ai/provider.py` | Local simulation/manual mode and optional external providers |
+| `web/`, `templates/web/` | Server-rendered presentation, translations and shared template layout |
+| `static/web/` | CSS, JavaScript, fonts and icons |
+| `*/migrations/` | Reproducible database schema changes |
+| `docs/` | Design, verification history, demonstration and implementation explanation |
+
+See [architecture details](docs/django-edition.md) and the [ERD](docs/design.md).
+
+## Requirements
+
+- Python **3.12 or later**; validated with Python 3.12.14 and Django 6.1.2.
+- Packages declared in `requirements.txt`: Django, Requests, Pillow and python-dotenv.
+- Git if you want to clone and pull updates. SQLite is included with Python.
+
+Clone this repository using its GitHub **Code** URL, or extract its ZIP. Open the actual project folder containing both `manage.py` and `requirements.txt` before running commands.
 
 ## Windows setup
-
-Use Python 3.12+ (validated with 3.12.14 and Django 6.1.2). In this edition's project folder:
 
 ```powershell
 py -m venv .venv
@@ -15,59 +57,88 @@ py -m venv .venv
 .\.venv\Scripts\python.exe manage.py runserver
 ```
 
-Open `http://127.0.0.1:8000`. Later, only the last command is needed. Stop with Ctrl+C. Start from the root `manage.py`. For phone access on the same Wi-Fi use:
+Open **http://127.0.0.1:8000**. Keep the terminal open; Ctrl+C stops the server. On later starts only the last command is needed.
 
-```powershell
-.\.venv\Scripts\python.exe scripts/dev.py --lan
+## Linux/macOS setup
+
+```bash
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
+.venv/bin/python manage.py migrate
+.venv/bin/python manage.py runserver
 ```
 
-The helper prints the phone URL and allows its host. Permit Python on Windows private networks if prompted. Existing accounts are kept in local `db.sqlite3`: retain the same project folder/data when updating. For a separate download, keep a backup, stop servers and copy your original database and `media/` locally if you want the same records. Never commit real data.
+## Updating an existing Git installation
 
-Linux/macOS: create `.venv` with `python3 -m venv .venv`; use `.venv/bin/python` for the corresponding commands.
-
-## Connect a ZIP installation to Git once
-
-Stop the server first. Open PowerShell in the folder containing `manage.py` and `requirements.txt`. Git for Windows must be installed. The helper makes a sibling local backup (including DB, media and `.env`, excluding virtual environments/caches), then connects the folder to `django-templates` and installs the latest tracked code while preserving local data.
+Stop the server first, then run in the same project folder:
 
 ```powershell
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/YmamG/Mawj/django-templates/scripts/connect_git.py" -OutFile "$env:TEMP\mawj-connect-git.py"
-.\.venv\Scripts\python.exe "$env:TEMP\mawj-connect-git.py"
-```
-
-If the folder already uses Git on the expected branch and origin, the helper reports that it is connected. An existing different branch/origin is left for review; do not force-reset local work.
-
-On future updates, stop the server and run:
-
-```powershell
-git pull --ff-only origin django-templates
+git pull --ff-only
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 .\.venv\Scripts\python.exe manage.py migrate
 .\.venv\Scripts\python.exe manage.py runserver
 ```
 
-If Git reports local edits/conflicts, inspect `git status` before proceeding. Keep the printed backup until you verify the updated site. The helper copies only remote tracked source; it does not upload local data.
+`git pull` follows your configured upstream branch; it does not require a particular repository name. If local edits prevent an update, inspect `git status` before proceeding.
 
-## AI and fictional data
+Accounts and records are stored in local `db.sqlite3`; uploaded photos are in `media/`. Keep these files and `.env` when updating and back them up. A fresh ZIP/clone creates a separate database unless you transfer your existing local data after stopping the server. These personal files and virtual environments are excluded by `.gitignore`.
 
-`AI_PROVIDER=demo` is a clearly labeled local **simulation**. Journal bullet lines and certain intent phrases become suggestions; task priority/duration suggestions are fixed at medium/30 minutes. `manual` saves without AI. Optional `gemini`, `openai` or `claude` requires that provider's local credentials. Copy `.env.example` to `.env` and configure the provider privately; restart the server. Environment variables take precedence. No real key enters browser code, the example or Git. Live AI has not been verified with credentials.
+## Phone access on the same Wi-Fi
 
-A suggested task becomes a real task only after the user accepts it. Cloud failure during journal creation preserves the original note with a warning. Reports calculate completed / total tasks scheduled within the calendar period (undated tasks use local creation date), not completion-event history. Weeks start Sunday in Riyadh time. Recurrence advances on completion and reminders are shown during site visits.
+```powershell
+.\.venv\Scripts\python.exe scripts/dev.py --lan
+```
 
-`python manage.py seed_demo` is different from AI Demo: it creates fictional sample records once, with a privately prompted password. The initial report is 6/12 = 50%; a historical task sits outside the current period. Existing accounts/data are not overwritten.
+Open the printed **Phone on the same Wi-Fi** URL on the phone. Both devices must share a reachable local network. If Windows prompts, permit Python on the private network. Use the printed computer IP, not `127.0.0.1` or `0.0.0.0`, on the phone. Sign in with your existing account.
 
-## Architecture and submission
+## AI modes and configuration
 
-See [the Django edition guide](docs/django-edition.md) for routes, file roles and design decisions. `web/views.py` renders inherited HTML templates from existing owner-filtered Django query/report logic. `static/web/app.js` handles ordinary DOM interactions and authenticated API mutations, which still use Django forms and CSRF. Original Django pages remain as legacy examples.
+No custom model was trained for this project. External AI is an optional integration.
 
-[Design and ERD](docs/design.md), [verification history](docs/verification.md) and [submission review](docs/submission-ar.md) cover the earlier shared project; Next.js sections in historical records describe `main`. This branch's current setup and architecture are in this README and `docs/django-edition.md`. Manual acceptance and instructor access must still be completed before submission; deploying publicly is separate.
+| `AI_PROVIDER` | Behavior |
+|---|---|
+| `manual` | Save the journal as written, without suggestions |
+| `demo` (default) | Clearly labeled local rules extract bullet lines or certain intent phrases; task details return medium priority and **30 minutes fixed** |
+| `gemini` | Send journal/task text to Gemini using `GEMINI_API_KEY` |
+| `openai` | Send journal/task text to OpenAI using `OPENAI_API_KEY` |
+| `claude` | Send journal/task text to Claude using `ANTHROPIC_API_KEY` |
+
+Demo is a simulation, not a live AI model. To configure an external provider, create a local `.env` from `.env.example` if it does not already exist, set the selected provider and its key privately, and restart the server. Process environment variables take precedence. Optional model settings are `GEMINI_MODEL`, `OPENAI_MODEL` and `CLAUDE_MODEL`; use a model available to your provider account. Do not commit credentials or put real keys in the example file.
+
+Suggestions remain separate from tasks until a user accepts them. AI output is parsed and validated; past suggested schedules are removed. If external AI fails during journal creation, the original note is saved with a warning. The interface identifies the provider before cloud processing. Live external calls have not been verified; simulated and mocked checks do not prove provider reliability.
+
+## Fictional demonstration data
+
+```powershell
+.\.venv\Scripts\python.exe manage.py seed_demo
+```
+
+This prompts privately for a password and creates the fictional `mawj_demo` account, 13 tasks, two journals and three suggestions. Initially 12 tasks are in the current period and six are complete: **50%**. One historical task is outside that period. Repeating the command preserves an existing account and its data.
+
+`seed_demo` creates sample records; it is different from `AI_PROVIDER=demo`. No sample password is stored in source. Use fictional records for presentations.
+
+## Business rules and current limitations
+
+- Required fields and business values are validated on the server. Task duration is 1–1440 minutes; new/changed schedules cannot be in the past. Existing unchanged overdue schedules remain editable.
+- Completion percentage is completed / total tasks scheduled within the selected calendar period, rounded to an integer. Undated tasks use their creation date in Riyadh time. Weeks start Sunday; whole months/years include future scheduled tasks. This is not completion-event history.
+- Recurrence advances when a task is completed; reminders appear on site visits, without email or push delivery.
+- Editing a journal saves revised text as written and dismisses old pending suggestions. Reanalysis is explicit. Deleting a journal removes its suggestions, while already accepted tasks remain.
+- Original Django HTML routes remain as legacy examples; the current interface starts at `/` and `/app/`. Known legacy-route limitations are recorded in the verification/design documentation.
+- This is a local development configuration. Public deployment requires separate DEBUG/secret/HTTPS/host/cookie/file-backup configuration. No deployment link is provided.
+
+## Verification and submission
 
 ```powershell
 .\.venv\Scripts\python.exe manage.py test --noinput
 .\.venv\Scripts\python.exe manage.py makemigrations --check --dry-run
 ```
 
-The source includes migrations and requirements. For production, DEBUG, private secret, HTTPS/secure cookies, allowed hosts and file backups need separate configuration.
+The [verification record](docs/verification.md) distinguishes full-suite runs, targeted checks, browser checks and untested behavior. A full 95-test run passed after the template conversion; later navigation fixes passed six targeted template checks. Browser review covered desktop/mobile widths and core workflows, including calendar, themes, suggestions, recurrence, reminders and avatar upload/removal. These records do not replace the required manual acceptance test on the student's devices.
+
+Use [the demonstration guide](docs/demo.md) and [submission review](docs/submission-ar.md) to prepare the individual discussion. Confirm instructor repository access, approved scope and the exact submitted revision. Explain relationships, validation, aggregation and per-entry annotation, and distinguish market assumptions from evidence. Historical Next.js sections describe an earlier implementation; this version's setup is the one above.
 
 ## Sources and assistance
 
-Django, Requests, Pillow and python-dotenv support the backend. Phosphor SVG icons and DM Sans, Fraunces, Noto Sans Arabic fonts are served locally with upstream license files; the owner supplied Saudi Web. Significant OpenAI Codex assistance was used for implementation, conversion, tests and documentation. Public HTML was exported once from the previous design during development; no React library is loaded at runtime. Review and understand this work for the individual capstone discussion.
+Django, Requests, Pillow and python-dotenv support the backend. Phosphor SVG icons and DM Sans, Fraunces and Noto Sans Arabic fonts are served locally with upstream license files. The project owner supplied Saudi Web.
+
+Significant OpenAI Codex assistance was used for implementation, conversion, tests and documentation. Public HTML was exported once from the earlier design during development and is now maintained as Django templates; React is not loaded at runtime. Review and understand these contributions before the capstone technical discussion.

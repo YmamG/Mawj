@@ -1,6 +1,6 @@
 # Django template edition
 
-This branch is a separate edition of Mawj. `main` retains the Next.js edition. The unused `myproject/` scaffold and old project-generation PowerShell script were removed from this branch to avoid starting a different project. This edition requires Python and the root requirements only; no Node.js, npm, React or Next server is needed at runtime.
+This is the Django-template implementation of mawj, developed from an earlier Next.js design. The unused `myproject/` scaffold and old project-generation PowerShell script were removed from this implementation to avoid starting a different project. This edition requires Python and the root requirements only; no Node.js, npm, React or Next server is needed at runtime.
 
 ## Architecture
 
