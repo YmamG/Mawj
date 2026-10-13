@@ -5,9 +5,11 @@ import json
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.http import Http404
+from django.http import HttpResponsePermanentRedirect
 from django.middleware.csrf import get_token
 from django.shortcuts import redirect, render
 from django.utils import timezone
+from django.urls import resolve, Resolver404
 from django.views.decorators.cache import never_cache
 
 from config import api
@@ -87,4 +89,13 @@ def workspace(request, section="today"):
 
 @never_cache
 def missing(request, unmatched=None):
+    # The branded catch-all prevents CommonMiddleware's normal APPEND_SLASH redirect.
+    # Preserve valid slashless bookmarks without redirecting unknown paths or POST data.
+    if request.method in ("GET", "HEAD") and not request.path_info.endswith("/"):
+        try:
+            match = resolve(request.path_info + "/")
+        except Resolver404:
+            match = None
+        if match and match.func is not missing:
+            return HttpResponsePermanentRedirect(request.get_full_path(force_append_slash=True))
     return render(request, "web/missing.html", context(request), status=404)

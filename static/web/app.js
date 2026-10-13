@@ -481,7 +481,10 @@
           ...Object.fromEntries(new FormData(form)),
           theme: document.documentElement.dataset.theme,
         });
-        location.href = "/app/today/";
+        let destination;
+        try { destination = new URL(new URLSearchParams(location.search).get("next") || "/app/today/", location.origin); }
+        catch { destination = new URL("/app/today/", location.origin); }
+        location.href = destination.origin === location.origin && destination.pathname.startsWith("/app/") ? destination.href : "/app/today/";
       } else if (form.id === "task-form") {
         await api(
           taskId ? `/tasks/${taskId}/` : "/tasks/",

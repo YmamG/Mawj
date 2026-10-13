@@ -40,3 +40,30 @@ class TemplateEditionTests(TestCase):
         self.assertContains(response,'Full note '*80)
         self.assertNotContains(response,'</script><script>alert(1)</script>')
         self.assertNotContains(response,'private-other-journal')
+
+    def test_public_navigation_links_work_in_both_languages(self):
+        from html.parser import HTMLParser
+        from urllib.parse import urlsplit
+        class Links(HTMLParser):
+            def __init__(self):
+                super().__init__()
+                self.paths = set()
+            def handle_starttag(self, tag, attrs):
+                href = dict(attrs).get('href', '')
+                if tag == 'a' and href.startswith('/'):
+                    self.paths.add(urlsplit(href).path)
+        for language in ('en', 'ar'):
+            self.client.cookies['mawj-language'] = language
+            parser = Links()
+            parser.feed(self.client.get('/').content.decode())
+            self.assertGreaterEqual(len(parser.paths), 4)
+            for path in parser.paths:
+                with self.subTest(language=language, path=path):
+                    self.assertEqual(self.client.get(path, follow=True).status_code, 200)
+
+    def test_slashless_bookmark_redirect_preserves_query_and_unknown_path_stays_404(self):
+        response = self.client.get('/login?next=%2Fapp%2Ftasks%2F')
+        self.assertEqual(response.status_code, 301)
+        self.assertEqual(response['Location'], '/login/?next=%2Fapp%2Ftasks%2F')
+        self.assertEqual(self.client.get('/does-not-exist').status_code, 404)
+        self.assertEqual(self.client.post('/api/tasks', data={}).status_code, 404)
