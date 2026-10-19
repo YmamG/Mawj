@@ -124,7 +124,7 @@ This prompts privately for a password and creates the fictional `mawj_demo` acco
 - Recurrence advances when a task is completed; reminders appear on site visits, without email or push delivery.
 - Editing a journal saves revised text as written and dismisses old pending suggestions. Reanalysis is explicit. Deleting a journal removes its suggestions, while already accepted tasks remain.
 - Original Django HTML routes remain as legacy examples; the current interface starts at `/` and `/app/`. Known legacy-route limitations are recorded in the verification/design documentation.
-- This is a local development configuration. Public deployment requires separate DEBUG/secret/HTTPS/host/cookie/file-backup configuration. No deployment link is provided.
+- Local development uses `config.settings`. Optional production configuration uses `config.settings_production` and `config.wsgi_production`. Follow the [PythonAnywhere deployment guide](docs/pythonanywhere.md) to create private host settings, collect static assets and verify HTTPS. No public deployment has been performed.
 
 ## Verification and submission
 

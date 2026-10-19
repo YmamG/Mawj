@@ -12,3 +12,7 @@ frontend/*.tsbuildinfo
 frontend/.env.local
 
 .venv
+
+# Production collection output and private deployment overrides
+staticfiles/
+.env.production
