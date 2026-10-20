@@ -99,6 +99,11 @@
       throw error;
     }
     if (body.csrf) csrf = body.csrf;
+    if (path.startsWith("/auth/") && typeof BroadcastChannel === "function") {
+      const channel = new BroadcastChannel("mawj-vault-lock");
+      channel.postMessage("lock");
+      channel.close();
+    }
     return body;
   }
   function feedback(message, form, error = false) {
@@ -303,7 +308,7 @@
     );
     $("#day-title").textContent = date(day);
     $("#day-content").innerHTML =
-      `<h4>${esc(t("Tasks"))}</h4>${tasks.map((x) => `<div class="reminder-row"><span dir="auto">${esc(x.title)} · ${esc(t(x.status === "done" ? "Completed" : "To do"))}</span><button class="text-link" data-edit-task="${x.id}">${esc(t("Edit task"))}</button></div>`).join("")}<h4>${esc(t("Journal entries"))}</h4>${entries.map((x) => `<article><span>${esc(date(x.created_at))}</span><p class="journal-text" dir="auto">${esc(x.clean_text || x.raw_text)}</p></article>`).join("")}${!tasks.length && !entries.length ? `<p>${esc(t("A little open space. Nothing scheduled here yet."))}</p>` : ""}`;
+      `<h4>${esc(t("Tasks"))}</h4>${tasks.map((x) => `<div class="reminder-row"><span dir="auto">${esc(x.title)} · ${esc(t(x.status === "done" ? "Completed" : "To do"))}</span><button class="text-link" data-edit-task="${x.id}">${esc(t("Edit task"))}</button></div>`).join("")}<h4>${esc(t("Journal entries"))}</h4>${entries.map((x) => `<article><span>${esc(date(x.created_at))}</span><p class="journal-text" dir="auto">${x.encrypted ? `<a href="/app/encrypted-journal/?entry=${encodeURIComponent(x.id)}">${esc(lang === "ar" ? "فتح التدوينة المشفّرة" : "Unlock encrypted entry")}</a>` : esc(x.clean_text || x.raw_text)}</p></article>`).join("")}${!tasks.length && !entries.length ? `<p>${esc(t("A little open space. Nothing scheduled here yet."))}</p>` : ""}`;
     openDialog($("#day-dialog"));
   }
   document.addEventListener("click", async (event) => {

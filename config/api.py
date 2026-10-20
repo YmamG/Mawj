@@ -86,8 +86,12 @@ def entry_data(entry, detail=False):
 def account_data(user):
     preferences, _ = UserPreferences.objects.get_or_create(user=user)
     theme = {"tide": "grove", "forest": "grove", "orchid": "petal", "sunrise": "dusk"}.get(preferences.theme, preferences.theme)
+    journal_count = user.journal_entries.count()
+    if settings.E2EE_JOURNAL_PREVIEW:
+        from journal.models import EncryptedJournalEntry
+        journal_count += EncryptedJournalEntry.objects.filter(vault__user=user).count()
     return {"id": user.pk, "username": user.username, "first_name": user.first_name, "last_name": user.last_name, "email": user.email, "display_name": preferences.display_name, "theme": theme, "has_avatar": bool(preferences.avatar), "date_joined": user.date_joined,
-        "stats": {"tasks": user.tasks.count(), "completed": user.tasks.filter(status="done").count(), "journals": user.journal_entries.count()}}
+        "stats": {"tasks": user.tasks.count(), "completed": user.tasks.filter(status="done").count(), "journals": journal_count}}
 
 
 def paginated(queryset, request, serialize):
@@ -241,6 +245,8 @@ def today(request):
 @endpoint(("GET", "POST"))
 def journals(request):
     if request.method == "POST":
+        if settings.E2EE_JOURNAL_PREVIEW:
+            return JsonResponse({"error": "Use the encrypted journal preview. Plaintext saving is disabled."}, status=409)
         form = JournalEntryForm(payload(request))
         if not form.is_valid():
             return invalid(form)
@@ -271,6 +277,8 @@ def journals(request):
 def journal(request, pk):
     entry = get_object_or_404(JournalEntry, pk=pk, user=request.user)
     if request.method == "POST":
+        if settings.E2EE_JOURNAL_PREVIEW:
+            return JsonResponse({"error": "Use the encrypted journal preview to migrate this entry."}, status=409)
         data = payload(request)
         if data.get("action") == "delete":
             entry.delete()
@@ -334,6 +342,11 @@ def month(request):
         return JsonResponse({"error": "Choose a valid month."}, status=400)
     entries = JournalEntry.objects.filter(user=request.user, created_at__year=year, created_at__month=month)
     entry_dates = set(entries.values_list("created_at__date", flat=True))
+    encrypted_entries = []
+    if settings.E2EE_JOURNAL_PREVIEW:
+        from journal.models import EncryptedJournalEntry
+        encrypted_entries = list(EncryptedJournalEntry.objects.filter(vault__user=request.user, created_at__year=year, created_at__month=month))
+        entry_dates.update(timezone.localtime(item.created_at).date() for item in encrypted_entries)
     from django.db.models.functions import Coalesce, TruncDate
     start = date(year, month, 1)
     end = (start + timedelta(days=32)).replace(day=1)
@@ -344,4 +357,4 @@ def month(request):
         current = date(year, month, day)
         counts = summaries.get(current, {})
         days.append({"date": current, "day": day, "total": counts.get("total", 0), "completed": counts.get("completed", 0), "has_journal": current in entry_dates})
-    return JsonResponse({"year": year, "month": month, "days": days, "tasks": [{**task_data(task), "calendar_date": task.date or timezone.localtime(task.created_at).date()} for task in queryset], "entries": [entry_data(entry) for entry in entries]})
+    return JsonResponse({"year": year, "month": month, "days": days, "tasks": [{**task_data(task), "calendar_date": task.date or timezone.localtime(task.created_at).date()} for task in queryset], "entries": [entry_data(entry) for entry in entries] + [{"id": str(entry.pk), "created_at": entry.created_at, "encrypted": True, "raw_text": "", "clean_text": ""} for entry in encrypted_entries]})

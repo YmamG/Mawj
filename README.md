@@ -23,6 +23,8 @@ The initial adoption model is a free student pilot. Audience demand and benefits
 
 ## Technology and architecture
 
+This experimental branch includes an **opt-in encrypted journal preview**. It is disabled by default and must be tested with fictional data in a separate checkout/database. See [the design, limitations and trial instructions](docs/e2ee-preview.md). No production rollout or independent security review is claimed.
+
 This version uses **Python, Django, SQLite, Django templates, CSS and plain JavaScript**, with one development server. Node.js and npm are not required.
 
 Django renders the initial HTML and enforces authentication, ownership, validation and data persistence. JavaScript adds interactive forms, appearance controls and dialogs, and calls Django's session-authenticated API for changes. There is no frontend proxy or separate frontend server.

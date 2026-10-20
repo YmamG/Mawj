@@ -1,0 +1,51 @@
+{% extends "web/base.html" %}{% load static %}
+{% block content %}
+<main id="main" class="vault-page">
+  <a class="button secondary" href="/app/today/">{% if lang == 'ar' %}العودة إلى موج{% else %}Back to Mawj{% endif %}</a>
+  <h1>{% if lang == 'ar' %}يومياتك المشفّرة{% else %}Your encrypted journal{% endif %}</h1>
+  <p class="banner">{% if lang == 'ar' %}نسخة تجريبية لم تخضع بعد لمراجعة أمنية مستقلة. اختبريها ببيانات وهمية فقط. التشفير يخص اليوميات، ولا يشمل المهام وأسماء الحسابات وتواريخ التسجيل والكتابة. لا تحمي هذه النسخة من تعديل مشغّل الخادم لكود الموقع.{% else %}Experimental preview, not independently security reviewed. Use fictional data only. Encryption covers journal content, not tasks, account names or registration/entry dates. This web version does not protect against an operator modifying the site's code.{% endif %}</p>
+  <p id="vault-status" role="status" aria-live="polite">{% if lang == 'ar' %}جارٍ التحقق من مخزن اليوميات…{% else %}Checking journal storage…{% endif %}</p>
+  <noscript>{% if lang == 'ar' %}تحتاج اليوميات المشفّرة إلى JavaScript واتصال HTTPS. لن يُرسل النص دون تشفير.{% else %}Encrypted journals require JavaScript and HTTPS. Text will not be submitted without encryption.{% endif %}</noscript>
+  <section id="vault-setup" class="surface" hidden>
+    <h2>{% if lang == 'ar' %}إنشاء قفل اليوميات{% else %}Create a journal lock{% endif %}</h2>
+    <p>{% if lang == 'ar' %}اختاري عبارة قفل مختلفة عن كلمة مرور الدخول، من 12 حرفًا على الأقل؛ يُفضّل عدة كلمات عشوائية. دون العبارة أو مفتاح الاسترداد لن نستطيع استرجاع المحتوى.{% else %}Choose a separate vault passphrase of at least 12 characters; several random words are preferable. Without it or your recovery key, we cannot recover the content.{% endif %}</p>
+    <div class="field"><label for="vault-new-pass">{% if lang == 'ar' %}عبارة قفل اليوميات{% else %}Vault passphrase{% endif %}</label><input id="vault-new-pass" type="password" autocomplete="new-password" minlength="12"></div>
+    <div class="field"><label for="vault-new-confirm">{% if lang == 'ar' %}تأكيد العبارة{% else %}Confirm passphrase{% endif %}</label><input id="vault-new-confirm" type="password" autocomplete="new-password"></div>
+    <button type="button" class="button" data-vault="prepare">{% if lang == 'ar' %}إنشاء مفتاح الاسترداد على جهازي{% else %}Generate recovery key on my device{% endif %}</button>
+  </section>
+  <section id="vault-recovery-display" class="surface" hidden>
+    <h2>{% if lang == 'ar' %}احفظي مفتاح الاسترداد{% else %}Save your recovery key{% endif %}</h2>
+    <p>{% if lang == 'ar' %}يظهر الآن فقط. احفظيه في مدير كلمات مرور أو مكان آمن خارج هذا الموقع. من يملك المفتاح مع نسخة من مخزن بياناتك يستطيع فك يومياتك. لن نرسله إلى الخادم.{% else %}Shown only now. Store it in a password manager or a safe place outside this site. Anyone with this key and a copy of your vault can decrypt it. It will not be sent to the server.{% endif %}</p>
+    <label for="vault-recovery-code">{% if lang == 'ar' %}مفتاح الاسترداد{% else %}Recovery key{% endif %}</label><textarea id="vault-recovery-code" readonly dir="ltr" rows="3" autocomplete="off"></textarea>
+    <button type="button" class="button secondary" data-vault="download">{% if lang == 'ar' %}تنزيل نسخة خاصة من المفتاح{% else %}Download private key copy{% endif %}</button>
+    <label class="checkbox-label"><input id="vault-ack" type="checkbox">{% if lang == 'ar' %}حفظت المفتاح وأفهم أن فقدان وسائل الفتح قد يفقدني يومياتي.{% else %}I saved the key and understand losing all unlock methods may lose my journals.{% endif %}</label>
+    <button type="button" class="button" data-vault="finish">{% if lang == 'ar' %}تفعيل مخزن اليوميات{% else %}Activate journal vault{% endif %}</button>
+  </section>
+  <section id="vault-unlock" class="surface" hidden>
+    <h2>{% if lang == 'ar' %}فتح اليوميات على هذا الجهاز{% else %}Unlock on this device{% endif %}</h2>
+    <p>{% if lang == 'ar' %}تُفك اليوميات في هذا المتصفح. لا تُرسل عبارة القفل إلى الخادم، ولن تُحفظ المفاتيح في تخزين المتصفح. ستحتاجين إلى الفتح مجددًا بعد مغادرة الصفحة.{% else %}Journals decrypt in this browser. Your passphrase is not sent to the server and keys are not saved in browser storage. Unlock again after leaving this page.{% endif %}</p>
+    <div class="field"><label for="vault-pass">{% if lang == 'ar' %}عبارة قفل اليوميات{% else %}Vault passphrase{% endif %}</label><input id="vault-pass" type="password" autocomplete="off"></div>
+    <button type="button" class="button" data-vault="unlock">{% if lang == 'ar' %}فتح اليوميات{% else %}Unlock journals{% endif %}</button>
+    <details><summary>{% if lang == 'ar' %}نسيت عبارة القفل{% else %}Forgot the passphrase{% endif %}</summary>
+      <p>{% if lang == 'ar' %}استخدمي مفتاح الاسترداد لتعيين عبارة قفل جديدة. تغيير كلمة مرور الدخول وحده لا يسترجع اليوميات.{% else %}Use your recovery key to set a new vault passphrase. Resetting the sign-in password alone cannot recover journals.{% endif %}</p>
+      <div class="field"><label for="vault-recover-key">{% if lang == 'ar' %}مفتاح الاسترداد{% else %}Recovery key{% endif %}</label><input id="vault-recover-key" type="password" autocomplete="off"></div>
+      <div class="field"><label for="vault-recover-pass">{% if lang == 'ar' %}عبارة قفل جديدة{% else %}New vault passphrase{% endif %}</label><input id="vault-recover-pass" type="password" autocomplete="new-password" minlength="12"></div>
+      <div class="field"><label for="vault-recover-confirm">{% if lang == 'ar' %}تأكيد العبارة الجديدة{% else %}Confirm new passphrase{% endif %}</label><input id="vault-recover-confirm" type="password" autocomplete="new-password"></div>
+      <button type="button" class="button secondary" data-vault="recover">{% if lang == 'ar' %}استرداد وفتح اليوميات{% else %}Recover and unlock{% endif %}</button>
+    </details>
+  </section>
+  <section id="vault-open" hidden>
+    <div class="form-actions"><button type="button" class="button" data-vault="new">{% if lang == 'ar' %}تدوينة جديدة{% else %}New entry{% endif %}</button><button type="button" class="button secondary" data-vault="lock">{% if lang == 'ar' %}قفل اليوميات{% else %}Lock journals{% endif %}</button></div>
+    <p>{% if lang == 'ar' %}القفل تلقائي عند إخفاء الصفحة أو بعد 15 دقيقة دون تفاعل. احفظي التعديلات قبل المغادرة؛ المسودات لا تُحفظ تلقائيًا.{% else %}Locks when the page is hidden or after 15 idle minutes. Save before leaving; drafts are not automatically stored.{% endif %}</p>
+    <section id="vault-legacy" class="banner" hidden><p id="vault-legacy-count"></p><p>{% if lang == 'ar' %}النقل يشفّر التدوينات القديمة واقتراحاتها على جهازك، ويتحقق من فكّها محليًا، ثم يستبدل نسخها غير المشفّرة الحالية. تبقى المهام المقبولة خارج التشفير، وقد تبقى آثار قديمة في ملفات قاعدة البيانات والنسخ الاحتياطية. لا يمكن التراجع إلى النص غير المشفّر تلقائيًا.{% else %}Migration encrypts old entries and suggestions on your device, verifies local decryption, then replaces their current plaintext copies. Accepted tasks remain unencrypted and database remnants and old backups may still contain plaintext. There is no automatic rollback to plaintext.{% endif %}</p><button type="button" class="button secondary" data-vault="migrate">{% if lang == 'ar' %}مراجعة الموافقة ونقل التدوينات القديمة{% else %}Review consent and migrate old entries{% endif %}</button></section>
+    <div class="vault-layout"><section class="surface"><label for="vault-search">{% if lang == 'ar' %}البحث في التدوينات المحمّلة على جهازي{% else %}Search entries loaded on my device{% endif %}</label><input id="vault-search" type="search" autocomplete="off"><div id="vault-list"></div><button type="button" class="button secondary" id="vault-more" data-vault="more" hidden>{% if lang == 'ar' %}تحميل المزيد{% else %}Load more{% endif %}</button></section>
+    <section id="vault-editor" class="surface" hidden><h2 id="vault-entry-date"></h2><div class="field"><label for="vault-text">{% if lang == 'ar' %}نص التدوينة{% else %}Journal text{% endif %}</label><textarea id="vault-text" rows="12" maxlength="32000" dir="auto" autocomplete="off" spellcheck="false"></textarea></div>
+      <div class="form-actions"><button type="button" class="button" data-vault="save">{% if lang == 'ar' %}تشفير وحفظ{% else %}Encrypt and save{% endif %}</button><button type="button" class="button secondary" data-vault="delete">{% if lang == 'ar' %}حذف التدوينة{% else %}Delete entry{% endif %}</button></div>
+      <p>{% if lang == 'ar' %}التحليل اختياري. الوضع التجريبي يعمل داخل متصفحك. مع مزوّد خارجي، تُطلب موافقتك لإرسال نص هذه التدوينة مقروءًا عبر الخادم إلى المزوّد. اقتراحات المهام تُحفظ مشفّرة حتى تختاري تحويلها إلى مهام عادية.{% else %}Analysis is optional. Demo runs in your browser. For an external provider, consent is requested to send this entry's readable text through the server to that provider. Suggestions are stored encrypted until you choose to create ordinary tasks.{% endif %}</p>
+      <button type="button" class="button secondary" data-vault="analyze">{% if lang == 'ar' %}مراجعة خيارات التحليل{% else %}Review analysis options{% endif %} ({{ provider }})</button>
+      <pre id="vault-clean" class="journal-text" dir="auto"></pre><div id="vault-suggestions"></div>
+    </section></div>
+  </section>
+</main>
+<script type="module" src="{% static 'web/vault-ui.mjs' %}"></script>
+{% endblock %}

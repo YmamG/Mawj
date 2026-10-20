@@ -146,3 +146,6 @@ MEDIA_URL = "/media/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 
 FRONTEND_URL = ""
+
+# Opt-in only on the separate experimental branch; never enables itself on deploy.
+E2EE_JOURNAL_PREVIEW = os.environ.get("MAWJ_E2EE_JOURNAL_PREVIEW") == "1"

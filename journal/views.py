@@ -17,6 +17,8 @@ from .models import JournalEntry, TaskSuggestion
 
 @login_required
 def journal_list(request):
+    if settings.E2EE_JOURNAL_PREVIEW:
+        return redirect("/app/encrypted-journal/")
     entries = JournalEntry.objects.filter(user=request.user).annotate(
         pending_count=Count("suggestions", filter=Q(suggestions__status="pending")),
     ).order_by("-created_at", "-pk")
@@ -34,6 +36,8 @@ def journal_list(request):
 
 @login_required
 def journal_create(request):
+    if settings.E2EE_JOURNAL_PREVIEW:
+        return redirect("/app/encrypted-journal/")
     if request.method == "POST":
         form = JournalEntryForm(request.POST)
         if form.is_valid():
@@ -70,6 +74,8 @@ def journal_create(request):
 
 @login_required
 def journal_detail(request, pk):
+    if settings.E2EE_JOURNAL_PREVIEW:
+        return redirect("/app/encrypted-journal/")
     entry = get_object_or_404(JournalEntry, pk=pk, user=request.user)
     pending = entry.suggestions.filter(status="pending")
     return render(request, "journal/journal_detail.html", {"entry": entry, "pending": pending})
@@ -123,6 +129,8 @@ def suggestion_dismiss(request, pk):
 
 @login_required
 def journal_update(request, pk):
+    if settings.E2EE_JOURNAL_PREVIEW:
+        return redirect("/app/encrypted-journal/")
     entry = get_object_or_404(JournalEntry, pk=pk, user=request.user)
     form = JournalEntryForm(request.POST if request.method == "POST" else None, instance=entry)
     if request.method == "POST" and form.is_valid():

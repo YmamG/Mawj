@@ -41,11 +41,12 @@ def context(request):
     theme = account["theme"] if account else request.COOKIES.get("mawj-theme", "grove")
     return {
         "lang": lang, "theme": theme if theme in dict(THEMES) else "grove",
-        "account": account, "themes": THEMES, "navigation": NAV,
+        "account": account, "themes": THEMES, "navigation": [("encrypted-journal" if name == "journal" and settings.E2EE_JOURNAL_PREVIEW else name, label, icon) for name, label, icon in NAV],
         "today": timezone.localdate().isoformat(), "provider": settings.AI_PROVIDER,
         "sends_to_cloud": settings.AI_PROVIDER in api.CLOUD_PROVIDERS,
+        "e2ee_preview": settings.E2EE_JOURNAL_PREVIEW,
         "boot": {"language": lang, "user": account, "csrf": get_token(request),
-                 "provider": settings.AI_PROVIDER, "translations": MESSAGES},
+                 "provider": settings.AI_PROVIDER, "sends_to_cloud": settings.AI_PROVIDER in api.CLOUD_PROVIDERS, "translations": MESSAGES},
     }
 
 
@@ -78,6 +79,8 @@ def account_directory(request):
 @login_required(login_url="/login/")
 @never_cache
 def workspace(request, section="today"):
+    if section == "journal" and settings.E2EE_JOURNAL_PREVIEW:
+        return redirect("/app/encrypted-journal/")
     handlers = {
         "today": api.today, "tasks": api.tasks, "journal": api.journals,
         "achievements": api.achievements, "calendar": api.month, "profile": api.profile,
@@ -105,6 +108,14 @@ def workspace(request, section="today"):
             weekdays=["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
         )
     return render(request, "web/workspace.html", ctx, status=response.status_code)
+
+
+@never_cache
+@login_required(login_url="/login/")
+def encrypted_journal(request):
+    if not settings.E2EE_JOURNAL_PREVIEW:
+        raise Http404
+    return render(request, "web/vault.html", context(request))
 
 
 @never_cache

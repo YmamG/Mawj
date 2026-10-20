@@ -1,6 +1,7 @@
-from django.urls import path
+from django.urls import include, path
 from . import api
 urlpatterns = [
+    path("vault/", include("journal.vault_urls")),
     path("session/", api.session), path("auth/login/", api.signin), path("auth/signup/", api.signup), path("auth/logout/", api.signout),
     path("profile/", api.profile), path("profile/avatar/", api.endpoint()(api.avatar)), path("theme/", api.theme),
     path("tasks/", api.tasks), path("tasks/suggest/", api.task_suggest), path("tasks/<int:pk>/", api.task), path("today/", api.today),

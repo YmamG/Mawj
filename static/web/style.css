@@ -1587,6 +1587,18 @@ textarea {
 .account-directory-table td {
   overflow-wrap: anywhere;
 }
+.vault-page { max-width: 1120px; margin: 40px auto; padding: 0 20px 60px; }
+.vault-page > h1 { margin: 32px 0 20px; }
+.vault-page .surface { padding: 24px; margin-top: 20px; min-width: 0; }
+.vault-page textarea, .vault-page input:not([type="checkbox"]) { width: 100%; }
+.vault-page textarea { resize: vertical; }
+.vault-page [hidden] { display: none !important; }
+.vault-layout { display: grid; grid-template-columns: minmax(220px, 1fr) minmax(0, 2fr); gap: 20px; }
+.vault-note-link { display: block; width: 100%; padding: 16px 0; border: 0; border-bottom: 1px solid var(--line); background: transparent; text-align: start; color: var(--ink); overflow-wrap: anywhere; cursor: pointer; }
+.vault-suggestion { margin-top: 20px; border-top: 1px solid var(--line); padding-top: 12px; }
+.vault-suggestion button { margin: 4px; }
+.vault-page pre { white-space: pre-wrap; overflow-wrap: anywhere; font-family: inherit; }
+@media (max-width: 700px) { .vault-layout { grid-template-columns: minmax(0, 1fr); } .vault-page .surface { padding: 16px; } }
 .chart-table table {
   width: 100%;
   text-align: left;

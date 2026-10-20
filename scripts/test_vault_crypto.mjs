@@ -1,0 +1,35 @@
+/* Run with Node 22+; no dependency install and no secrets printed. */
+import assert from "node:assert/strict";
+import {createVault, unlock, recover, encryptDocument, decryptDocument} from "../static/web/vault-crypto.mjs";
+
+const phrase = "fictional sample vault phrase";
+const vault = await createVault(phrase, 1);
+const noteId = crypto.randomUUID();
+const document = {text: "ملاحظة اختبار وهمية <script>not executed</script>", clean_text: "", suggestions: []};
+const one = await encryptDocument(document, vault.key, 1, vault.id, noteId);
+const two = await encryptDocument(document, vault.key, 1, vault.id, noteId);
+assert.notEqual(one.iv, two.iv);
+assert.notEqual(one.ciphertext, two.ciphertext);
+assert.deepEqual(await decryptDocument(one, vault.key, 1, vault.id, noteId), document);
+assert.equal(JSON.stringify(one).includes(document.text), false);
+assert.equal(JSON.stringify(vault.envelopes).includes(phrase), false);
+assert.equal(JSON.stringify(vault.envelopes).includes(vault.recoveryCode), false);
+const unlocked = await unlock(phrase, vault, 1);
+assert.deepEqual(await decryptDocument(one, unlocked, 1, vault.id, noteId), document);
+await assert.rejects(unlock("incorrect vault phrase", vault, 1));
+await assert.rejects(unlock(phrase, vault, 2));
+await assert.rejects(decryptDocument(one, unlocked, 2, vault.id, noteId));
+await assert.rejects(decryptDocument(one, unlocked, 1, vault.id, crypto.randomUUID()));
+const modified = {...one, ciphertext: (one.ciphertext[0] === "A" ? "B" : "A") + one.ciphertext.slice(1)};
+await assert.rejects(decryptDocument(modified, unlocked, 1, vault.id, noteId));
+const newPhrase = "another fictional replacement phrase";
+const recovery = await recover(vault.recoveryCode, newPhrase, vault, 1);
+const changed = {...vault, envelopes: recovery.envelopes};
+assert.deepEqual(await decryptDocument(one, recovery.key, 1, vault.id, noteId), document);
+await assert.rejects(unlock(phrase, changed, 1));
+const reopened = await unlock(newPhrase, changed, 1);
+assert.deepEqual(await decryptDocument(one, reopened, 1, vault.id, noteId), document);
+await assert.rejects(recover("0".repeat(64), newPhrase, vault, 1));
+const recoveredAgain = await recover(vault.recoveryCode, "third fictional replacement phrase", changed, 1);
+assert.deepEqual(await decryptDocument(one, recoveredAgain.key, 1, vault.id, noteId), document);
+console.log("Web Crypto round-trip, nonce uniqueness, tamper/context rejection, unlock and recovery checks passed.");
