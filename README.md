@@ -11,6 +11,7 @@ The initial adoption model is a free student pilot. Audience demand and benefits
 ## Features
 
 - Django accounts, saved sessions and owner-only access to tasks, journals and profile photos.
+- Active staff/superusers can view a read-only account directory at `/operator/accounts/`, linked from their own profile. It lists usernames and registration dates only, with no account editing, impersonation, email addresses or private content.
 - Production disables Django administration, including user password changes and private-record browsing. App ownership checks also apply to staff/superusers. Server/database operators retain direct access; this is not end-to-end encryption.
 - Task creation, editing, completion/reopening and confirmed deletion; search, status/category/priority filters and pagination.
 - Title-only quick entry with optional scheduling, duration, priority, category, daily/weekly recurrence and in-app reminders.

@@ -4,6 +4,9 @@ import json
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth import get_user_model
+from django.core.exceptions import PermissionDenied
+from django.core.paginator import Paginator
 from django.http import Http404
 from django.http import HttpResponsePermanentRedirect
 from django.middleware.csrf import get_token
@@ -11,6 +14,7 @@ from django.shortcuts import redirect, render
 from django.utils import timezone
 from django.urls import resolve, Resolver404
 from django.views.decorators.cache import never_cache
+from django.views.decorators.http import require_safe
 
 from config import api
 from .templatetags.mawj import MESSAGES
@@ -53,6 +57,22 @@ def public(request, page="landing"):
         return redirect("/app/today/")
     ctx = context(request)
     return render(request, f'web/{page}-{ctx["lang"]}.html', ctx)
+
+
+@never_cache
+@login_required(login_url="/login/")
+@require_safe
+def account_directory(request):
+    """A minimal read-only directory, not Django administration or impersonation."""
+    if not (request.user.is_active and request.user.is_staff and request.user.is_superuser):
+        raise PermissionDenied
+    accounts = get_user_model().objects.order_by("-date_joined", "-pk").values(
+        "username", "date_joined"
+    )
+    page = Paginator(accounts, 50).get_page(request.GET.get("page"))
+    ctx = context(request)
+    ctx.update(registered_accounts=page, account_count=page.paginator.count)
+    return render(request, "web/account-directory.html", ctx)
 
 
 @login_required(login_url="/login/")

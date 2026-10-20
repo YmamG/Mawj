@@ -70,6 +70,9 @@ plain = client.get('/', HTTP_X_FORWARDED_PROTO='https')
 assert plain.status_code == 301
 assert plain['Location'] == 'https://mawj.example.test/'
 assert client.get('/', secure=True).status_code == 200
+directory = client.get('/operator/accounts/', secure=True)
+assert directory.status_code == 302
+assert directory['Location'] == '/login/?next=/operator/accounts/'
 from django.urls import resolve
 for path in ('/admin/', '/admin/login/', '/admin/auth/user/', '/admin/tasks/task/', '/admin/journal/journalentry/'):
     assert resolve(path).namespace != 'admin'

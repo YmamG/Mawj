@@ -1,0 +1,19 @@
+{% extends "web/base.html" %}
+{% block content %}
+<main id="main" class="prose-page">
+  <a class="button secondary" href="/app/profile/">{% if lang == 'ar' %}العودة إلى مساحتي{% else %}Back to my space{% endif %}</a>
+  <h1>{% if lang == 'ar' %}الحسابات المسجّلة{% else %}Registered accounts{% endif %}</h1>
+  <p>{% if lang == 'ar' %}عدد الحسابات: {{ account_count }}. تعرض هذه الصفحة أسماء المستخدمين وتواريخ التسجيل فقط، ولا تتيح فتح حساباتهم أو تعديلها أو عرض محتواها.{% else %}{{ account_count }} accounts. This page shows only usernames and registration dates. It cannot open or modify their accounts or display their content.{% endif %}</p>
+  <div class="account-directory-table chart-table" role="region" aria-label="{% if lang == 'ar' %}قائمة الحسابات{% else %}Account list{% endif %}" tabindex="0">
+    <table>
+      <thead><tr><th scope="col">{% if lang == 'ar' %}اسم المستخدم{% else %}Username{% endif %}</th><th scope="col">{% if lang == 'ar' %}تاريخ التسجيل{% else %}Registered{% endif %}</th></tr></thead>
+      <tbody>{% for item in registered_accounts %}<tr><td>{{ item.username }}</td><td><time datetime="{{ item.date_joined|date:'c' }}">{{ item.date_joined|date:'Y-m-d H:i' }}</time></td></tr>{% empty %}<tr><td colspan="2">{% if lang == 'ar' %}لا توجد حسابات.{% else %}No accounts.{% endif %}</td></tr>{% endfor %}</tbody>
+    </table>
+  </div>
+  {% if registered_accounts.has_other_pages %}<nav class="pagination" aria-label="{% if lang == 'ar' %}صفحات الحسابات{% else %}Account pages{% endif %}">
+    {% if registered_accounts.has_previous %}<a class="button secondary" href="?page={{ registered_accounts.previous_page_number }}">{% if lang == 'ar' %}السابق{% else %}Previous{% endif %}</a>{% endif %}
+    <span>{{ registered_accounts.number }} / {{ registered_accounts.paginator.num_pages }}</span>
+    {% if registered_accounts.has_next %}<a class="button secondary" href="?page={{ registered_accounts.next_page_number }}">{% if lang == 'ar' %}التالي{% else %}Next{% endif %}</a>{% endif %}
+  </nav>{% endif %}
+</main>
+{% endblock %}

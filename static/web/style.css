@@ -1579,6 +1579,14 @@ textarea {
 .chart-table summary {
   cursor: pointer;
 }
+.account-directory-table {
+  overflow-x: auto;
+  font-size: 16px;
+  color: var(--ink);
+}
+.account-directory-table td {
+  overflow-wrap: anywhere;
+}
 .chart-table table {
   width: 100%;
   text-align: left;
