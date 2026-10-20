@@ -7,6 +7,9 @@ from django.core.exceptions import ImproperlyConfigured
 from .settings import *  # noqa: F403 - inherit the shared application configuration
 
 DEBUG = False
+# Public instances have no administrator UI for browsing private records or
+# changing another user's credentials. This does not restrict the host operator.
+ADMIN_ENABLED = False
 
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "")
 if (

@@ -41,6 +41,26 @@ class ApiTests(TestCase):
         self.assertEqual(client.post("/api/auth/login/", credentials, content_type="application/json", HTTP_X_CSRFTOKEN=session["csrf"], HTTP_ORIGIN="https://evil.example").status_code, 403)
         self.assertEqual(client.post("/api/auth/login/", credentials, content_type="application/json", HTTP_X_CSRFTOKEN=session["csrf"], HTTP_ORIGIN="http://localhost:3000").status_code, 200)
 
+    def test_superuser_has_no_private_record_or_account_bypass_in_app(self):
+        self.user.is_staff = self.user.is_superuser = True
+        self.user.save(update_fields=["is_staff", "is_superuser"])
+        task = Task.objects.create(user=self.other, title="Private task")
+        entry = JournalEntry.objects.create(user=self.other, raw_text="Private journal")
+        suggestion = TaskSuggestion.objects.create(user=self.other, entry=entry, title="Private suggestion")
+        self.assertEqual(self.client.get("/api/tasks/").json()["total"], 0)
+        self.assertEqual(self.client.get("/api/journal/").json()["total"], 0)
+        for path in (f"tasks/{task.pk}/", f"journal/{entry.pk}/"):
+            self.assertEqual(self.client.get("/api/" + path).status_code, 404)
+            self.assertEqual(self.post(path, {"action": "delete"}).status_code, 404)
+        self.assertEqual(self.post(f"suggestions/{suggestion.pk}/", {"action": "accept"}).status_code, 404)
+        self.post("profile/", {"user_id": self.other.pk, "username": self.other.username, "display_name": "Own profile"})
+        self.assertEqual(self.client.get("/api/session/").json()["user"]["id"], self.user.pk)
+        self.other.refresh_from_db()
+        self.assertEqual(self.other.username, "other-api")
+        self.assertFalse(UserPreferences.objects.filter(user=self.other, display_name="Own profile").exists())
+        self.assertTrue(Task.objects.filter(pk=task.pk).exists())
+        self.assertTrue(JournalEntry.objects.filter(pk=entry.pk).exists())
+
     def test_tasks_validation_filters_recurrence_and_isolation(self):
         self.assertEqual(self.post("tasks/", {"title": "Invalid", "estimated_duration": 0}).status_code, 400)
         self.assertEqual(self.post("tasks/", {"title": "Missing date", "repeat": "daily"}).status_code, 400)

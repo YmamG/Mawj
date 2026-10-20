@@ -9,10 +9,13 @@ urlpatterns = [
     path("", include("web.urls")),
     path("api/", include("config.api_urls")),
     path("achievements/", achievements, name="achievements"),
-    path("admin/", admin.site.urls),
     path("accounts/", include("accounts.urls")),
     path("tasks/", include("tasks.urls")),
     path("journal/", include("journal.urls")),
     path("calendar/", include("dashboard.urls")),
     path("<path:unmatched>", missing),
 ]
+
+if getattr(settings, "ADMIN_ENABLED", True):
+    # Keep development administration available, ahead of the branded catch-all.
+    urlpatterns.insert(-1, path("admin/", admin.site.urls))

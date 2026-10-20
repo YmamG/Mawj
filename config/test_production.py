@@ -62,6 +62,7 @@ import json
 from config.wsgi_production import application
 from django.conf import settings
 assert settings.DEBUG is False
+assert settings.ADMIN_ENABLED is False
 assert settings.MAILERS['default']['BACKEND'] == 'django.core.mail.backends.smtp.EmailBackend'
 from django.test import Client
 client = Client(enforce_csrf_checks=True, HTTP_HOST='mawj.example.test')
@@ -69,6 +70,10 @@ plain = client.get('/', HTTP_X_FORWARDED_PROTO='https')
 assert plain.status_code == 301
 assert plain['Location'] == 'https://mawj.example.test/'
 assert client.get('/', secure=True).status_code == 200
+from django.urls import resolve
+for path in ('/admin/', '/admin/login/', '/admin/auth/user/', '/admin/tasks/task/', '/admin/journal/journalentry/'):
+    assert resolve(path).namespace != 'admin'
+    assert client.get(path, secure=True).status_code == 404
 assert client.get('/', secure=True, HTTP_HOST='other.example.test').status_code == 400
 response = client.get('/api/session/', secure=True)
 assert response.status_code == 200
