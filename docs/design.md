@@ -4,6 +4,9 @@
 
 ```mermaid
 erDiagram
+    USER ||--o{ GOAL : plans
+    GOAL ||--o{ GOAL_STEP : contains
+    TASK o|--o| GOAL_STEP : linked_step
     USER ||--o{ TASK : owns
     TASK o|--o| TASK : next_occurrence
     USER ||--o{ JOURNAL_ENTRY : writes
@@ -32,6 +35,26 @@ erDiagram
         string priority
         string status
         datetime completed_at "nullable"
+        datetime created_at
+    }
+    GOAL {
+        integer id PK
+        integer user_id FK
+        string title
+        text why "optional"
+        date target_date "nullable"
+        string category
+        boolean paused
+        boolean marked_complete "only without steps"
+        datetime created_at
+    }
+    GOAL_STEP {
+        integer id PK
+        integer goal_id FK
+        integer task_id FK,UK "nullable, SET_NULL"
+        string title
+        date target_date "nullable"
+        boolean is_done "fallback when no linked task"
         datetime created_at
     }
     JOURNAL_ENTRY {
@@ -63,8 +86,11 @@ erDiagram
 
 Every task/entry/suggestion has exactly one owner. Preferences are optional until first needed, then unique per user. Owner and journal-entry foreign keys use CASCADE; the repeating-task self-reference uses SET_NULL. An accepted task is independent of its originating suggestion; removing a journal does not remove that task. The duplicated suggestion owner supports ownership checks, but the view must keep it consistent with the entry owner; this consistency is not a database constraint. Django owns username uniqueness and password hashing. The model defaults and choice fields represent priority/status; form validation enforces allowed task values and duration bounds. Task categories use a small fixed choice set. The optional unique self-reference permits at most one generated next occurrence per task; SET_NULL preserves successors if the predecessor is removed. Uploaded avatar paths are stored in preferences; image bytes remain outside the database. No many-to-many relationship is needed.
 
+Goals and steps are ordinary owner-scoped records, outside the optional journal encryption boundary. A linked task supplies the step completion state; deleting it preserves the last state in `is_done`. Deleting a goal cascades to its steps, without deleting linked tasks. [Goal details](goals.md).
+
 ## Wireframes
 
+- Goals: short title form → optional reason/date → milestone timeline and filters → steps and progress → optional task links.
 - Tasks: heading → search/status/priority controls → Add Task → cards with edit/delete/complete → pagination.
 - Add Task: title → optional date → collapsible optional details → Save / AI suggestion / Cancel. AI results open the details for review.
 - Journal: search → New Entry → date, excerpt and pending count on each entry → open/edit/delete → pagination.

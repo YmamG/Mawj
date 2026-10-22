@@ -1,0 +1,3 @@
+{% extends 'web/app-base.html' %}{% load static %}
+{% block workspace_content %}<p id="goal-notice" class="banner" role="status" hidden></p><div id="goals-content">{% include 'web/goals-content.html' %}</div>{% endblock %}
+{% block workspace_scripts %}<script defer src="{% static 'web/goals.js' %}"></script>{% endblock %}

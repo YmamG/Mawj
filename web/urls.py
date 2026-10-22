@@ -1,7 +1,8 @@
-from django.urls import path
+from django.urls import include, path
 from . import views
 
 urlpatterns = [
+    path('app/goals/', include('goals.urls')),
     path('app/encrypted-journal/', views.encrypted_journal, name='encrypted_journal'),
     path('operator/accounts/', views.account_directory, name='account_directory'),
     path('', views.public, name='web_home'),

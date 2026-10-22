@@ -1,0 +1,2 @@
+{% extends 'web/app-base.html' %}{% load mawj %}
+{% block workspace_content %}<section class="surface goal-delete-confirm"><h1>{% tr 'Delete goal' %}</h1><h2 dir="auto">{{ goal.title }}</h2><p>{% tr 'Delete this goal and its steps? Tasks already added to your list will stay.' %}</p><form method="post">{% csrf_token %}<input name="confirm" type="hidden" value="yes"><div class="form-actions"><button class="button danger">{% tr 'Delete goal' %}</button><a class="button secondary" href="{% url 'goal_detail' goal.pk %}">{% tr 'Keep it' %}</a></div></form></section>{% endblock %}

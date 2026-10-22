@@ -17,6 +17,7 @@ The initial adoption model is a free student pilot. Audience demand and benefits
 - Title-only quick entry with optional scheduling, duration, priority, category, daily/weekly recurrence and in-app reminders.
 - Journal creation, search, editing and deletion; suggestion analysis, explicit acceptance and dismissal.
 - Calendar days showing tasks and complete journal text, including undated tasks on their creation day.
+- Future goals with title-only entry, optional dates, milestones, real completion percentages and linked tasks. See [goal behavior and implementation](docs/goals.md).
 - Weekly, monthly and yearly reports with completion percentage, charts and a data table.
 - Editable profile, private PNG/JPEG avatar upload/removal, five themes and English/Arabic switching.
 - Locally served fonts, including Saudi for Arabic headings and the Arabic wordmark; responsive layouts and modal confirmations.
@@ -35,6 +36,7 @@ Django renders the initial HTML and enforces authentication, ownership, validati
 | `accounts/` | Authentication, profile, preferences and private photos |
 | `tasks/` | Task models, forms, recurrence and reminders |
 | `journal/` | Journal entries and reviewed task suggestions |
+| `goals/` | Future goals, milestone progress and task links |
 | `dashboard/reports.py` | Calendar-period summaries and chart calculations |
 | `ai/provider.py` | Local simulation/manual mode and optional external providers |
 | `web/`, `templates/web/` | Server-rendered presentation, translations and shared template layout |

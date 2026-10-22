@@ -39,6 +39,7 @@ FRONTEND_URL = os.environ.get("MAWJ_FRONTEND_URL", "").rstrip("/")
 
 INSTALLED_APPS = [
     "web",
+    "goals.apps.GoalsConfig",
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

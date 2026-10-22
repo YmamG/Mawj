@@ -1,0 +1,10 @@
+{% load mawj %}
+<section class="surface goal-compose" id="goal-compose" {% if not show_compose %}hidden{% endif %}>
+  <header class="compose-heading"><h2>{% if goal %}{% tr 'Edit goal' %}{% else %}{% tr 'A little room for tomorrow' %}{% endif %}</h2><button type="button" class="icon-button" data-goal-close aria-label="{% tr 'Close' %}">{% icon 'X' %}</button></header>
+  <form method="post" action="{% if goal %}{% url 'goal_detail' goal.id %}{% else %}{% url 'goals_home' %}{% endif %}" data-goal-form>{% csrf_token %}
+    <input type="hidden" name="action" value="edit">
+    <div class="field"><label for="id_title">{% tr 'What would you like to work towards?' %}</label>{{ goal_form.title }}{% for error in goal_form.title.errors %}<p class="field-error">{% tr error %}</p>{% endfor %}</div>
+    <details {% if goal_form.errors %}open{% endif %}><summary>{% tr 'A few optional details' %}</summary><div class="goal-form-details"><div class="field"><label for="id_why">{% tr 'Why does this matter to you?' %}</label>{{ goal_form.why }}{% for error in goal_form.why.errors %}<p class="field-error">{% tr error %}</p>{% endfor %}</div><div class="form-grid"><div class="field"><label for="id_target_date">{% tr 'A date to aim for' %}</label>{{ goal_form.target_date }}{% for error in goal_form.target_date.errors %}<p class="field-error">{% tr error %}</p>{% endfor %}</div><div class="field"><label for="id_category">{% tr 'Category' %}</label><select id="id_category" name="category">{% for value,label in goal_form.fields.category.choices %}<option value="{{ value }}" {% if goal_form.category.value == value %}selected{% endif %}>{% tr label %}</option>{% endfor %}</select>{% for error in goal_form.category.errors %}<p class="field-error">{% tr error %}</p>{% endfor %}</div></div></div></details>
+    <div class="form-actions"><button class="button">{% if goal %}{% tr 'Save changes' %}{% else %}{% tr 'Make room for this goal' %}{% endif %}</button></div>
+  </form>
+</section>

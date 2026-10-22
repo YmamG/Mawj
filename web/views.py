@@ -23,6 +23,7 @@ THEMES = [("grove", "Grove"), ("petal", "Petal"), ("dusk", "Dusk"), ("ember", "E
 NAV = [
     ("today", "Today", "Sun"), ("tasks", "My tasks", "CheckCircle"),
     ("journal", "Journal", "Notebook"), ("achievements", "Progress", "ChartBar"),
+    ("goals", "Goals", "Plant"),
     ("calendar", "Calendar", "CalendarBlank"), ("profile", "My space", "UserCircle"),
 ]
 COPY = {
