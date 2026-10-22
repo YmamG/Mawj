@@ -3365,6 +3365,124 @@ html[lang="ar"] .brand > span {
   max-width: 260px;
 }
 
+.goal-ai-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.goal-ai-entry button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.goal-ai-entry button:disabled {
+  cursor: default;
+  opacity: .65;
+}
+
+.goal-ai-entry svg,
+.goal-ai-panel svg {
+  width: 17px;
+  height: 17px;
+}
+
+.goal-ai-panel {
+  margin-top: 16px;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--soft);
+}
+
+.goal-ai-panel[hidden],
+.goal-ai-results[hidden] {
+  display: none;
+}
+
+.goal-ai-panel > header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.goal-ai-panel > header > span {
+  display: grid;
+  place-items: center;
+  flex: 0 0 36px;
+  height: 36px;
+  border-radius: 11px;
+  background: var(--paper);
+  color: var(--accent);
+}
+
+.goal-ai-panel h3,
+.goal-ai-panel header p {
+  margin: 0;
+}
+
+.goal-ai-panel h3 {
+  font-family: inherit;
+  font-size: 17px;
+}
+
+.goal-ai-panel header p,
+.goal-ai-provider,
+.goal-ai-results > p {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.goal-ai-panel header p {
+  margin-top: 4px;
+}
+
+.goal-ai-provider {
+  margin: 16px 0;
+}
+
+.goal-ai-results {
+  margin-top: 18px;
+}
+
+.goal-ai-list {
+  display: grid;
+  gap: 9px;
+  margin: 10px 0 16px;
+}
+
+.goal-ai-option {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+}
+
+.goal-ai-option input[type="checkbox"] {
+  width: 17px;
+  height: 17px;
+  accent-color: var(--accent);
+}
+
+.goal-ai-option input[type="text"] {
+  width: 100%;
+  padding: 10px 12px;
+  background: var(--paper);
+}
+
 .goal-no-steps {
   padding: 32px 12px;
   text-align: center;

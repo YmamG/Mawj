@@ -103,15 +103,15 @@ No custom model was trained for this project. External AI is an optional integra
 
 | `AI_PROVIDER` | Behavior |
 |---|---|
-| `manual` | Save the journal as written, without suggestions |
-| `demo` (default) | Clearly labeled local rules extract bullet lines or certain intent phrases; task details return medium priority and **30 minutes fixed** |
-| `gemini` | Send journal/task text to Gemini using `GEMINI_API_KEY` |
-| `openai` | Send journal/task text to OpenAI using `OPENAI_API_KEY` |
-| `claude` | Send journal/task text to Claude using `ANTHROPIC_API_KEY` |
+| `manual` | Save the journal as written, without AI suggestions |
+| `demo` (default) | Clearly labeled local rules extract journal intents, return fixed task details, and show a local sample goal plan |
+| `gemini` | Send the selected journal/task/goal data to Gemini using `GEMINI_API_KEY` |
+| `openai` | Send the selected journal/task/goal data to OpenAI using `OPENAI_API_KEY` |
+| `claude` | Send the selected journal/task/goal data to Claude using `ANTHROPIC_API_KEY` |
 
 Demo is a simulation, not a live AI model. To configure an external provider, create a local `.env` from `.env.example` if it does not already exist, set the selected provider and its key privately, and restart the server. Process environment variables take precedence. Optional model settings are `GEMINI_MODEL`, `OPENAI_MODEL` and `CLAUDE_MODEL`; use a model available to your provider account. Do not commit credentials or put real keys in the example file.
 
-Suggestions remain separate from tasks until a user accepts them. AI output is parsed and validated; past suggested schedules are removed. If external AI fails during journal creation, the original note is saved with a warning. The interface identifies the provider before cloud processing. Live external calls have not been verified; simulated and mocked checks do not prove provider reliability.
+Suggestions remain separate from tasks and goal steps until a user accepts them. A goal plan can be edited and individual steps can be removed before saving. AI output is parsed, limited and validated; past suggested schedules are removed. If external AI fails during journal creation, the original note is saved with a warning. The interface identifies the provider and the goal data sent before cloud processing. Live external calls have not been verified; simulated and mocked checks do not prove provider reliability.
 
 ## Fictional demonstration data
 

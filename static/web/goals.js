@@ -28,6 +28,32 @@
     } catch { notice("We could not reach Mawj. Check your connection and try again.", true); }
     finally { busy = false; }
   }
+  async function suggest(panel, button) {
+    if (busy) return;
+    busy = true; button.disabled = true; panel.setAttribute("aria-busy", "true");
+    const data = new FormData(); data.set("action", "suggest");
+    if (panel.dataset.cloud === "yes") data.set("consent", "yes");
+    try {
+      const response = await fetch(panel.dataset.url, {method: "POST", body: data, credentials: "same-origin", cache: "no-store", headers: {"Accept": "application/json", "X-CSRFToken": boot.csrf}});
+      const result = await response.json();
+      if (!response.ok) { notice(result.error || "AI could not suggest steps right now.", true); return; }
+      const list = panel.querySelector("[data-goal-ai-list]");
+      list.replaceChildren();
+      result.suggestions.forEach((suggestion, index) => {
+        const row = document.createElement("label"); row.className = "goal-ai-option";
+        const check = document.createElement("input"); check.type = "checkbox"; check.checked = true;
+        check.setAttribute("aria-label", text("Include suggested step") + " " + (index + 1));
+        const input = document.createElement("input"); input.type = "text"; input.maxLength = 200;
+        input.required = true; input.value = suggestion.title; input.dir = "auto";
+        row.append(check, input); list.append(row);
+      });
+      panel.querySelector("[data-goal-ai-results]").hidden = false;
+      button.querySelector("span").textContent = text("Suggest again");
+      panel.querySelector(".goal-ai-option input[type=text]")?.focus();
+      notice("");
+    } catch { notice("We could not reach Mawj. Check your connection and try again.", true); }
+    finally { busy = false; button.disabled = false; panel.removeAttribute("aria-busy"); }
+  }
   document.addEventListener("submit", async (event) => {
     const form = event.target;
     if (!form.matches("[data-goal-form]")) return;
@@ -42,9 +68,23 @@
     if (button) button.disabled = false;
   });
   document.addEventListener("click", async (event) => {
-    const control = event.target.closest("[data-goal-new],[data-goal-close],[data-goal-delete]");
+    const control = event.target.closest("[data-goal-new],[data-goal-close],[data-goal-delete],[data-goal-ai-open],[data-goal-ai-generate],[data-goal-ai-add]");
     if (!control) return;
-    if (control.hasAttribute("data-goal-delete")) {
+    if (control.hasAttribute("data-goal-ai-open")) {
+      const panel = document.getElementById("goal-ai-panel"); panel.hidden = !panel.hidden;
+      control.setAttribute("aria-expanded", String(!panel.hidden));
+      if (!panel.hidden) panel.querySelector("[data-goal-ai-generate]")?.focus();
+    } else if (control.hasAttribute("data-goal-ai-generate")) {
+      await suggest(control.closest(".goal-ai-panel"), control);
+    } else if (control.hasAttribute("data-goal-ai-add")) {
+      const panel = control.closest(".goal-ai-panel");
+      const steps = [...panel.querySelectorAll(".goal-ai-option")]
+        .filter((row) => row.querySelector("input[type=checkbox]").checked)
+        .map((row) => row.querySelector("input[type=text]").value.trim()).filter(Boolean);
+      if (!steps.length) { notice("Choose at least one suggested step.", true); return; }
+      const data = new FormData(); data.set("action", "accept"); data.set("steps", JSON.stringify(steps));
+      control.disabled = true; await send(panel.dataset.url, data); control.disabled = false;
+    } else if (control.hasAttribute("data-goal-delete")) {
       event.preventDefault();
       if (confirm(text("Delete this goal and its steps? Tasks already added to your list will stay."))) {
         const data = new FormData(); data.set("confirm", "yes"); await send(control.href, data);

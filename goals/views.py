@@ -1,3 +1,6 @@
+import json
+
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db import transaction
@@ -13,8 +16,9 @@ from django.views.decorators.http import require_http_methods, require_POST
 from tasks.forms import TaskForm
 from tasks.views import task_toggle
 from web.views import context
+from ai.provider import AIProviderError, CLOUD_PROVIDERS, suggest_goal_steps
 from .forms import GoalForm, StepForm
-from .models import GoalStep
+from .models import Goal, GoalStep
 from .services import achieved_query, goal_data, owned_goals
 
 
@@ -111,6 +115,62 @@ def add_step(request, pk):
         goal.marked_complete = False
         goal.save(update_fields=["marked_complete"])
     return _finish(request, pk, "Step added.")
+
+
+@login_required(login_url="/login/")
+@never_cache
+@require_POST
+def ai_plan(request, pk):
+    goal = get_object_or_404(owned_goals(request.user), pk=pk)
+    action = request.POST.get("action", "suggest")
+    if action == "suggest":
+        if settings.AI_PROVIDER in CLOUD_PROVIDERS and request.POST.get("consent") != "yes":
+            return JsonResponse({"error": "Confirm before sending goal details to the AI provider."}, status=400)
+        try:
+            result = suggest_goal_steps(
+                goal.title,
+                goal.why,
+                goal.category,
+                goal.target_date,
+                goal.steps.values_list("title", flat=True),
+            )
+        except AIProviderError as exc:
+            return JsonResponse({"error": str(exc)}, status=422)
+        return JsonResponse({"suggestions": result["steps"], "provider": settings.AI_PROVIDER})
+
+    if action != "accept":
+        return JsonResponse({"error": "Invalid AI plan action."}, status=400)
+    try:
+        submitted = json.loads(request.POST.get("steps", "[]"))
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Choose valid suggested steps."}, status=400)
+    if not isinstance(submitted, list) or not submitted or len(submitted) > 8:
+        return JsonResponse({"error": "Choose between one and eight suggested steps."}, status=400)
+
+    titles = []
+    for value in submitted:
+        if not isinstance(value, str):
+            return JsonResponse({"error": "Choose valid suggested steps."}, status=400)
+        form = StepForm({"title": value.strip()}, goal=goal)
+        if not form.is_valid():
+            return JsonResponse({"error": "Check the suggested step titles."}, status=400)
+        titles.append(form.cleaned_data["title"])
+
+    with transaction.atomic():
+        locked_goal = get_object_or_404(Goal.objects.select_for_update(), pk=goal.pk, user=request.user)
+        existing = {value.casefold() for value in locked_goal.steps.values_list("title", flat=True)}
+        created = 0
+        for title in titles:
+            key = title.casefold()
+            if key in existing:
+                continue
+            GoalStep.objects.create(goal=locked_goal, title=title)
+            existing.add(key)
+            created += 1
+        if created and locked_goal.marked_complete:
+            locked_goal.marked_complete = False
+            locked_goal.save(update_fields=["marked_complete"])
+    return _finish(request, pk, "Suggested steps added." if created else "Those steps are already in your plan.")
 
 
 @login_required(login_url="/login/")

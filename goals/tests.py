@@ -1,7 +1,9 @@
 from datetime import timedelta
 
 from django.contrib.auth import get_user_model
-from django.test import Client, TestCase
+from unittest.mock import patch
+
+from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
@@ -45,7 +47,7 @@ class GoalTests(TestCase):
         self.other.is_staff = self.other.is_superuser = True
         self.other.save()
         self.client.force_login(self.other)
-        for name, kwargs in [("goal_detail", {}), ("goal_delete", {}), ("goal_add_step", {}), ("goal_step_action", {"step_pk": step.pk})]:
+        for name, kwargs in [("goal_detail", {}), ("goal_delete", {}), ("goal_add_step", {}), ("goal_ai_plan", {}), ("goal_step_action", {"step_pk": step.pk})]:
             url = self.url(name, **kwargs)
             self.assertEqual(self.client.post(url, {"action": "toggle", "title": "Intrusion", "confirm": "yes"}).status_code, 404)
         self.assertEqual(self.client.get(self.url()).status_code, 404)
@@ -162,3 +164,62 @@ class GoalTests(TestCase):
         self.assertEqual(len(response.context["cards"]), 9)
         self.assertEqual(len(response.context["horizon"]), 1)
         self.assertEqual(response.context["summary"]["total"], 11)
+
+    @override_settings(AI_PROVIDER="demo")
+    def test_ai_demo_suggests_without_saving_then_accepts_selected_steps(self):
+        url = self.url("goal_ai_plan")
+        detail = self.client.get(self.url())
+        self.assertContains(detail, "Demo mode")
+        self.assertContains(detail, "generated locally")
+        suggested = self.client.post(url, {"action": "suggest"})
+        self.assertEqual(suggested.status_code, 200)
+        self.assertEqual(suggested.json()["provider"], "demo")
+        self.assertEqual(len(suggested.json()["suggestions"]), 4)
+        self.assertEqual(self.goal.steps.count(), 0)
+
+        accepted = self.client.post(
+            url,
+            {"action": "accept", "steps": '["Define success", "Take the first action"]'},
+            HTTP_ACCEPT="application/json",
+        )
+        self.assertEqual(accepted.status_code, 200)
+        self.assertEqual(set(self.goal.steps.values_list("title", flat=True)), {"Define success", "Take the first action"})
+        self.assertIn("Suggested steps added.", accepted.json()["notice"])
+
+    @override_settings(AI_PROVIDER="demo")
+    def test_ai_accept_is_validated_deduplicated_and_reopens_goal(self):
+        url = self.url("goal_ai_plan")
+        GoalStep.objects.create(goal=self.goal, title="Existing")
+        self.goal.marked_complete = True
+        self.goal.save(update_fields=["marked_complete"])
+        response = self.client.post(url, {"action": "accept", "steps": '["existing", "New", "new"]'}, HTTP_ACCEPT="application/json")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(self.goal.steps.count(), 2)
+        self.goal.refresh_from_db()
+        self.assertFalse(self.goal.marked_complete)
+        for invalid in ("not-json", "[]", '["' + "x" * 201 + '"]', "[1]"):
+            self.assertEqual(self.client.post(url, {"action": "accept", "steps": invalid}).status_code, 400)
+
+    @override_settings(AI_PROVIDER="manual")
+    def test_ai_manual_mode_reports_that_suggestions_are_off(self):
+        response = self.client.post(self.url("goal_ai_plan"), {"action": "suggest"})
+        self.assertEqual(response.status_code, 422)
+        self.assertIn("off", response.json()["error"])
+
+    @override_settings(AI_PROVIDER="gemini")
+    def test_cloud_goal_plan_requires_explicit_send_action(self):
+        detail = self.client.get(self.url())
+        self.assertContains(detail, "goal details and current steps will be sent to")
+        self.assertContains(detail, "Gemini")
+        with patch("goals.views.suggest_goal_steps", return_value={"steps": [{"title": "One"}]}) as suggest:
+            denied = self.client.post(self.url("goal_ai_plan"), {"action": "suggest"})
+            allowed = self.client.post(self.url("goal_ai_plan"), {"action": "suggest", "consent": "yes"})
+        self.assertEqual(denied.status_code, 400)
+        self.assertEqual(allowed.status_code, 200)
+        suggest.assert_called_once()
+
+    @override_settings(AI_PROVIDER="demo")
+    def test_ai_endpoint_requires_csrf(self):
+        secure = Client(enforce_csrf_checks=True)
+        secure.force_login(self.user)
+        self.assertEqual(secure.post(self.url("goal_ai_plan"), {"action": "suggest"}).status_code, 403)
