@@ -193,7 +193,7 @@ class VaultApiTests(TestCase):
         self.assertTrue(day["has_journal"])
         self.assertEqual(self.client.get("/api/session/").json()["user"]["stats"]["journals"], 1)
         response = self.client.get("/app/encrypted-journal/")
-        self.assertContains(response, "Experimental preview")
+        self.assertContains(response, "Preview · use fictional data")
         self.assertNotContains(response, "<form")
         self.assertIn("no-store", response.headers["Cache-Control"])
 
@@ -211,3 +211,15 @@ class VaultApiTests(TestCase):
         data["task"] = {"title": "corrected task"}
         self.assertEqual(self.post(path, data).status_code, 201)
         self.assertEqual(Task.objects.count(), 1)
+
+    def test_device_binding_follows_login_session_and_is_not_a_credential(self):
+        first = self.client.get("/api/vault/").json()["device_session"]
+        self.assertEqual(len(first), 64)
+        self.assertNotEqual(first, self.client.session.session_key)
+        self.assertEqual(self.client.get("/api/vault/").json()["device_session"], first)
+        self.client.logout()
+        self.client.force_login(self.user)
+        second = self.client.get("/api/vault/").json()["device_session"]
+        self.assertNotEqual(first, second)
+        self.client.logout()
+        self.assertEqual(self.client.get("/api/vault/", HTTP_AUTHORIZATION=second).status_code, 401)

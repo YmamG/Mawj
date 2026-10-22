@@ -46,7 +46,7 @@ def context(request):
         "sends_to_cloud": settings.AI_PROVIDER in api.CLOUD_PROVIDERS,
         "e2ee_preview": settings.E2EE_JOURNAL_PREVIEW,
         "boot": {"language": lang, "user": account, "csrf": get_token(request),
-                 "provider": settings.AI_PROVIDER, "sends_to_cloud": settings.AI_PROVIDER in api.CLOUD_PROVIDERS, "translations": MESSAGES},
+                 "provider": settings.AI_PROVIDER, "sends_to_cloud": settings.AI_PROVIDER in api.CLOUD_PROVIDERS, "e2ee_preview": settings.E2EE_JOURNAL_PREVIEW, "translations": MESSAGES},
     }
 
 

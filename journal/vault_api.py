@@ -11,6 +11,7 @@ from django.db import IntegrityError, transaction
 from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from django.utils.crypto import salted_hmac
 
 from ai.provider import CLOUD_PROVIDERS, AIProviderError, process_journal
 from config.api import endpoint, payload, paginated, entry_data
@@ -87,7 +88,9 @@ def conflict():
 def vault(request):
     existing = JournalVault.objects.filter(user=request.user).first()
     if request.method == "GET":
-        return JsonResponse({"vault": vault_data(existing) if existing else None, "legacy_count": JournalEntry.objects.filter(user=request.user).count()})
+        # An opaque cache binding, not a credential and never the session cookie.
+        binding = salted_hmac("mawj.vault.browser-session", request.session.session_key or "", algorithm="sha256").hexdigest()
+        return JsonResponse({"vault": vault_data(existing) if existing else None, "legacy_count": JournalEntry.objects.filter(user=request.user).count(), "device_session": binding})
     data = payload(request)
     only(data, ("id", "envelopes"))
     key_id = identifier(data["id"])
