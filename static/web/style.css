@@ -3609,3 +3609,767 @@ html[lang=ar] .goals-hero h1 em {
   width: 14px;
   height: 14px;
 }
+
+/* Clearer journal and goals experience */
+.page-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  margin-bottom: 18px;
+  border-radius: 17px;
+  background: var(--soft);
+  color: var(--accent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 10%, transparent);
+}
+.page-icon svg {
+  width: 27px;
+  height: 27px;
+}
+.journal-heading {
+  padding: 30px 34px;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at 88% 18%, color-mix(in srgb, var(--palette-3) 12%, transparent), transparent 25%),
+    linear-gradient(135deg, var(--paper), color-mix(in srgb, var(--soft) 60%, var(--paper)));
+  overflow: hidden;
+}
+.journal-heading > div {
+  position: relative;
+}
+.journal-heading h1 {
+  font-size: clamp(38px, 5vw, 58px);
+}
+.journal-tools {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin: 24px 0;
+}
+.journal-search {
+  max-width: 420px;
+  width: 100%;
+}
+.journal-ai-note {
+  position: relative;
+  color: var(--muted);
+  font-size: 11px;
+}
+.journal-ai-note summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 12px;
+  border-radius: 999px;
+  background: var(--soft);
+  cursor: pointer;
+  list-style: none;
+}
+.journal-ai-note summary::-webkit-details-marker {
+  display: none;
+}
+.journal-ai-note svg {
+  width: 15px;
+  height: 15px;
+  color: var(--accent);
+}
+.journal-ai-note p {
+  position: absolute;
+  z-index: 5;
+  inset-inline-end: 0;
+  width: 240px;
+  margin-top: 8px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--paper);
+  box-shadow: 0 12px 35px var(--shadow);
+}
+.journal-shelf {
+  align-items: stretch;
+}
+.journal-page-card {
+  position: relative;
+  min-height: 255px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px 20px 20px 8px;
+  box-shadow: 0 10px 30px var(--shadow), inset 7px 0 0 var(--soft);
+  transform-origin: bottom center;
+  animation: page-arrive 0.45s ease both;
+}
+.journal-page-card:nth-child(2) { animation-delay: 0.05s; }
+.journal-page-card:nth-child(3) { animation-delay: 0.1s; }
+.journal-page-card:nth-child(4) { animation-delay: 0.15s; }
+.journal-page-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.26;
+  background: repeating-linear-gradient(to bottom, transparent 0 35px, var(--line) 36px);
+}
+.journal-page-card:hover,
+.journal-page-card:focus-within {
+  transform: translateY(-5px) rotate(-0.3deg);
+  box-shadow: 0 18px 42px var(--shadow), inset 7px 0 0 var(--soft-2);
+}
+html[dir="rtl"] .journal-page-card {
+  border-radius: 20px 8px 8px 20px;
+  box-shadow: 0 10px 30px var(--shadow), inset -7px 0 0 var(--soft);
+}
+.journal-bookmark {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  inset-inline-end: 24px;
+  width: 18px;
+  height: 35px;
+  background: var(--palette-3);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 72%, 0 100%);
+}
+.journal-page-card .entry-open {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.journal-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+.journal-date {
+  display: inline-flex;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: var(--soft);
+  color: var(--muted);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+.journal-page-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--soft) 75%, transparent);
+}
+.journal-page-icon svg {
+  width: 18px;
+  height: 18px;
+}
+.journal-page-card h3 {
+  font-size: 25px;
+  margin-bottom: 12px;
+}
+.journal-page-card p {
+  flex: 1;
+  color: var(--ink);
+  opacity: 0.78;
+  line-height: 2;
+}
+.entry-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--accent);
+  font-size: 10px;
+  font-weight: 600;
+}
+.entry-meta svg {
+  width: 13px;
+  height: 13px;
+}
+.journal-page-card .entry-actions {
+  position: absolute;
+  z-index: 3;
+  inset-inline-end: 15px;
+  bottom: 12px;
+  padding: 3px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--paper) 92%, transparent);
+  opacity: 0;
+  transform: translateY(5px);
+  transition: opacity 0.2s, transform 0.2s;
+}
+.journal-page-card:hover .entry-actions,
+.journal-page-card:focus-within .entry-actions {
+  opacity: 1;
+  transform: translateY(0);
+}
+.journal-empty {
+  grid-column: 1 / -1;
+  border: 1px dashed var(--line);
+  border-radius: 22px;
+}
+.empty-journal-cover {
+  display: inline-grid;
+  place-items: center;
+  width: 76px;
+  height: 86px;
+  margin-bottom: 22px;
+  border-radius: 7px 16px 16px 7px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  box-shadow: inset 7px 0 color-mix(in srgb, var(--accent-ink) 16%, transparent), 0 12px 24px var(--shadow);
+}
+.empty-journal-cover svg {
+  width: 34px;
+  height: 34px;
+}
+.journal-compose {
+  position: relative;
+  padding: 34px 42px 34px 56px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px 22px 22px 8px;
+  box-shadow: 0 16px 44px var(--shadow);
+  animation: page-open 0.35s ease both;
+}
+html[dir="rtl"] .journal-compose {
+  padding: 34px 56px 34px 42px;
+  border-radius: 22px 8px 8px 22px;
+}
+.journal-binding {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: 17px;
+  background: repeating-linear-gradient(to bottom, var(--accent) 0 18px, var(--soft-2) 18px 30px);
+}
+.journal-compose .compose-heading > div {
+  display: flex;
+  flex-direction: column;
+}
+.journal-compose textarea {
+  min-height: 260px;
+  padding: 12px 4px;
+  border: 0;
+  border-radius: 0;
+  background: repeating-linear-gradient(to bottom, transparent 0 34px, var(--line) 35px);
+  font-family: "Fraunces Variable", Georgia, serif;
+  font-size: 18px;
+  line-height: 35px;
+  box-shadow: none;
+}
+html[lang="ar"] .journal-compose textarea {
+  font-family: var(--font-saudi), "Noto Sans Arabic", sans-serif;
+  font-size: 17px;
+}
+.journal-private-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-inline-start: auto;
+  color: var(--muted);
+  font-size: 10px;
+}
+.journal-private-hint svg {
+  width: 15px;
+  height: 15px;
+}
+.journal-reader {
+  position: relative;
+  overflow: hidden;
+  padding: 36px 42px 40px 56px;
+  border: 1px solid var(--line);
+  border-radius: 8px 22px 22px 8px;
+  box-shadow: 0 16px 44px var(--shadow);
+  animation: page-open 0.35s ease both;
+}
+html[dir="rtl"] .journal-reader {
+  padding: 36px 56px 40px 42px;
+  border-radius: 22px 8px 8px 22px;
+}
+.journal-reader-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 6px;
+  margin-top: -54px;
+}
+.journal-reader .journal-text {
+  min-height: 210px;
+  padding: 34px 4px;
+  background: repeating-linear-gradient(to bottom, transparent 0 42px, var(--line) 43px);
+  line-height: 43px;
+}
+.journal-next-steps {
+  margin-top: 20px;
+  padding: 22px;
+  border-radius: 16px;
+  background: var(--soft);
+}
+.journal-next-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+.journal-next-heading > div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.journal-next-heading h3 {
+  margin: 0;
+  font-size: 17px;
+}
+.journal-spark {
+  display: grid;
+  place-items: center;
+  width: 31px;
+  height: 31px;
+  border-radius: 10px;
+  background: var(--paper);
+  color: var(--accent);
+}
+.vault-privacy-label {
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: var(--soft);
+}
+.vault-privacy-label svg,
+.vault-privacy-info summary svg {
+  width: 16px;
+  height: 16px;
+}
+.vault-privacy-info summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.vault-options summary {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: var(--soft);
+  color: var(--ink);
+  font-weight: 700;
+  letter-spacing: 2px;
+  cursor: pointer;
+  list-style: none;
+}
+.vault-options summary::-webkit-details-marker {
+  display: none;
+}
+
+/* Goals are intentionally reduced to one obvious action per screen. */
+.goals-simple-head,
+.goal-detail-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 26px;
+}
+.goals-simple-title,
+.goal-detail-title {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  min-width: 0;
+}
+.goals-simple-title .page-icon {
+  flex-shrink: 0;
+  margin: 0;
+}
+.goals-simple-head h1,
+.goal-detail-head h1 {
+  margin: 4px 0 6px;
+  font-size: clamp(34px, 4vw, 50px);
+  overflow-wrap: anywhere;
+}
+.goals-simple-head p,
+.goal-detail-head p,
+.goal-section-heading p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+.goal-quick-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 30px;
+}
+.goal-quick-stats > div {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 0 12px;
+  padding: 17px 20px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--paper);
+}
+.goal-quick-stats .stat-icon {
+  grid-row: 1 / 3;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: var(--soft);
+  color: var(--accent);
+}
+.goal-quick-stats svg {
+  width: 19px;
+  height: 19px;
+}
+.goal-quick-stats strong {
+  font-size: 22px;
+  line-height: 1;
+}
+.goal-quick-stats > div > span:last-child {
+  color: var(--muted);
+  font-size: 10px;
+}
+.goal-library-simple {
+  margin-top: 12px;
+}
+.goal-card-simple {
+  border-radius: 20px;
+  overflow: hidden;
+  animation: card-rise 0.4s ease both;
+}
+.goal-card-simple:nth-child(2) { animation-delay: 0.05s; }
+.goal-card-simple:nth-child(3) { animation-delay: 0.1s; }
+.goal-card-simple .goal-card-icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: var(--soft);
+  color: var(--accent);
+}
+.goal-card-simple .goal-card-icon svg {
+  width: 19px;
+  height: 19px;
+}
+.goal-card-simple h3 {
+  margin-top: 24px;
+}
+.goal-card-simple footer span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.goal-card-simple footer svg {
+  width: 15px;
+  height: 15px;
+}
+.goal-open-icon {
+  display: grid !important;
+  place-items: center;
+  width: 31px;
+  height: 31px;
+  border-radius: 50%;
+  background: var(--soft);
+}
+.empty-goal-target {
+  display: inline-grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  margin-bottom: 20px;
+  border-radius: 50%;
+  background: var(--soft);
+  color: var(--accent);
+}
+.empty-goal-target svg {
+  width: 34px;
+  height: 34px;
+}
+.goal-compose .compose-heading > div {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.compose-icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: var(--soft);
+  color: var(--accent);
+}
+.compose-icon svg {
+  width: 19px;
+  height: 19px;
+}
+.goal-detail-head {
+  padding: 24px 28px;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: var(--paper);
+}
+.goal-title-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 58px;
+  height: 58px;
+  border-radius: 18px;
+  background: var(--soft);
+  color: var(--accent);
+}
+.goal-title-icon svg {
+  width: 30px;
+  height: 30px;
+}
+.goal-detail-title p {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.goal-detail-title p svg {
+  width: 15px;
+  height: 15px;
+}
+.goal-head-progress {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 92px;
+  height: 92px;
+  border-radius: 50%;
+  background: var(--soft);
+  box-shadow: inset 0 0 0 7px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+.goal-head-progress strong {
+  font-size: 23px;
+  line-height: 1;
+}
+.goal-head-progress span {
+  color: var(--muted);
+  font-size: 9px;
+}
+.goal-detail-simple {
+  grid-template-columns: minmax(0, 1fr) 260px;
+}
+.goal-detail-bar {
+  margin: -4px 0 12px;
+}
+.goal-section-heading > strong {
+  display: grid;
+  place-items: center;
+  min-width: 42px;
+  height: 34px;
+  border-radius: 999px;
+  background: var(--soft);
+  font-size: 12px;
+}
+.goal-step-meta time {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.goal-step-meta time svg {
+  width: 13px;
+  height: 13px;
+}
+.goal-why {
+  margin-top: 0;
+}
+.goal-aside-icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  margin-bottom: 16px;
+  border-radius: 12px;
+  background: var(--soft);
+  color: var(--accent);
+}
+.goal-aside-icon svg {
+  width: 18px;
+  height: 18px;
+}
+.goal-why h3 {
+  font-size: 16px;
+}
+.goal-options {
+  margin-top: 16px;
+  padding: 18px 20px;
+  font-size: 12px;
+}
+.goal-options summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.goal-options > div {
+  display: grid;
+  gap: 12px;
+  padding-top: 16px;
+}
+.goal-options button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+}
+.danger-link {
+  color: #a14d46;
+}
+
+@keyframes page-arrive {
+  from { opacity: 0; transform: translateY(12px) rotate(0.5deg); }
+}
+@keyframes page-open {
+  from { opacity: 0; transform: translateY(-8px) scale(0.99); }
+}
+@keyframes card-rise {
+  from { opacity: 0; transform: translateY(10px); }
+}
+
+@media (max-width: 700px) {
+  .journal-heading,
+  .goal-detail-head {
+    padding: 24px 20px;
+  }
+  .journal-heading {
+    align-items: flex-end;
+  }
+  .journal-heading .vault-privacy-label {
+    align-self: flex-start;
+  }
+  .journal-tools {
+    align-items: stretch;
+    flex-wrap: wrap;
+  }
+  .journal-tools .journal-search {
+    order: 2;
+    max-width: none;
+    flex-basis: 100%;
+  }
+  .journal-compose,
+  .journal-reader,
+  html[dir="rtl"] .journal-compose {
+    padding: 26px 22px 26px 38px;
+  }
+  html[dir="rtl"] .journal-compose {
+    padding-inline: 38px 22px;
+  }
+  html[dir="rtl"] .journal-reader {
+    padding-inline: 38px 22px;
+  }
+  .journal-reader-actions {
+    margin: 0 0 16px;
+    justify-content: flex-start;
+  }
+  .journal-next-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .journal-private-hint {
+    flex-basis: 100%;
+    margin-inline-start: 0;
+  }
+  .journal-page-card .entry-actions {
+    opacity: 1;
+    transform: none;
+  }
+  .goals-simple-head {
+    align-items: flex-start;
+  }
+  .goals-simple-title {
+    align-items: flex-start;
+  }
+  .goals-simple-title .page-icon {
+    width: 44px;
+    height: 44px;
+  }
+  .goal-quick-stats {
+    gap: 8px;
+  }
+  .goal-quick-stats > div {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 14px;
+  }
+  .goal-quick-stats .stat-icon {
+    width: 31px;
+    height: 31px;
+    margin-bottom: 10px;
+  }
+  .goal-detail-head {
+    align-items: flex-start;
+  }
+  .goal-title-icon {
+    width: 46px;
+    height: 46px;
+  }
+  .goal-head-progress {
+    width: 70px;
+    height: 70px;
+  }
+  .goal-head-progress strong {
+    font-size: 18px;
+  }
+  .goal-detail-simple {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .journal-heading,
+  .goals-simple-head,
+  .goal-detail-head {
+    flex-wrap: wrap;
+  }
+  .journal-heading .journal-new-button,
+  .goals-simple-head > .button {
+    width: 100%;
+  }
+  .goals-simple-title {
+    gap: 12px;
+  }
+  .goals-simple-head h1,
+  .goal-detail-head h1 {
+    font-size: 31px;
+  }
+  .goal-detail-title {
+    gap: 12px;
+  }
+  .goal-detail-head {
+    flex-wrap: nowrap;
+  }
+  .goal-head-progress {
+    width: 64px;
+    height: 64px;
+  }
+  .goal-head-progress span {
+    display: none;
+  }
+  .goal-step-input .button {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .journal-page-card,
+  .journal-compose,
+  .journal-reader,
+  .goal-card-simple {
+    animation: none;
+  }
+  .journal-page-card:hover,
+  .journal-page-card:focus-within {
+    transform: none;
+  }
+}

@@ -56,17 +56,21 @@ function renderList() {
   const query = $("#vault-search").value.toLocaleLowerCase();
   for (const row of rows) {
     if (!row.document.text.toLocaleLowerCase().includes(query)) continue;
-    const card = element("article", "", "entry-card");
+    const card = element("article", "", "entry-card journal-page-card");
+    card.append(element("span", "", "journal-bookmark"));
     const button = element("button", "", "entry-open vault-note-link");
     button.type = "button"; button.dataset.vault = "select"; button.dataset.id = row.id;
-    const title = element("h3", row.document.text.trim().split("\n")[0].slice(0, 64) || say("صفحة من يومك", "A page from your day"));
+    const top = element("span", "", "journal-card-top");
+    top.append(element("span", date(row.created_at), "journal-date"), element("span", "✦", "journal-page-icon"));
+    const title = element("h3", say("من يومياتي", "From my journal"));
     const excerpt = element("p", row.document.text.slice(0, 180)); title.dir = "auto"; excerpt.dir = "auto";
-    button.append(element("span", date(row.created_at), "eyebrow"), title, excerpt);
+    const open = element("span", say("فتح التدوينة", "Open entry"), "entry-meta");
+    button.append(top, title, excerpt, open);
     card.append(button); list.append(card);
   }
   if (!list.childElementCount) {
-    const empty = element("section", "", "empty-state");
-    empty.append(element("h3", query ? say("لا توجد نتائج بعد.", "No matches yet.") : say("أول صفحة لك تنتظرك.", "Your first page is waiting.")), element("p", say("بضع كلمات عن يومك تكفي للبداية.", "A few words about your day are a good start.")));
+    const empty = element("section", "", "empty-state journal-empty");
+    empty.append(element("span", "✎", "empty-journal-cover"), element("h3", query ? say("لا توجد نتائج بعد.", "No matches yet.") : say("يومياتك تبدأ هنا", "Your journal starts here")), element("p", say("اكتبي سطرًا واحدًا عن يومك. هذا يكفي.", "Write one line about today. That is enough.")));
     list.append(empty);
   }
 }

@@ -67,3 +67,13 @@ class TemplateEditionTests(TestCase):
         self.assertEqual(response['Location'], '/login/?next=%2Fapp%2Ftasks%2F')
         self.assertEqual(self.client.get('/does-not-exist').status_code, 404)
         self.assertEqual(self.client.post('/api/tasks', data={}).status_code, 404)
+
+    def test_journal_uses_clear_notebook_layout_and_single_primary_action(self):
+        JournalEntry.objects.create(user=self.owner, raw_text="A private page", clean_text="A private page")
+        self.client.force_login(self.owner)
+        response = self.client.get('/app/journal/')
+        self.assertContains(response, 'class="page-heading journal-heading"')
+        self.assertContains(response, 'class="entry-card journal-page-card"')
+        self.assertContains(response, 'Write a new entry')
+        self.assertContains(response, 'Writing assistant')
+        self.assertNotContains(response, 'class="banner journal-mode"')

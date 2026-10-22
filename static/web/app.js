@@ -260,7 +260,8 @@
     const panel = $("#journal-detail");
     document.querySelector(".entry-grid")?.setAttribute("hidden", "");
     panel.hidden = false;
-    panel.innerHTML = `<header class="compose-heading"><div><span class="eyebrow">${esc(date(entry.created_at))}</span><h2>${esc(t("A page from your day"))}</h2></div><button class="text-link" data-close-compose="journal-detail">${esc(t("Back to your pages"))}</button></header><div class="task-actions"><button class="button secondary" data-edit-journal="${entry.id}">${esc(t("Edit journal entry"))}</button><button class="button secondary" data-delete-journal="${entry.id}">${esc(t("Delete entry"))}</button></div><p class="field-help">${esc(boot.provider)}: ${esc(t(boot.provider === "demo" ? "Demo mode: local rule-based suggestions, not a live AI model." : "Optional AI processing"))}</p><button class="button secondary" data-analyze="${entry.id}" ${boot.provider === "manual" ? "disabled" : ""}>${esc(t("Find next steps"))}</button><p class="journal-text" dir="auto">${esc(entry.clean_text || entry.raw_text)}</p><h3>${esc(t("Your next steps"))}</h3><div class="suggestion-list">${
+    panel.classList.add("journal-reader");
+    panel.innerHTML = `<span class="journal-binding" aria-hidden="true"></span><header class="compose-heading"><div><span class="eyebrow">${esc(t("From my journal"))} · ${esc(date(entry.created_at))}</span><h2>${esc(t("A page from your day"))}</h2></div><button class="text-link" data-close-compose="journal-detail">← ${esc(t("Back to your pages"))}</button></header><div class="journal-reader-actions"><button class="button secondary" data-edit-journal="${entry.id}">${esc(t("Edit journal entry"))}</button><button class="icon-button danger" data-delete-journal="${entry.id}" aria-label="${esc(t("Delete entry"))}">×</button></div><p class="journal-text" dir="auto">${esc(entry.clean_text || entry.raw_text)}</p><div class="journal-next-steps"><div class="journal-next-heading"><div><span class="journal-spark" aria-hidden="true">✦</span><h3>${esc(t("Your next steps"))}</h3></div><button class="button secondary" data-analyze="${entry.id}" ${boot.provider === "manual" ? "disabled" : ""}>${esc(t("Find next steps"))}</button></div><div class="suggestion-list">${
       entry.suggestions
         .filter((s) => s.status === "pending")
         .map(
@@ -269,7 +270,7 @@
         )
         .join("") ||
       `<p>${esc(t("No pending suggestions. Sometimes a page is just a page—and that’s enough."))}</p>`
-    }</div>`;
+    }</div></div>`;
     panel.scrollIntoView({ behavior: "smooth", block: "start" });
   }
   function confirmDelete(kind, id) {

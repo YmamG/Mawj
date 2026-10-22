@@ -22,8 +22,8 @@ from .templatetags.mawj import MESSAGES
 THEMES = [("grove", "Grove"), ("petal", "Petal"), ("dusk", "Dusk"), ("ember", "Ember"), ("midnight", "Midnight")]
 NAV = [
     ("today", "Today", "Sun"), ("tasks", "My tasks", "CheckCircle"),
-    ("journal", "Journal", "Notebook"), ("achievements", "Progress", "ChartBar"),
-    ("goals", "Goals", "Plant"),
+    ("journal", "Journal", "BookOpenText"), ("achievements", "Progress", "ChartBar"),
+    ("goals", "Goals", "Target"),
     ("calendar", "Calendar", "CalendarBlank"), ("profile", "My space", "UserCircle"),
 ]
 COPY = {

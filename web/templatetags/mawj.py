@@ -22,7 +22,7 @@ def icon(name):
     return mark_safe(_svg(name))
 @lru_cache(maxsize=64)
 def _svg(name):
-    if name not in ('Sun','CheckCircle','Notebook','ChartBar','CalendarBlank','UserCircle','Plus','SignOut','Check','X','MagnifyingGlass','Sparkle','Plant','PencilSimple','Trash','ArrowUpRight','Bell','CaretLeft','CaretRight'):
+    if name not in ('Sun','CheckCircle','Notebook','BookOpenText','Target','FlagBanner','ShieldCheck','ChartBar','CalendarBlank','UserCircle','Plus','SignOut','Check','X','MagnifyingGlass','Sparkle','Plant','PencilSimple','Trash','ArrowUpRight','Bell','CaretLeft','CaretRight'):
         return ''
     return (settings.BASE_DIR / 'templates' / 'web' / f'icon-{name}.html').read_text()
 @register.filter
