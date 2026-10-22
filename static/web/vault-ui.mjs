@@ -218,7 +218,6 @@ const actions = {
   async analyze() {
     if (boot.provider === "manual") throw Error(say("التحليل غير مفعّل في الوضع اليدوي.", "Analysis is disabled in manual mode."));
     syncDraft();
-    if (boot.sends_to_cloud && !confirm(say(`هل توافقين على إرسال نص هذه التدوينة مقروءًا عبر خادم موج إلى ${boot.provider}؟ قد يحتفظ المزوّد به وفق سياسته. الحفظ المشفّر وحده لا يرسله.`, `Send this entry's readable text through Mawj's server to ${boot.provider}? Provider retention policies apply. Encrypted saving alone never sends it.`))) return;
     await save(); const token = generation;
     const result = boot.sends_to_cloud ? await api("vault/analyze/", {text: current.document.text, provider: boot.provider, consent: true}) : demo(current.document.text);
     stillOpen(token);

@@ -209,7 +209,7 @@ class GoalTests(TestCase):
     @override_settings(AI_PROVIDER="gemini")
     def test_cloud_goal_plan_requires_explicit_send_action(self):
         detail = self.client.get(self.url())
-        self.assertContains(detail, "goal details and current steps will be sent to")
+        self.assertContains(detail, "Step suggestions from")
         self.assertContains(detail, "Gemini")
         with patch("goals.views.suggest_goal_steps", return_value={"steps": [{"title": "One"}]}) as suggest:
             denied = self.client.post(self.url("goal_ai_plan"), {"action": "suggest"})

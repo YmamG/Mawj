@@ -202,6 +202,8 @@ class VaultApiTests(TestCase):
         response = self.client.get("/app/encrypted-journal/")
         self.assertTrue(response.context["boot"]["sends_to_cloud"])
         self.assertEqual(response.context["boot"]["provider"], "openai")
+        self.assertContains(response, "Next-step suggestions from")
+        self.assertContains(response, "OpenAI")
 
     def test_rejected_task_validation_does_not_claim_idempotency_token(self):
         note = self.create_note()
