@@ -205,9 +205,9 @@ def analyze(request):
         raise ValueError()
     try:
         result = process_journal(data["text"])
-    except AIProviderError:
-        # Do not expose provider responses that might repeat a private prompt.
-        return JsonResponse({"error": "Analysis failed. Your encrypted entry is unchanged."}, status=422)
+    except AIProviderError as error:
+        # AIProviderError contains our fixed safe messages, never the private prompt or provider body.
+        return JsonResponse({"error": f"{error} Your encrypted entry is unchanged."}, status=422)
     # No database write: result returns to the browser for encryption there.
     return JsonResponse(result)
 

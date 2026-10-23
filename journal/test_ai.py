@@ -121,6 +121,7 @@ class ProviderCallTests(SimpleTestCase):
         self.assertEqual(len(result["suggestions"]), 2)
         self.assertEqual(post.call_args.kwargs["headers"]["x-goog-api-key"], "k")
         self.assertNotIn("k", post.call_args.args[0].split("?")[-1])  # key never in URL
+        self.assertIn("/models/gemini-2.5-flash:generateContent", post.call_args.args[0])
 
     def test_claude_request_and_parse(self):
         body = {"content": [{"type": "text", "text": json.dumps(GOOD)}]}

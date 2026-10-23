@@ -191,7 +191,7 @@ def _call_openai(system_prompt, user_message):
 
 def _call_gemini(system_prompt, user_message):
     key = _get_key("GEMINI_API_KEY", "Gemini")
-    model = os.environ.get("GEMINI_MODEL", "gemini-3.6-flash")
+    model = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
     data = _post(
         f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
         {"x-goog-api-key": key},

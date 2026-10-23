@@ -8,6 +8,7 @@ from django.contrib.auth import get_user_model
 from django.test import Client, TestCase, override_settings
 from django.utils import timezone
 
+from ai.provider import AIProviderError
 from tasks.models import Task
 from .models import EncryptedJournalEntry, JournalEntry, JournalVault, TaskSuggestion
 from .vault_api import legacy_snapshot
@@ -132,6 +133,15 @@ class VaultApiTests(TestCase):
         self.assertFalse(JournalEntry.objects.exists())
         self.assertFalse(TaskSuggestion.objects.exists())
         self.assertEqual(EncryptedJournalEntry.objects.get().payload, original)
+
+    @override_settings(AI_PROVIDER="gemini")
+    @patch("journal.vault_api.process_journal", side_effect=AIProviderError("The AI service returned an error (code 404)."))
+    def test_analysis_returns_safe_provider_error_without_note_text(self, process):
+        self.create_note()
+        response = self.post("vault/analyze/", {"text": "private note must not echo", "provider": "gemini", "consent": True})
+        self.assertEqual(response.status_code, 422)
+        self.assertContains(response, "code 404", status_code=422)
+        self.assertNotContains(response, "private note must not echo", status_code=422)
 
     def test_explicit_legacy_migration_is_atomic_and_keeps_tasks_and_date(self):
         self.create_vault()
