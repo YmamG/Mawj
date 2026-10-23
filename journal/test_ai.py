@@ -115,13 +115,28 @@ class ProviderCallTests(SimpleTestCase):
 
     def test_gemini_request_and_parse(self):
         body = {"candidates": [{"content": {"parts": [{"text": json.dumps(GOOD)}]}}]}
-        with patch.dict("os.environ", {"GEMINI_API_KEY": "k"}), \
+        with patch.dict("os.environ", {"GEMINI_API_KEY": "k", "GEMINI_MODEL": "gemini-2.5-flash"}), \
                 patch("ai.provider.requests.post", return_value=fake_response(200, body)) as post:
             result = provider.gemini_provider("hello")
         self.assertEqual(len(result["suggestions"]), 2)
         self.assertEqual(post.call_args.kwargs["headers"]["x-goog-api-key"], "k")
         self.assertNotIn("k", post.call_args.args[0].split("?")[-1])  # key never in URL
         self.assertIn("/models/gemini-2.5-flash:generateContent", post.call_args.args[0])
+
+    def test_gemini_auto_uses_available_generate_content_model_without_sending_text_to_listing(self):
+        model_body = {"models": [
+            {"name": "models/text-embedding-004", "supportedGenerationMethods": ["embedContent"]},
+            {"name": "models/gemini-3-flash-preview", "supportedGenerationMethods": ["generateContent"]},
+        ]}
+        reply = {"candidates": [{"content": {"parts": [{"text": json.dumps(GOOD)}]}}]}
+        with patch.dict("os.environ", {"GEMINI_API_KEY": "secret", "GEMINI_MODEL": "auto"}), \
+                patch("ai.provider.requests.get", return_value=fake_response(200, model_body)) as get, \
+                patch("ai.provider.requests.post", return_value=fake_response(200, reply)) as post:
+            result = provider.gemini_provider("private journal text")
+        self.assertEqual(result["clean_text"], "Organized text.")
+        self.assertEqual(get.call_args.kwargs["headers"], {"x-goog-api-key": "secret"})
+        self.assertNotIn("private journal text", json.dumps(get.call_args.kwargs))
+        self.assertIn("/models/gemini-3-flash-preview:generateContent", post.call_args.args[0])
 
     def test_claude_request_and_parse(self):
         body = {"content": [{"type": "text", "text": json.dumps(GOOD)}]}
@@ -153,7 +168,7 @@ class JournalAIFlowTests(TestCase):
         good = json.loads(json.dumps(GOOD))
         good["suggestions"][0]["date"] = (timezone.localdate() + timedelta(days=1)).isoformat()
         body = {"candidates": [{"content": {"parts": [{"text": json.dumps(good)}]}}]}
-        with patch.dict("os.environ", {"GEMINI_API_KEY": "k"}), \
+        with patch.dict("os.environ", {"GEMINI_API_KEY": "k", "GEMINI_MODEL": "gemini-2.5-flash"}), \
                 patch("ai.provider.requests.post", return_value=fake_response(200, body)):
             r = self.client.post(reverse("journal_create"), {"raw_text": "raw"}, follow=True)
         entry = JournalEntry.objects.get()

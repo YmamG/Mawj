@@ -25,6 +25,7 @@ from django.core.exceptions import ImproperlyConfigured
 
 TIMEOUT_SECONDS = 60
 VALID_PRIORITIES = ("low", "medium", "high")
+GEMINI_MODELS_URL = "https://generativelanguage.googleapis.com/v1beta/models"
 
 
 class AIProviderError(Exception):
@@ -165,6 +166,43 @@ def _post(url, headers, payload):
         raise AIProviderError("The AI service sent an unreadable reply.")
 
 
+def available_gemini_models():
+    """Return models this API key can use for text generation; no user text is sent."""
+    key = _get_key("GEMINI_API_KEY", "Gemini")
+    try:
+        response = requests.get(GEMINI_MODELS_URL, headers={"x-goog-api-key": key}, timeout=TIMEOUT_SECONDS)
+    except requests.RequestException:
+        raise AIProviderError("Could not reach the AI service.")
+    if response.status_code != 200:
+        raise AIProviderError(f"The AI service returned an error while listing models (code {response.status_code}).")
+    try:
+        models = response.json().get("models", [])
+    except (ValueError, AttributeError):
+        raise AIProviderError("The AI service sent an unreadable model list.")
+    return [
+        item["name"].removeprefix("models/")
+        for item in models
+        if isinstance(item, dict)
+        and isinstance(item.get("name"), str)
+        and item["name"].startswith("models/gemini-")
+        and "generateContent" in item.get("supportedGenerationMethods", [])
+    ]
+
+
+def _automatic_gemini_model():
+    models = available_gemini_models()
+    for preferred in ("gemini-3-flash-preview", "gemini-3-flash", "gemini-2.5-flash", "gemini-2.0-flash"):
+        if preferred in models:
+            return preferred
+    excluded = ("image", "tts", "live", "embedding")
+    candidates = [name for name in models if "flash" in name and not any(word in name for word in excluded)]
+    if candidates:
+        return candidates[0]
+    if models:
+        return models[0]
+    raise AIProviderError("This Gemini API key has no model that supports text generation.")
+
+
 # ---------------------------------------------------------------- real providers
 # Each _call_* function sends one prompt to one service and returns the reply TEXT.
 # Everything else (parsing, safety checks) is shared.
@@ -191,7 +229,9 @@ def _call_openai(system_prompt, user_message):
 
 def _call_gemini(system_prompt, user_message):
     key = _get_key("GEMINI_API_KEY", "Gemini")
-    model = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
+    model = os.environ.get("GEMINI_MODEL", "auto").strip() or "auto"
+    if model == "auto":
+        model = _automatic_gemini_model()
     data = _post(
         f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
         {"x-goog-api-key": key},

@@ -62,7 +62,7 @@ class SuggestButtonTests(TestCase):
     def test_real_provider_reply_fills_the_form(self):
         body = {"candidates": [{"content": {"parts": [{"text": json.dumps(
             {"priority": "high", "estimated_duration": 90})}]}}]}
-        with patch.dict("os.environ", {"GEMINI_API_KEY": "k"}), \
+        with patch.dict("os.environ", {"GEMINI_API_KEY": "k", "GEMINI_MODEL": "gemini-2.5-flash"}), \
                 patch("ai.provider.requests.post", return_value=fake_response(body)) as post:
             r = self.post_suggest(reverse("task_create"))
         html = r.content.decode()
