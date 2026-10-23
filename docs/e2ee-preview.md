@@ -1,6 +1,6 @@
 # تشفير اليوميات المُدار
 
-هذه ميزة تجريبية في فرع `e2ee-journal-preview`، وتُفعّل بوضع `MAWJ_E2EE_JOURNAL_PREVIEW=1`. لم تخضع لمراجعة أمنية مستقلة.
+هذه ميزة تجريبية مضمّنة في نسخة Django، وتُفعّل بوضع `MAWJ_E2EE_JOURNAL_PREVIEW=1`. لم تخضع لمراجعة أمنية مستقلة.
 
 ## تجربة المستخدم
 
@@ -34,8 +34,8 @@
 ## التشغيل المحلي
 
 ```powershell
-git clone --branch e2ee-journal-preview --single-branch https://github.com/YmamG/Mawj.git mawj-e2ee-preview
-cd mawj-e2ee-preview
+git clone --branch django-templates --single-branch https://github.com/YmamG/Mawj.git mawj
+cd mawj
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 $env:MAWJ_E2EE_JOURNAL_PREVIEW="1"

@@ -28,6 +28,8 @@ python3.12 -m venv .venv
 ```dotenv
 DJANGO_ALLOWED_HOSTS=PA_USERNAME.pythonanywhere.com
 AI_PROVIDER=demo
+# فعّل اليوميات الخاصة وإضافة الأهداف والمهام من اقتراحات اليوميات.
+MAWJ_E2EE_JOURNAL_PREVIEW=1
 ```
 
 استبدل `PA_USERNAME` باسم حساب PythonAnywhere الفعلي. ولّد مفتاحًا خاصًا مرة واحدة في Bash console؛ الأمر يكتبه دون طباعته:
@@ -95,7 +97,8 @@ from config.wsgi_production import application
 
 ```bash
 cd ~/mawj
-git pull --ff-only
+git switch django-templates
+git pull --ff-only origin django-templates
 .venv/bin/python -m pip install -r requirements.txt
 .venv/bin/python manage.py migrate --settings=config.settings_production
 .venv/bin/python manage.py collectstatic --noinput --settings=config.settings_production
