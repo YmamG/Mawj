@@ -1,5 +1,5 @@
 import json
-from datetime import date, time, timedelta
+from datetime import date, datetime, time, timedelta
 from django.utils import timezone
 from unittest.mock import MagicMock, patch
 
@@ -58,6 +58,55 @@ class ParseTests(SimpleTestCase):
     def test_missing_clean_text_falls_back_to_original(self):
         r = provider.parse_ai_reply('{"suggestions": []}', "my original")
         self.assertEqual(r["clean_text"], "my original")
+
+
+class ScheduleInferenceTests(SimpleTestCase):
+    @override_settings(AI_PROVIDER="demo")
+    @patch("django.utils.timezone.localdate", return_value=date(2026, 10, 23))
+    def test_demo_resolves_arabic_relative_date_weekday_and_time(self, localdate):
+        result = provider.process_journal("- أراجع الملخص غدًا الساعة ٥:٣٠ مساءً.\n- أرسل التقرير يوم الأحد")
+        first, second = result["suggestions"]
+        self.assertEqual((first["date"], first["start_time"]), (date(2026, 10, 24), time(17, 30)))
+        self.assertEqual(second["date"], date(2026, 10, 25))
+
+    @override_settings(AI_PROVIDER="gemini")
+    @patch("django.utils.timezone.localdate", return_value=date(2026, 10, 23))
+    def test_missing_model_dates_are_recovered_from_matching_source_sentences(self, localdate):
+        reply = {"clean_text": "x", "suggestions": [
+            {"title": "Study for the quiz", "date": None, "start_time": None, "priority": "medium", "estimated_duration": None},
+            {"title": "Call Mom", "date": None, "start_time": None, "priority": "medium", "estimated_duration": None},
+        ]}
+        text = "I need to study for the quiz tomorrow. I need to call Mom on Monday at 09:15."
+        with patch.dict(provider.PROVIDERS, {"gemini": lambda value: reply}):
+            result = provider.process_journal(text)
+        self.assertEqual(result["suggestions"][0]["date"], date(2026, 10, 24))
+        self.assertEqual((result["suggestions"][1]["date"], result["suggestions"][1]["start_time"]),
+                         (date(2026, 10, 26), time(9, 15)))
+
+    @override_settings(AI_PROVIDER="gemini")
+    @patch("django.utils.timezone.localdate", return_value=date(2026, 10, 23))
+    def test_explicit_source_date_overrides_model_guess_and_unscheduled_task_stays_undated(self, localdate):
+        reply = {"clean_text": "x", "suggestions": [
+            {"title": "Submit report", "date": date(2025, 10, 26), "start_time": None, "priority": "medium", "estimated_duration": None},
+            {"title": "Organize desk", "date": None, "start_time": None, "priority": "low", "estimated_duration": None},
+        ]}
+        with patch.dict(provider.PROVIDERS, {"gemini": lambda value: reply}):
+            result = provider.process_journal("I need to submit the report on 26/10/2026. I need to organize my desk.")
+        self.assertEqual(result["suggestions"][0]["date"], date(2026, 10, 26))
+        self.assertIsNone(result["suggestions"][1]["date"])
+
+    @override_settings(AI_PROVIDER="gemini")
+    @patch("django.utils.timezone.localtime")
+    @patch("django.utils.timezone.localdate", return_value=date(2026, 10, 23))
+    def test_past_time_today_is_removed_without_losing_today_date(self, localdate, localtime):
+        localtime.return_value = timezone.make_aware(datetime(2026, 10, 23, 18, 0))
+        reply = {"clean_text": "x", "suggestions": [
+            {"title": "Call at 09:00 today", "date": date(2026, 10, 23), "start_time": time(9), "priority": "medium", "estimated_duration": None},
+        ]}
+        with patch.dict(provider.PROVIDERS, {"gemini": lambda value: reply}):
+            result = provider.process_journal("Call at 09:00 today")
+        self.assertEqual(result["suggestions"][0]["date"], date(2026, 10, 23))
+        self.assertIsNone(result["suggestions"][0]["start_time"])
 
 
 class GoalPlanAITests(SimpleTestCase):

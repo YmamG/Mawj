@@ -17,7 +17,7 @@ import json
 import os
 import re
 import time
-from datetime import date, datetime
+from datetime import date, datetime, time as clock_time, timedelta
 
 import requests
 from django.conf import settings
@@ -68,14 +68,167 @@ Do two things:
 2. suggestions: list tasks or appointments the user clearly said they need or want to do. Do NOT invent tasks. If there are none, return an empty list.
 
 Reply with ONLY a JSON object, no markdown, in exactly this shape:
-{"clean_text": "...", "suggestions": [{"title": "...", "date": "YYYY-MM-DD or null", "start_time": "HH:MM or null", "priority": "low|medium|high", "estimated_duration": minutes as a number or null}]}
+{"clean_text": "...", "suggestions": [{"title": "...", "date": null, "start_time": null, "priority": "medium", "estimated_duration": null}]}
 
-Use today's date (given below) to turn words like "tomorrow" into a real date. Use null when the user did not say."""
+Date and time rules:
+- Today's date, weekday and timezone are given below. Resolve relative phrases such as "today", "tomorrow", "after tomorrow", "next Sunday", "اليوم", "غدًا", "بعد غد" and Arabic weekday names.
+- If a task or appointment contains a date or time expression, you MUST put the resolved value in that same suggestion. Do not return null for an expressed schedule.
+- A non-null date must be a "YYYY-MM-DD" string, a non-null time must be a 24-hour "HH:MM" string, priority must be "low", "medium" or "high", and duration must be whole minutes. Keep date/time null only when the user gave no date/time for that task.
+- Do not guess a schedule from another task or invent one.
+"""
 
 
 def _build_user_message(text):
     from django.utils import timezone
-    return f"Today's date: {timezone.localdate().isoformat()}\n\nJournal text:\n{text}"
+    today = timezone.localdate()
+    return f"Today's date: {today.isoformat()} ({today.strftime('%A')})\nTimezone: Asia/Riyadh\n\nJournal text:\n{text}"
+
+
+_ARABIC_DIGITS = str.maketrans("٠١٢٣٤٥٦٧٨٩۰۱۲۳۴۵۶۷۸۹", "01234567890123456789")
+_WEEKDAYS = {
+    "monday": 0, "الاثنين": 0, "الإثنين": 0,
+    "tuesday": 1, "الثلاثاء": 1,
+    "wednesday": 2, "الاربعاء": 2, "الأربعاء": 2,
+    "thursday": 3, "الخميس": 3,
+    "friday": 4, "الجمعه": 4, "الجمعة": 4,
+    "saturday": 5, "السبت": 5,
+    "sunday": 6, "الاحد": 6, "الأحد": 6,
+}
+_MONTHS = {
+    "january": 1, "jan": 1, "يناير": 1,
+    "february": 2, "feb": 2, "فبراير": 2,
+    "march": 3, "mar": 3, "مارس": 3,
+    "april": 4, "apr": 4, "ابريل": 4, "أبريل": 4,
+    "may": 5, "مايو": 5,
+    "june": 6, "jun": 6, "يونيو": 6,
+    "july": 7, "jul": 7, "يوليو": 7,
+    "august": 8, "aug": 8, "اغسطس": 8, "أغسطس": 8,
+    "september": 9, "sep": 9, "sept": 9, "سبتمبر": 9,
+    "october": 10, "oct": 10, "اكتوبر": 10, "أكتوبر": 10,
+    "november": 11, "nov": 11, "نوفمبر": 11,
+    "december": 12, "dec": 12, "ديسمبر": 12,
+}
+_SCHEDULE_WORDS = re.compile(
+    r"\b(?:today|tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday|at)\b"
+    r"|(?:اليوم|غدا|بكره|بكرة|بكرا|الاثنين|الإثنين|الثلاثاء|الاربعاء|الأربعاء|الخميس|الجمعه|الجمعة|السبت|الاحد|الأحد|الساعة|الساعه)"
+    r"|\d{1,4}[/:.-]\d{1,2}",
+    re.IGNORECASE,
+)
+
+
+def _temporal_text(value):
+    value = str(value or "").translate(_ARABIC_DIGITS).casefold()
+    return re.sub(r"[\u064b-\u065f\u0670ـ]", "", value)
+
+
+def _valid_date(year, month, day):
+    try:
+        return date(year, month, day)
+    except ValueError:
+        return None
+
+
+def _date_from_text(value, today):
+    """Resolve common explicit/relative Gregorian dates without inventing one."""
+    text = _temporal_text(value)
+    match = re.search(r"(?<!\d)(20\d{2})[-/.](\d{1,2})[-/.](\d{1,2})(?!\d)", text)
+    if match:
+        return _valid_date(*(int(part) for part in match.groups()))
+    match = re.search(r"(?<!\d)(\d{1,2})[-/.](\d{1,2})[-/.](20\d{2})(?!\d)", text)
+    if match:
+        day, month, year = (int(part) for part in match.groups())
+        return _valid_date(year, month, day)
+    match = re.search(r"(?<!\d)(\d{1,2})/(\d{1,2})(?![/\d])", text)
+    if match:
+        day, month = (int(part) for part in match.groups())
+        resolved = _valid_date(today.year, month, day)
+        if resolved and resolved < today:
+            resolved = _valid_date(today.year + 1, month, day)
+        return resolved
+
+    if re.search(r"\b(?:day after tomorrow)\b|(?:بعد\s+(?:غد|بكره|بكرة|بكرا))", text):
+        return today + timedelta(days=2)
+    if re.search(r"\btomorrow\b|(?:غدا|بكره|بكرة|بكرا)", text):
+        return today + timedelta(days=1)
+    if re.search(r"\btoday\b|اليوم", text):
+        return today
+
+    month_names = "|".join(sorted((re.escape(name) for name in _MONTHS), key=len, reverse=True))
+    match = re.search(rf"(?<!\d)(\d{{1,2}})\s+({month_names})(?:\s+(20\d{{2}}))?", text)
+    if not match:
+        match = re.search(rf"(?:{month_names})\s+(\d{{1,2}})(?:\s*,?\s*(20\d{{2}}))?", text)
+        if match:
+            month_name = match.group(0).split()[0]
+            day, year = int(match.group(1)), int(match.group(2) or today.year)
+            month = _MONTHS[month_name]
+        else:
+            day = month = year = None
+    else:
+        day, month_name, year_value = match.groups()
+        day, month, year = int(day), _MONTHS[month_name], int(year_value or today.year)
+    if day is not None:
+        resolved = _valid_date(year, month, day)
+        if resolved and not re.search(r"20\d{2}", match.group(0)) and resolved < today:
+            resolved = _valid_date(year + 1, month, day)
+        return resolved
+
+    for name, weekday in _WEEKDAYS.items():
+        if re.search(rf"(?<!\w){re.escape(_temporal_text(name))}(?!\w)", text):
+            days = (weekday - today.weekday()) % 7
+            return today + timedelta(days=days)
+    return None
+
+
+def _time_from_text(value):
+    text = _temporal_text(value)
+    patterns = (
+        r"(?:\bat\b|الساعة|الساعه)\s*(\d{1,2})(?::(\d{2}))?\s*(am|pm|ص|م|صباحا|مساء)?",
+        r"(?<!\d)(\d{1,2}):(\d{2})\s*(am|pm|ص|م|صباحا|مساء)?",
+        r"(?<!\d)(\d{1,2})\s*(am|pm|ص|م|صباحا|مساء)(?!\w)",
+    )
+    for index, pattern in enumerate(patterns):
+        match = re.search(pattern, text)
+        if not match:
+            continue
+        parts = match.groups()
+        hour = int(parts[0])
+        if index == 2:
+            minute, period = 0, parts[1]
+        else:
+            minute, period = int(parts[1] or 0), parts[2]
+        if period in ("pm", "م", "مساء") and hour < 12:
+            hour += 12
+        elif period in ("am", "ص", "صباحا") and hour == 12:
+            hour = 0
+        if 0 <= hour <= 23 and 0 <= minute <= 59:
+            return clock_time(hour, minute)
+    return None
+
+
+def _source_segments(text):
+    return [part.strip(" -*\t") for part in re.split(r"[\n.!؟؛]+", text) if part.strip(" -*\t")]
+
+
+def _schedule_context(title, source, index, total):
+    """Choose the source sentence most likely to belong to this suggestion."""
+    segments = _source_segments(source)
+    scheduled = [segment for segment in segments if _SCHEDULE_WORDS.search(_temporal_text(segment))]
+    if not scheduled:
+        return ""
+    ignored = {"the", "and", "to", "a", "an", "i", "my", "في", "من", "الى", "إلى", "على", "و", "انا", "أنا"}
+    tokens = {token for token in re.findall(r"[\w\u0600-\u06ff]+", _temporal_text(title)) if len(token) > 1 and token not in ignored}
+    scored = []
+    for segment in scheduled:
+        segment_tokens = set(re.findall(r"[\w\u0600-\u06ff]+", _temporal_text(segment)))
+        scored.append((len(tokens & segment_tokens), segment))
+    score, best = max(scored, key=lambda item: item[0])
+    if score:
+        return best
+    if len(segments) == total and index < len(segments):
+        return segments[index]
+    if len(scheduled) == 1 and total == 1:
+        return scheduled[0]
+    return ""
 
 
 def _clean_suggestion(item):
@@ -303,16 +456,32 @@ def _provider_name():
 def process_journal(text):
     from django.utils import timezone
     result = PROVIDERS[_provider_name()](text)
+    today = timezone.localdate()
     adjusted = False
-    for suggestion in result["suggestions"]:
+    total = len(result["suggestions"])
+    for index, suggestion in enumerate(result["suggestions"]):
+        context = _schedule_context(suggestion["title"], text, index, total)
+        source = f"{suggestion['title']}\n{context}"
+        inferred_date = _date_from_text(source, today)
+        inferred_time = _time_from_text(source)
         when = suggestion.get("date")
         clock = suggestion.get("start_time")
-        if when and (when < timezone.localdate() or (when == timezone.localdate() and clock and clock < timezone.localtime().time().replace(tzinfo=None))):
+        # Fill missing schedules locally, and repair a model date that is already past.
+        # A valid future model date may reflect context such as "study for tomorrow's quiz".
+        if inferred_date and (when is None or when < today):
+            when = suggestion["date"] = inferred_date
+        if inferred_time and clock is None:
+            clock = suggestion["start_time"] = inferred_time
+        if when and when < today:
             suggestion["date"] = None
             suggestion["start_time"] = None
             adjusted = True
+        elif when == today and clock and clock < timezone.localtime().time().replace(tzinfo=None):
+            # Keep "today" useful while avoiding a start time that already passed.
+            suggestion["start_time"] = None
+            adjusted = True
     if adjusted:
-        result["warning"] = "Past suggested dates were removed. Choose a current or future date in your task list."
+        result["warning"] = "Past suggested schedules were adjusted. Choose a current or future time in your task list."
     return result
 
 

@@ -37,6 +37,10 @@ function lock() {
   notice("");
 }
 function date(value) { return new Intl.DateTimeFormat(boot.language === "ar" ? "ar-SA-u-ca-gregory" : "en", {dateStyle: "medium", timeZone: "Asia/Riyadh"}).format(new Date(value)); }
+function time(value) {
+  const [hour, minute] = String(value).slice(0, 5).split(":").map(Number);
+  return new Intl.DateTimeFormat(boot.language === "ar" ? "ar-SA" : "en", {hour: "numeric", minute: "2-digit", timeZone: "UTC"}).format(new Date(Date.UTC(2000, 0, 1, hour, minute)));
+}
 function element(tag, text, className) { const node = document.createElement(tag); node.textContent = text; if (className) node.className = className; return node; }
 function renderList(reset = false) {
   const list = $("#vault-list"); list.replaceChildren();
@@ -117,6 +121,8 @@ function renderEditor(preserveText = false) {
   for (const suggestion of current.document.suggestions) {
     const row = element("div", "", "vault-suggestion");
     row.append(element("p", suggestion.title));
+    const schedule = [suggestion.date ? date(suggestion.date) : "", suggestion.start_time ? time(suggestion.start_time) : ""].filter(Boolean).join(" · ");
+    if (schedule) row.append(element("small", schedule, "entry-meta"));
     if (suggestion.status === "pending") {
       const accept = element("button", say("إضافة كمهمة عادية", "Add as an ordinary task"), "button secondary");
       accept.type = "button"; accept.dataset.vault = "accept"; accept.dataset.id = suggestion.id;
@@ -173,7 +179,39 @@ function demo(text) {
     if (/^[-*]/.test(line)) titles.push(line.replace(/^[-*\s]+/, ""));
     else { const matches = [...line.matchAll(pattern)]; for (let i = 0; i < matches.length; i++) titles.push(line.slice(matches[i].index + matches[i][0].length, matches[i + 1]?.index).trim()); }
   }
-  return {clean_text: text.trim(), suggestions: [...new Set(titles.filter(Boolean).map((s) => s.slice(0, 200)))].slice(0, 20).map((title) => ({title, priority: "medium", date: null, start_time: null, estimated_duration: null}))};
+  return {clean_text: text.trim(), suggestions: [...new Set(titles.filter(Boolean).map((s) => s.slice(0, 200)))].slice(0, 20).map((title) => ({title, priority: "medium", ...localSchedule(title), estimated_duration: null}))};
+}
+function localSchedule(value) {
+  const digits = "٠١٢٣٤٥٦٧٨٩۰۱۲۳۴۵۶۷۸۹";
+  const text = String(value).replace(/[٠-٩۰-۹]/g, (number) => String(digits.indexOf(number) % 10)).toLocaleLowerCase().replace(/[\u064b-\u065f\u0670ـ]/g, "");
+  const base = new Date(`${boot.today}T12:00:00Z`);
+  const add = (days) => { const result = new Date(base); result.setUTCDate(result.getUTCDate() + days); return result.toISOString().slice(0, 10); };
+  let due = null;
+  let match = text.match(/(?<!\d)(20\d{2})[-/.](\d{1,2})[-/.](\d{1,2})(?!\d)/);
+  if (match) due = `${match[1]}-${match[2].padStart(2, "0")}-${match[3].padStart(2, "0")}`;
+  if (!due && (match = text.match(/(?<!\d)(\d{1,2})[-/.](\d{1,2})[-/.](20\d{2})(?!\d)/))) due = `${match[3]}-${match[2].padStart(2, "0")}-${match[1].padStart(2, "0")}`;
+  if (!due && (match = text.match(/(?<!\d)(\d{1,2})\/(\d{1,2})(?![\/\d])/))) {
+    const candidate = new Date(Date.UTC(base.getUTCFullYear(), Number(match[2]) - 1, Number(match[1]), 12));
+    if (candidate < base) candidate.setUTCFullYear(candidate.getUTCFullYear() + 1);
+    if (candidate.getUTCDate() === Number(match[1]) && candidate.getUTCMonth() === Number(match[2]) - 1) due = candidate.toISOString().slice(0, 10);
+  }
+  if (!due && (/\bday after tomorrow\b|بعد\s+(?:غد|بكره|بكرة|بكرا)/.test(text))) due = add(2);
+  if (!due && (/\btomorrow\b|غدا|بكره|بكرة|بكرا/.test(text))) due = add(1);
+  if (!due && (/\btoday\b|اليوم/.test(text))) due = add(0);
+  if (!due) {
+    const weekdays = [["sunday", "الاحد", "الأحد"], ["monday", "الاثنين", "الإثنين"], ["tuesday", "الثلاثاء"], ["wednesday", "الاربعاء", "الأربعاء"], ["thursday", "الخميس"], ["friday", "الجمعه", "الجمعة"], ["saturday", "السبت"]];
+    const target = weekdays.findIndex((names) => names.some((name) => text.includes(name.toLocaleLowerCase().replace(/[\u064b-\u065f\u0670ـ]/g, ""))));
+    if (target >= 0) due = add((target - base.getUTCDay() + 7) % 7);
+  }
+  let start = null;
+  match = text.match(/(?:\bat\b|الساعة|الساعه)\s*(\d{1,2})(?::(\d{2}))?\s*(am|pm|ص|م|صباحا|مساء)?|(?<!\d)(\d{1,2}):(\d{2})\s*(am|pm|ص|م|صباحا|مساء)?/);
+  if (match) {
+    let hour = Number(match[1] ?? match[4]), minute = Number(match[2] ?? match[5] ?? 0), period = match[3] ?? match[6];
+    if (["pm", "م", "مساء"].includes(period) && hour < 12) hour += 12;
+    if (["am", "ص", "صباحا"].includes(period) && hour === 12) hour = 0;
+    if (hour <= 23 && minute <= 59) start = `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+  }
+  return {date: due, start_time: start};
 }
 const actions = {
   async resetLegacy() {
