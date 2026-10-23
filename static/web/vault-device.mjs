@@ -1,4 +1,4 @@
-/* Browser-only session cache. Never stores passphrases, recovery codes or notes. */
+/* Browser-only trusted-device cache. Never stores passphrases, recovery codes or notes. */
 const database = "mawj-journal-device-v1";
 async function open() {
   return new Promise((resolve, reject) => {
@@ -22,18 +22,18 @@ async function transaction(mode, action) {
 function usable(key) {
   return key instanceof CryptoKey && key.type === "secret" && key.extractable === false && key.algorithm.name === "AES-GCM" && key.algorithm.length === 256;
 }
-export async function rememberDeviceKey(userId, session, vaultId, key) {
-  if (!Number.isSafeInteger(userId) || !session || !vaultId || !usable(key)) throw Error("Invalid device key");
-  await transaction("readwrite", (store) => store.put({userId, session, vaultId, key}));
+export async function rememberDeviceKey(userId, vaultId, key) {
+  if (!Number.isSafeInteger(userId) || !vaultId || !usable(key)) throw Error("Invalid device key");
+  await transaction("readwrite", (store) => store.put({userId, vaultId, key}));
 }
 export async function forgetDeviceKey(userId) {
   if (!Number.isSafeInteger(userId)) return;
   await transaction("readwrite", (store) => store.delete(userId));
 }
-export async function readDeviceKey(userId, session, vaultId) {
+export async function readDeviceKey(userId, vaultId) {
   const saved = await transaction("readonly", (store) => store.get(userId));
   if (!saved) return null;
-  if (saved.session !== session || saved.vaultId !== vaultId || !usable(saved.key)) {
+  if (saved.vaultId !== vaultId || !usable(saved.key)) {
     await forgetDeviceKey(userId);
     return null;
   }

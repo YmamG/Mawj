@@ -104,12 +104,6 @@
       channel.postMessage("lock");
       channel.close();
     }
-    if (path.startsWith("/auth/") && boot.e2ee_preview) {
-      try {
-        const device = await import("/static/web/vault-device.mjs");
-        await device.forgetDeviceKey(boot.user?.id || body.user?.id);
-      } catch { /* Session binding still rejects cache reuse after authentication. */ }
-    }
     return body;
   }
   function feedback(message, form, error = false) {

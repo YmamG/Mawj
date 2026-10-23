@@ -194,6 +194,8 @@ class VaultApiTests(TestCase):
         self.assertEqual(self.client.get("/api/session/").json()["user"]["stats"]["journals"], 1)
         response = self.client.get("/app/encrypted-journal/")
         self.assertContains(response, "Preview · use fictional data")
+        self.assertContains(response, 'id="vault-device-open"')
+        self.assertContains(response, "Forget this device")
         self.assertNotContains(response, "<form")
         self.assertIn("no-store", response.headers["Cache-Control"])
 

@@ -3808,6 +3808,199 @@ html[lang=ar] .goals-hero h1 em {
 .journal-shelf {
   align-items: stretch;
 }
+.journal-book-shell {
+  grid-column: 1 / -1;
+  width: 100%;
+  padding: 18px 0 6px;
+}
+.journal-book-stage {
+  position: relative;
+  width: min(100%, 690px);
+  min-height: 500px;
+  margin: 0 auto;
+  perspective: 1600px;
+}
+.journal-book-stage::before,
+.journal-book-stage::after {
+  content: "";
+  position: absolute;
+  inset: 16px 12px 3px 18px;
+  border: 1px solid var(--line);
+  border-radius: 12px 28px 28px 12px;
+  background: var(--paper);
+  box-shadow: 0 22px 48px var(--shadow);
+}
+.journal-book-stage::before {
+  transform: translate(8px, 7px) rotate(.35deg);
+  opacity: .55;
+}
+.journal-book-stage::after {
+  transform: translate(4px, 3px) rotate(.15deg);
+  opacity: .8;
+}
+.journal-book-cover,
+.journal-book-page {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  min-height: 500px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 12px 28px 28px 12px;
+  transform-style: preserve-3d;
+  transform-origin: left center;
+  box-shadow: 0 24px 55px var(--shadow), inset 14px 0 0 color-mix(in srgb, var(--ink) 10%, transparent);
+}
+.journal-book-cover {
+  justify-content: center;
+  align-items: flex-start;
+  padding: clamp(34px, 7vw, 72px);
+  color: var(--accent-ink);
+  background: radial-gradient(circle at 82% 20%, color-mix(in srgb, var(--accent-ink) 14%, transparent), transparent 27%), linear-gradient(145deg, var(--accent), color-mix(in srgb, var(--accent) 76%, var(--palette-3)));
+}
+.journal-book-cover::after {
+  content: "";
+  position: absolute;
+  inset: 18px;
+  border: 1px solid color-mix(in srgb, var(--accent-ink) 24%, transparent);
+  border-radius: 7px 20px 20px 7px;
+  pointer-events: none;
+}
+.journal-cover-mark {
+  font-family: Georgia, serif;
+  font-size: 62px;
+  line-height: .65;
+  opacity: .82;
+}
+.journal-book-cover .eyebrow {
+  margin: 34px 0 8px;
+}
+.journal-book-cover h2 {
+  margin: 0;
+  color: inherit;
+  font-size: clamp(48px, 8vw, 76px);
+}
+.journal-cover-count {
+  margin: 16px 0 30px;
+  opacity: .75;
+}
+.journal-cover-open {
+  position: relative;
+  z-index: 1;
+  background: var(--paper);
+  color: var(--ink);
+}
+.journal-book-page {
+  padding: clamp(28px, 6vw, 58px);
+  background: repeating-linear-gradient(to bottom, transparent 0 40px, color-mix(in srgb, var(--line) 72%, transparent) 41px), var(--paper);
+}
+.journal-book-page::before {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 50px;
+  width: 1px;
+  background: color-mix(in srgb, var(--palette-4) 38%, transparent);
+  pointer-events: none;
+}
+.journal-book-page-open {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  padding-inline-start: 20px;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  text-align: start;
+  cursor: pointer;
+}
+.journal-book-page-open h3 {
+  margin: 20px 0 14px;
+  font-size: clamp(28px, 5vw, 40px);
+}
+.journal-book-page-open > p {
+  display: -webkit-box;
+  flex: 1;
+  margin: 0 0 24px;
+  overflow: hidden;
+  color: var(--ink);
+  font-family: "Fraunces Variable", Georgia, serif;
+  font-size: 18px;
+  line-height: 2.28;
+  white-space: pre-wrap;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 7;
+}
+html[lang="ar"] .journal-book-page-open > p {
+  font-family: var(--font-saudi), "Noto Sans Arabic", sans-serif;
+  font-size: 17px;
+}
+.journal-page-number {
+  color: var(--muted);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.journal-book-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin: 22px auto 0;
+}
+.journal-book-controls .icon-button {
+  border: 1px solid var(--line);
+  background: var(--paper);
+}
+.journal-book-controls .icon-button:disabled {
+  opacity: .35;
+  cursor: default;
+}
+.journal-book-status {
+  min-width: 120px;
+  color: var(--muted);
+  font-size: 11px;
+  text-align: center;
+}
+.journal-book-cover.is-next,
+.journal-book-page.is-next {
+  animation: book-page-next .46s cubic-bezier(.2,.72,.25,1) both;
+}
+.journal-book-cover.is-prev,
+.journal-book-page.is-prev {
+  animation: book-page-prev .46s cubic-bezier(.2,.72,.25,1) both;
+}
+html[dir="rtl"] .journal-book-stage::before,
+html[dir="rtl"] .journal-book-stage::after,
+html[dir="rtl"] .journal-book-cover,
+html[dir="rtl"] .journal-book-page {
+  border-radius: 28px 12px 12px 28px;
+}
+html[dir="rtl"] .journal-book-cover,
+html[dir="rtl"] .journal-book-page {
+  transform-origin: right center;
+  box-shadow: 0 24px 55px var(--shadow), inset -14px 0 0 color-mix(in srgb, var(--ink) 10%, transparent);
+}
+html[dir="rtl"] .journal-book-cover::after {
+  border-radius: 20px 7px 7px 20px;
+}
+@keyframes book-page-next {
+  from { opacity: .3; transform: translateX(-22px) rotateY(-12deg); }
+}
+@keyframes book-page-prev {
+  from { opacity: .3; transform: translateX(22px) rotateY(12deg); }
+}
+html[dir="rtl"] .journal-book-cover.is-next,
+html[dir="rtl"] .journal-book-page.is-next {
+  animation-name: book-page-prev;
+}
+html[dir="rtl"] .journal-book-cover.is-prev,
+html[dir="rtl"] .journal-book-page.is-prev {
+  animation-name: book-page-next;
+}
 .journal-page-card {
   position: relative;
   min-height: 255px;
@@ -4401,6 +4594,31 @@ html[dir="rtl"] .journal-reader {
     opacity: 1;
     transform: none;
   }
+  .journal-book-stage,
+  .journal-book-cover,
+  .journal-book-page {
+    min-height: 460px;
+  }
+  .journal-book-cover,
+  .journal-book-page {
+    border-radius: 9px 22px 22px 9px;
+  }
+  .journal-book-page {
+    padding: 30px 22px 28px 30px;
+  }
+  html[dir="rtl"] .journal-book-page {
+    padding-inline: 30px 22px;
+  }
+  .journal-book-page::before {
+    inset-inline-start: 28px;
+  }
+  .journal-book-page-open {
+    padding-inline-start: 13px;
+  }
+  .journal-book-page-open > p {
+    -webkit-line-clamp: 6;
+    font-size: 16px;
+  }
   .goals-simple-head {
     align-items: flex-start;
   }
@@ -4485,6 +4703,10 @@ html[dir="rtl"] .journal-reader {
   .journal-reader,
   .goal-card-simple {
     animation: none;
+  }
+  .journal-book-cover,
+  .journal-book-page {
+    animation: none !important;
   }
   .journal-page-card:hover,
   .journal-page-card:focus-within {
