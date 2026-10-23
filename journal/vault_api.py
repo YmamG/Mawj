@@ -180,7 +180,7 @@ def import_legacy(request, pk):
             if legacy_snapshot(entry)["fingerprint"] != data["fingerprint"]:
                 return conflict()
             note = current.entries.create(id=key_id, payload=cipher)
-            # Preserve its calendar day; accepted tasks remain outside encryption.
+            # Preserve its calendar day; accepted tasks and goals remain outside encryption.
             current.entries.filter(pk=note.pk).update(created_at=entry.created_at)
             entry.delete()
     except IntegrityError:
@@ -233,3 +233,30 @@ def accept_task(request, pk):
         link.task = task
         link.save(update_fields=["task"])
     return JsonResponse({"task_id": task.pk}, status=201)
+
+
+@preview(("POST",))
+def accept_goal(request, pk):
+    from goals.forms import GoalForm
+    entry = get_object_or_404(EncryptedJournalEntry, pk=pk, vault__user=request.user, vault__key_mode="managed")
+    data = payload(request)
+    only(data, ("token", "goal", "consent"))
+    if data["consent"] is not True or not isinstance(data["goal"], dict):
+        raise ValueError()
+    token = identifier(data["token"])
+    with transaction.atomic():
+        link, created = VaultTaskAcceptance.objects.get_or_create(entry=entry, token=token)
+        if link.goal_id is None and not created:
+            return JsonResponse({"goal_id": None, "already_accepted": True})
+        if not created:
+            return JsonResponse({"goal_id": link.goal_id, "already_accepted": True})
+        form = GoalForm(data["goal"])
+        if not form.is_valid():
+            transaction.set_rollback(True)
+            return JsonResponse({"error": "Check the goal date and details.", "fields": dict(form.errors)}, status=400)
+        goal = form.save(commit=False)
+        goal.user = request.user
+        goal.save()
+        link.goal = goal
+        link.save(update_fields=["goal"])
+    return JsonResponse({"goal_id": goal.pk}, status=201)

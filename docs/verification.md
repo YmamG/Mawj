@@ -246,3 +246,9 @@ Limitations remain: no production deployment or live AI provider test; reminders
 - Strengthened the journal prompt so configured cloud providers receive Mawj's current Riyadh date, weekday and explicit rules for resolving each task's date and time. Added a local fallback for Arabic/English relative dates, weekdays, Arabic numerals, common Gregorian month names, numeric dates and 12/24-hour times when a provider leaves schedule fields empty.
 - Demo mode now extracts common date/time phrases locally instead of assigning `null` to every suggestion. Encrypted-journal suggestions display the resolved schedule before acceptance. A past time on today's date is removed without discarding the still-valid date; truly past dates remain unscheduled.
 - **154 Django tests passed**, including Arabic relative dates/times, English sentence matching, provider-null recovery, explicit-date repair and today's past-time handling. Django checks, migration consistency, JavaScript syntax, diff whitespace and Node/Web Crypto checks passed.
+
+## Journal task and goal routing (2026-10-23)
+
+- Journal analysis now classifies each explicit next step as either a concrete task or a longer-term goal. The review UI labels both types and gives the user a separate action to add a goal to Goals; no suggestion is added automatically.
+- Goal acceptance preserves an optional future target date and category, is owner-scoped and idempotent, and validates dates through the existing goal form. Encrypted entries keep the suggestion encrypted until acceptance, then copy only the selected goal details to the ordinary Goals list.
+- **159 Django tests passed**, including goal parsing, Demo task/goal distinction, ordinary and encrypted acceptance, repeated-click idempotency, invalid-date retry and account ownership. Migration consistency, Django checks, translation JSON, JavaScript syntax and the Web Crypto test also passed.

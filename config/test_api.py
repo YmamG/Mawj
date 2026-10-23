@@ -6,6 +6,7 @@ from django.utils import timezone
 from tasks.models import Task
 from journal.models import JournalEntry, TaskSuggestion
 from accounts.models import UserPreferences
+from goals.models import Goal
 
 
 class ApiTests(TestCase):
@@ -93,6 +94,20 @@ class ApiTests(TestCase):
         self.assertEqual(Task.objects.filter(user=self.user).count(), 1)
         private = JournalEntry.objects.create(user=self.other, raw_text="Private")
         self.assertEqual(self.client.get(f"/api/journal/{private.pk}/").status_code, 404)
+
+    def test_journal_goal_suggestion_creates_one_goal_after_approval(self):
+        entry = JournalEntry.objects.create(user=self.user, raw_text="I want to learn photography")
+        target = timezone.localdate() + timedelta(days=30)
+        suggestion = TaskSuggestion.objects.create(
+            user=self.user, entry=entry, kind="goal", title="Learn photography",
+            category="personal", date=target,
+        )
+        first = self.post(f"suggestions/{suggestion.pk}/", {"action": "accept"})
+        second = self.post(f"suggestions/{suggestion.pk}/", {"action": "accept"})
+        self.assertEqual((first.status_code, first.json()["kind"]), (200, "goal"))
+        self.assertEqual(second.status_code, 200)
+        self.assertEqual(Goal.objects.filter(user=self.user, title="Learn photography", target_date=target).count(), 1)
+        self.assertFalse(Task.objects.filter(user=self.user, title="Learn photography").exists())
 
     def test_today_reminders_reports_calendar_and_profile(self):
         task = Task.objects.create(user=self.user, title="Task", date=timezone.localdate(), reminder_at=timezone.now()-timedelta(minutes=1))

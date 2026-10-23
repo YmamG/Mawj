@@ -13,13 +13,13 @@
 <h3>Organized text</h3>
 <p style="white-space: pre-wrap;">{{ entry.clean_text }}</p>
 
-<h3>Suggested tasks</h3>
+<h3>Suggested next steps</h3>
 {% for s in pending %}
     <div style="border: 1px solid #999; padding: 10px; margin-bottom: 10px;">
-        <strong>{{ s.title }}</strong>
+        <strong>{% if s.kind == 'goal' %}Goal{% else %}Task{% endif %}: {{ s.title }}</strong>
         (priority: {{ s.priority }}{% if s.date %}, date: {{ s.date|date:"Y-m-d" }}{% endif %}{% if s.start_time %}, at {{ s.start_time|time:"H:i" }}{% endif %}{% if s.estimated_duration %}, {{ s.estimated_duration }} min{% endif %})
         <form method="post" action="{% url 'suggestion_accept' s.pk %}" style="display: inline;">
-            {% csrf_token %}<button type="submit">Add to my tasks</button>
+            {% csrf_token %}<button type="submit">{% if s.kind == 'goal' %}Add to my goals{% else %}Add to my tasks{% endif %}</button>
         </form>
         <form method="post" action="{% url 'suggestion_dismiss' s.pk %}" style="display: inline;">
             {% csrf_token %}<button type="submit">Dismiss</button>

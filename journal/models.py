@@ -25,10 +25,11 @@ class EncryptedJournalEntry(models.Model):
 
 
 class VaultTaskAcceptance(models.Model):
-    """Idempotency metadata for a user-approved, explicitly unencrypted task."""
+    """Idempotency metadata for a user-approved task or goal."""
     entry = models.ForeignKey(EncryptedJournalEntry, on_delete=models.CASCADE)
     token = models.UUIDField()
     task = models.ForeignKey("tasks.Task", on_delete=models.SET_NULL, null=True)
+    goal = models.ForeignKey("goals.Goal", on_delete=models.SET_NULL, null=True)
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=["entry", "token"], name="unique_vault_task_acceptance")]
@@ -48,8 +49,7 @@ class JournalEntry(models.Model):
 
 
 class TaskSuggestion(models.Model):
-    """A task the AI found in a journal entry. It becomes a real Task
-    only after the user accepts it."""
+    """A task or goal found in a journal entry and awaiting user approval."""
 
     STATUS_CHOICES = [
         ("pending", "Pending"),
@@ -60,6 +60,8 @@ class TaskSuggestion(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="task_suggestions")
     entry = models.ForeignKey(JournalEntry, on_delete=models.CASCADE, related_name="suggestions")
     title = models.CharField(max_length=200)
+    kind = models.CharField(max_length=8, default="task")
+    category = models.CharField(max_length=20, default="personal")
     date = models.DateField(null=True, blank=True)
     start_time = models.TimeField(null=True, blank=True)
     priority = models.CharField(max_length=10, default="medium")

@@ -79,7 +79,7 @@ def task_data(task):
 def entry_data(entry, detail=False):
     data = {"id": entry.pk, "raw_text": entry.raw_text, "clean_text": entry.clean_text, "created_at": entry.created_at, "pending_count": entry.pending_count if hasattr(entry, "pending_count") else entry.suggestions.filter(status="pending").count()}
     if detail:
-        data["suggestions"] = list(entry.suggestions.values("id", "title", "date", "start_time", "priority", "estimated_duration", "status"))
+        data["suggestions"] = list(entry.suggestions.values("id", "kind", "title", "date", "start_time", "priority", "estimated_duration", "category", "status"))
     return data
 
 
@@ -318,14 +318,22 @@ def suggestion(request, pk):
     with transaction.atomic():
         instance = get_object_or_404(TaskSuggestion, pk=pk, user=request.user)
         if instance.status == "pending" and action == "accept":
-            form = TaskForm({"title": instance.title, "date": instance.date, "start_time": instance.start_time, "priority": instance.priority, "estimated_duration": instance.estimated_duration})
+            if instance.kind == "goal":
+                from goals.forms import GoalForm
+                form = GoalForm({"title": instance.title, "target_date": instance.date, "category": instance.category})
+            else:
+                form = TaskForm({"title": instance.title, "date": instance.date, "start_time": instance.start_time, "priority": instance.priority, "estimated_duration": instance.estimated_duration, "category": instance.category})
             if not form.is_valid():
                 return invalid(form)
-        # Claim the pending row before creating its task so repeat requests cannot duplicate it.
+        # Claim the pending row before creating its record so repeat requests cannot duplicate it.
         updated = TaskSuggestion.objects.filter(pk=pk, user=request.user, status="pending").update(status="accepted" if action == "accept" else "dismissed")
         if updated and action == "accept":
-            Task.objects.create(user=request.user, title=instance.title, description="Added from journal.", date=instance.date, start_time=instance.start_time, priority=instance.priority, estimated_duration=instance.estimated_duration)
-    return JsonResponse({"ok": True})
+            record = form.save(commit=False)
+            record.user = request.user
+            if instance.kind != "goal":
+                record.description = "Added from journal."
+            record.save()
+    return JsonResponse({"ok": True, "kind": instance.kind})
 
 
 @endpoint()

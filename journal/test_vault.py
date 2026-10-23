@@ -2,6 +2,7 @@ import base64
 import json
 import uuid
 from copy import deepcopy
+from datetime import timedelta
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
@@ -9,6 +10,7 @@ from django.test import Client, TestCase, override_settings
 from django.utils import timezone
 
 from ai.provider import AIProviderError
+from goals.models import Goal
 from tasks.models import Task
 from .models import EncryptedJournalEntry, JournalEntry, JournalVault, TaskSuggestion
 from .vault_api import legacy_snapshot
@@ -218,6 +220,29 @@ class VaultApiTests(TestCase):
         self.assertFalse(Task.objects.exists())
         self.client.force_login(self.other)
         self.assertEqual(self.post(path, data).status_code, 404)
+
+    def test_unencrypted_goal_acceptance_requires_consent_and_is_idempotent(self):
+        note = self.create_note()
+        target = (timezone.localdate() + timedelta(days=30)).isoformat()
+        data = {"token": str(uuid.uuid4()), "goal": {"title": "Learn photography", "target_date": target, "category": "personal"}, "consent": False}
+        path = f"vault/entries/{note['id']}/goals/"
+        self.assertEqual(self.post(path, data).status_code, 400)
+        data["consent"] = True
+        first = self.post(path, data)
+        self.assertEqual(first.status_code, 201)
+        self.assertEqual(self.post(path, data).json()["goal_id"], first.json()["goal_id"])
+        self.assertEqual(Goal.objects.filter(user=self.user, title="Learn photography").count(), 1)
+        self.client.force_login(self.other)
+        self.assertEqual(self.post(path, data).status_code, 404)
+
+    def test_rejected_goal_validation_does_not_claim_idempotency_token(self):
+        note = self.create_note()
+        data = {"token": str(uuid.uuid4()), "goal": {"title": "", "target_date": "2000-01-01"}, "consent": True}
+        path = f"vault/entries/{note['id']}/goals/"
+        self.assertEqual(self.post(path, data).status_code, 400)
+        data["goal"] = {"title": "Corrected goal"}
+        self.assertEqual(self.post(path, data).status_code, 201)
+        self.assertEqual(Goal.objects.count(), 1)
 
     def test_calendar_and_profile_show_metadata_without_ciphertext_or_plaintext(self):
         note = self.create_note()

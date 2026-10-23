@@ -260,7 +260,7 @@
         .filter((s) => s.status === "pending")
         .map(
           (s) =>
-            `<div class="suggestion-row"><span dir="auto">${esc(s.title)} ${esc(date(s.date))}</span><div><button class="button small" data-accept="${s.id}">${esc(t("Add to tasks"))}</button><button class="icon-button" data-dismiss="${s.id}" aria-label="${esc(t("Dismiss message"))}">×</button></div></div>`,
+            `<div class="suggestion-row"><span dir="auto"><small class="entry-meta">${esc(t(s.kind === "goal" ? "Goal" : "Task"))}</small> ${esc(s.title)} ${esc(date(s.date))}</span><div><button class="button small" data-accept="${s.id}">${esc(t(s.kind === "goal" ? "Add to goals" : "Add to tasks"))}</button><button class="icon-button" data-dismiss="${s.id}" aria-label="${esc(t("Dismiss message"))}">×</button></div></div>`,
         )
         .join("") ||
       `<p>${esc(t("No pending suggestions. Sometimes a page is just a page—and that’s enough."))}</p>`
@@ -448,11 +448,11 @@
         feedback(
           t(
             result.warning ||
-              "Next steps ready. Review them before adding to your tasks.",
+              "Next steps ready. Review them before adding to your tasks or goals.",
           ),
         );
       } else if (button.dataset.accept || button.dataset.dismiss) {
-        await api(
+        const result = await api(
           `/suggestions/${button.dataset.accept || button.dataset.dismiss}/`,
           { action: button.dataset.accept ? "accept" : "dismiss" },
         );
@@ -460,7 +460,9 @@
         feedback(
           t(
             button.dataset.accept
-              ? "Added to your tasks. One small step, ready when you are."
+              ? result.kind === "goal"
+                ? "Added to your goals. You can shape its steps there."
+                : "Added to your tasks. One small step, ready when you are."
               : "Suggestion dismissed.",
           ),
         );

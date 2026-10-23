@@ -8,6 +8,7 @@ urlpatterns = [
     path("entries/", views.notes),
     path("entries/<uuid:pk>/", views.note),
     path("entries/<uuid:pk>/tasks/", views.accept_task),
+    path("entries/<uuid:pk>/goals/", views.accept_goal),
     path("legacy/", views.legacy),
     path("legacy/<int:pk>/", views.import_legacy),
     path("analyze/", views.analyze),

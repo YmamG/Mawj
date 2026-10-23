@@ -9,8 +9,6 @@ from django.views.decorators.http import require_POST
 from django.conf import settings
 
 from ai.provider import CLOUD_PROVIDERS, AIProviderError, manual_provider, process_journal
-from tasks.models import Task
-
 from .forms import JournalEntryForm
 from .models import JournalEntry, TaskSuggestion
 
@@ -57,11 +55,13 @@ def journal_create(request):
                 TaskSuggestion.objects.create(
                     user=request.user,
                     entry=entry,
+                    kind=item.get("kind", "task"),
                     title=item["title"],
                     date=item.get("date"),
                     start_time=item.get("start_time"),
                     priority=item.get("priority", "medium"),
                     estimated_duration=item.get("estimated_duration"),
+                    category=item.get("category", "personal"),
                 )
             messages.success(request, "Journal entry saved.")
             return redirect("journal_detail", pk=entry.pk)
@@ -94,26 +94,26 @@ def journal_delete(request, pk):
 @login_required
 @require_POST
 def suggestion_accept(request, pk):
-    """The human approves: only now is a real Task created."""
+    """The human approves: only now is a real task or goal created."""
     suggestion = get_object_or_404(TaskSuggestion, pk=pk, user=request.user)
     if suggestion.status == "pending":
-        from tasks.forms import TaskForm
-        form = TaskForm({"title": suggestion.title, "date": suggestion.date, "start_time": suggestion.start_time, "priority": suggestion.priority, "estimated_duration": suggestion.estimated_duration})
+        if suggestion.kind == "goal":
+            from goals.forms import GoalForm
+            form = GoalForm({"title": suggestion.title, "target_date": suggestion.date, "category": suggestion.category})
+        else:
+            from tasks.forms import TaskForm
+            form = TaskForm({"title": suggestion.title, "date": suggestion.date, "start_time": suggestion.start_time, "priority": suggestion.priority, "estimated_duration": suggestion.estimated_duration, "category": suggestion.category})
         if not form.is_valid():
             messages.error(request, "This suggestion has a past schedule. Add it manually with today or a future date.")
             return redirect("journal_detail", pk=suggestion.entry_id)
-        Task.objects.create(
-            user=request.user,
-            title=suggestion.title,
-            description="Added from journal.",
-            date=suggestion.date,
-            start_time=suggestion.start_time,
-            priority=suggestion.priority,
-            estimated_duration=suggestion.estimated_duration,
-        )
+        record = form.save(commit=False)
+        record.user = request.user
+        if suggestion.kind != "goal":
+            record.description = "Added from journal."
+        record.save()
         suggestion.status = "accepted"
         suggestion.save()
-        messages.success(request, "Task added to your list.")
+        messages.success(request, "Goal added to your goals." if suggestion.kind == "goal" else "Task added to your list.")
     return redirect("journal_detail", pk=suggestion.entry_id)
 
 

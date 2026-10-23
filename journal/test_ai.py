@@ -59,6 +59,21 @@ class ParseTests(SimpleTestCase):
         r = provider.parse_ai_reply('{"suggestions": []}', "my original")
         self.assertEqual(r["clean_text"], "my original")
 
+    def test_goal_is_classified_with_target_date_and_without_task_time(self):
+        reply = {"clean_text": "x", "suggestions": [{
+            "kind": "goal", "title": "Build my portfolio", "date": "2027-06-01",
+            "start_time": "10:30", "priority": "high", "estimated_duration": 30,
+            "category": "work",
+        }]}
+        goal = provider.parse_ai_reply(json.dumps(reply), "x")["suggestions"][0]
+        self.assertEqual((goal["kind"], goal["category"], goal["date"]), ("goal", "work", date(2027, 6, 1)))
+        self.assertIsNone(goal["start_time"])
+        self.assertIsNone(goal["estimated_duration"])
+
+    def test_demo_distinguishes_long_term_goal_from_concrete_task(self):
+        result = provider.demo_provider("هدفي أن أتعلم التصوير. أحتاج أرسل الواجب غدًا")
+        self.assertEqual([item["kind"] for item in result["suggestions"]], ["goal", "task"])
+
 
 class ScheduleInferenceTests(SimpleTestCase):
     @override_settings(AI_PROVIDER="demo")

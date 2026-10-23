@@ -119,17 +119,18 @@ function renderEditor(preserveText = false) {
   const list = $("#vault-suggestions"); list.replaceChildren();
   $("#vault-suggestion-disclosure").hidden = !current.document.suggestions.some((s) => s.status === "pending");
   for (const suggestion of current.document.suggestions) {
+    const kind = suggestion.kind === "goal" ? "goal" : "task";
     const row = element("div", "", "vault-suggestion");
-    row.append(element("p", suggestion.title));
+    row.append(element("small", kind === "goal" ? say("هدف", "Goal") : say("مهمة", "Task"), "entry-meta"), element("p", suggestion.title));
     const schedule = [suggestion.date ? date(suggestion.date) : "", suggestion.start_time ? time(suggestion.start_time) : ""].filter(Boolean).join(" · ");
     if (schedule) row.append(element("small", schedule, "entry-meta"));
     if (suggestion.status === "pending") {
-      const accept = element("button", say("إضافة كمهمة عادية", "Add as an ordinary task"), "button secondary");
+      const accept = element("button", kind === "goal" ? say("إضافة إلى أهدافي", "Add to my goals") : say("إضافة إلى مهامي", "Add to my tasks"), "button secondary");
       accept.type = "button"; accept.dataset.vault = "accept"; accept.dataset.id = suggestion.id;
       const dismiss = element("button", say("تجاهل الاقتراح", "Dismiss suggestion"), "button secondary");
       dismiss.type = "button"; dismiss.dataset.vault = "dismiss"; dismiss.dataset.id = suggestion.id;
       row.append(accept, dismiss);
-    } else row.append(element("small", suggestion.status === "accepted" ? say("أُضيفت إلى مهامك.", "Added to your tasks.") : say("تم التجاهل.", "Dismissed.")));
+    } else row.append(element("small", suggestion.status === "accepted" ? (kind === "goal" ? say("أُضيف إلى أهدافك.", "Added to your goals.") : say("أُضيفت إلى مهامك.", "Added to your tasks.")) : say("تم التجاهل.", "Dismissed.")));
     list.append(row);
   }
 }
@@ -174,12 +175,17 @@ async function opened() {
 }
 function demo(text) {
   const titles = [];
-  const pattern = /(?:\b(?:I\s+)?(?:need to|want to|have to|plan to|should)\s+|(?:أبغى|ابغى|أبي|ابي|أحتاج|احتاج|لازم|ودي|ناوي)\s+)/gi;
+  const pattern = /(?:\bmy goal (?:is to|is|to)\s+|\b(?:I\s+)?(?:need to|want to|have to|plan to|should)\s+|(?:هدفي(?:\s+هو)?(?:\s+أن)?|أطمح(?:\s+أن)?|اطمح(?:\s+ان)?|أبغى|ابغى|أبي|ابي|أحتاج|احتاج|لازم|ودي|ناوي)\s+)/gi;
   for (const line of text.split(/[\n.!؟]+/).map((x) => x.trim())) {
     if (/^[-*]/.test(line)) titles.push(line.replace(/^[-*\s]+/, ""));
     else { const matches = [...line.matchAll(pattern)]; for (let i = 0; i < matches.length; i++) titles.push(line.slice(matches[i].index + matches[i][0].length, matches[i + 1]?.index).trim()); }
   }
-  return {clean_text: text.trim(), suggestions: [...new Set(titles.filter(Boolean).map((s) => s.slice(0, 200)))].slice(0, 20).map((title) => ({title, priority: "medium", ...localSchedule(title), estimated_duration: null}))};
+  return {clean_text: text.trim(), suggestions: [...new Set(titles.filter(Boolean).map((s) => s.slice(0, 200)))].slice(0, 20).map((title) => ({kind: localKind(title), title, priority: "medium", category: "personal", ...localSchedule(title), estimated_duration: null}))};
+}
+function localKind(value) {
+  const text = String(value).toLocaleLowerCase().replace(/[\u064b-\u065f\u0670ـ]/g, "");
+  const goals = [/\bmy goal (?:is|to)\b/, /\bi (?:want|plan) to (?:learn|become|improve|build)\b/, /^(?:learn|become|improve|build)\b/, /\bby the end of (?:the )?(?:year|semester)\b/, /(?:هدفي|اطمح|اريد ان اتعلم|ابغى اتعلم|بنهاية السنة|نهاية الفصل|^(?:اتعلم|تعلم)\s)/];
+  return goals.some((pattern) => pattern.test(text)) ? "goal" : "task";
 }
 function localSchedule(value) {
   const digits = "٠١٢٣٤٥٦٧٨٩۰۱۲۳۴۵۶۷۸۹";
@@ -233,7 +239,7 @@ const actions = {
   save,
   async more() { if (nextPage) await loadPage(nextPage); },
   async delete() {
-    if (!current || !confirm(say("حذف هذه التدوينة نهائيًا؟ تبقى المهام المقبولة في قائمة المهام.", "Permanently delete this entry? Accepted tasks remain in your task list."))) return;
+    if (!current || !confirm(say("حذف هذه التدوينة نهائيًا؟ تبقى المهام والأهداف المقبولة في قوائمها.", "Permanently delete this entry? Accepted tasks and goals remain in their lists."))) return;
     const token = generation;
     if (current.revision) await api(`vault/entries/${current.id}/`, {action: "delete", revision: current.revision});
     stillOpen(token); rows = rows.filter((row) => row.id !== current.id); current = null; dirty = false; renderList(); renderEditor(); notice(say("حُذفت التدوينة.", "Entry deleted."));
@@ -253,8 +259,12 @@ const actions = {
     await save(); const token = generation;
     const suggestion = current.document.suggestions.find((s) => s.id === button.dataset.id);
     if (!suggestion || suggestion.status !== "pending") return;
-    const {title, date, start_time, priority, estimated_duration} = suggestion;
-    await api(`vault/entries/${current.id}/tasks/`, {token: suggestion.id, consent: true, task: {title, date: date || "", start_time: start_time || "", priority, estimated_duration: estimated_duration || ""}});
+    const {title, date, start_time, priority, estimated_duration, category} = suggestion;
+    if (suggestion.kind === "goal") {
+      await api(`vault/entries/${current.id}/goals/`, {token: suggestion.id, consent: true, goal: {title, target_date: date || "", category: category || "personal"}});
+    } else {
+      await api(`vault/entries/${current.id}/tasks/`, {token: suggestion.id, consent: true, task: {title, date: date || "", start_time: start_time || "", priority, category: category || "personal", estimated_duration: estimated_duration || ""}});
+    }
     stillOpen(token); suggestion.status = "accepted"; dirty = true; await save();
   },
   async dismiss(button) { syncDraft(); const suggestion = current.document.suggestions.find((s) => s.id === button.dataset.id); if (suggestion) { suggestion.status = "dismissed"; dirty = true; await save(); } },

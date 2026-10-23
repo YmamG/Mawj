@@ -1,6 +1,6 @@
 # mawj
 
-**mawj (موج)** is a personal planning web application for students balancing study and daily responsibilities. It brings journals, reviewed task suggestions and progress reports into one workflow.
+**mawj (موج)** is a personal planning web application for students balancing study and daily responsibilities. It brings journals, reviewed task and goal suggestions, future goals and progress reports into one workflow.
 
 ## Problem, audience and value
 
@@ -35,7 +35,7 @@ Django renders the initial HTML and enforces authentication, ownership, validati
 | `manage.py`, `config/` | Django commands, settings, routes and API |
 | `accounts/` | Authentication, profile, preferences and private photos |
 | `tasks/` | Task models, forms, recurrence and reminders |
-| `journal/` | Journal entries and reviewed task suggestions |
+| `journal/` | Journal entries and reviewed task or goal suggestions |
 | `goals/` | Future goals, milestone progress and task links |
 | `dashboard/reports.py` | Calendar-period summaries and chart calculations |
 | `ai/provider.py` | Local simulation/manual mode and optional external providers |
@@ -111,7 +111,7 @@ No custom model was trained for this project. External AI is an optional integra
 
 Demo is a simulation, not a live AI model. To configure an external provider, create a local `.env` from `.env.example` if it does not already exist, set the selected provider and its key privately, and restart the server. Process environment variables take precedence; remove an earlier PowerShell `$env:AI_PROVIDER="demo"` before restarting if `.env` selects Gemini. `GEMINI_MODEL=auto` asks Google's model-list endpoint (without journal content) and chooses an available text-capable Flash model; a specific model name may be used instead. Other optional overrides are `OPENAI_MODEL` and `CLAUDE_MODEL`. Do not commit credentials or put real keys in the example file. Run `python manage.py check_ai` to inspect the active provider without printing its key, `python manage.py check_ai --models` to list models available to a Gemini key, or `python manage.py check_ai --live` to send only a fixed connection-test phrase.
 
-Suggestions remain separate from tasks and goal steps until a user accepts them. A goal plan can be edited and individual steps can be removed before saving. AI output is parsed, limited and validated; past suggested schedules are removed. If external AI fails during journal creation, the original note is saved with a warning. The interface identifies the provider and the goal data sent before cloud processing. Live external calls have not been verified; simulated and mocked checks do not prove provider reliability.
+Journal suggestions remain separate until the user accepts one; in the encrypted-journal preview they stay inside the encrypted entry until that choice. Concrete actions are copied to Tasks; longer-term outcomes are copied to Goals, where the user can plan their steps. A goal plan can be edited and individual steps can be removed before saving. AI output is parsed, limited and validated; past suggested schedules are removed. If external AI fails during journal creation, the original note is saved with a warning. The interface identifies the provider and the goal data sent before cloud processing. Live external calls have not been verified; simulated and mocked checks do not prove provider reliability.
 
 ## Fictional demonstration data
 
