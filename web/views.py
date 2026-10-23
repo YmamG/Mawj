@@ -97,7 +97,7 @@ def workspace(request, section="today"):
     params = request.GET.copy()
     params.pop("page", None)
     ctx.update(
-        categories=[("uncategorized", "Uncategorized"), ("study", "Study"), ("personal", "Personal"), ("work", "Work")],
+        categories=[("uncategorized", "Uncategorized"), ("study", "Study"), ("personal", "Personal"), ("work", "Work"), ("custom", "Custom")],
         priorities=[("low", "Low"), ("medium", "Medium"), ("high", "High")],
         periods=[("week", "This week"), ("month", "This month"), ("year", "This year")],
         section=section, heading=COPY[section], data=data,

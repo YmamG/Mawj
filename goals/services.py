@@ -18,6 +18,7 @@ def goal_data(goal):
     achieved = goal.done_steps == goal.total_steps if goal.total_steps else goal.marked_complete
     percent = round(100 * goal.done_steps / goal.total_steps) if goal.total_steps else (100 if achieved else 0)
     return {"object": goal, "id": goal.pk, "title": goal.title, "why": goal.why, "category": goal.category,
+            "has_image": bool(goal.image),
             "target_date": goal.target_date, "total_steps": goal.total_steps, "done_steps": goal.done_steps,
             "progress": percent, "ring_offset": round(276.46 * (1 - percent / 100), 2),
             "state": "achieved" if achieved else "paused" if goal.paused else "active",

@@ -80,6 +80,17 @@ class ApiTests(TestCase):
         self.assertEqual(self.post(f"tasks/{pk}/", {"title": "Edited", "category": "personal"}).status_code, 200)
         self.assertEqual(self.post(f"tasks/{pk}/", {"action": "delete"}).status_code, 200)
 
+    def test_custom_task_category_and_completed_archive(self):
+        self.assertEqual(self.post("tasks/", {"title": "Health visit", "category": "custom"}).status_code, 400)
+        created = self.post("tasks/", {"title": "Health visit", "category": "custom", "custom_category": "Health"})
+        self.assertEqual(created.status_code, 201)
+        self.assertEqual(created.json()["custom_category"], "Health")
+        pk = created.json()["id"]
+        self.post(f"tasks/{pk}/", {"action": "toggle"})
+        self.assertEqual(self.client.get("/api/tasks/").json()["total"], 0)
+        archive = self.client.get("/api/tasks/?status=done").json()
+        self.assertEqual((archive["total"], archive["results"][0]["id"]), (1, pk))
+
     def test_journal_complete_journey_and_private_records(self):
         response = self.post("journal/", {"raw_text": "Today\n- Read a chapter"})
         self.assertEqual(response.status_code, 201)

@@ -22,6 +22,7 @@ class TaskForm(forms.ModelForm):
             "estimated_duration",
             "priority",
             "category",
+            "custom_category",
             "repeat",
             "reminder_at",
         ]
@@ -56,6 +57,12 @@ class TaskForm(forms.ModelForm):
 
     def clean(self):
         data = super().clean()
+        if data.get("category") == "custom":
+            if not str(data.get("custom_category") or "").strip():
+                self.add_error("custom_category", "Write a name for the custom category.")
+        else:
+            data["custom_category"] = ""
+            self.instance.custom_category = ""
         if data.get("date") and data.get("start_time"):
             from datetime import datetime
             from django.utils import timezone

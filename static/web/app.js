@@ -198,6 +198,13 @@
       ...(page.reminders || []),
     ].find((x) => x.id === Number(id));
   }
+  function syncCustomCategory(form = $("#task-form")) {
+    if (!form?.elements.category || !form.elements.custom_category) return;
+    const custom = form.elements.category.value === "custom";
+    const field = form.querySelector("[data-custom-category]");
+    if (field) field.hidden = !custom;
+    form.elements.custom_category.required = custom;
+  }
   function showTask(task = null) {
     const panel = $("#task-compose"),
       form = $("#task-form");
@@ -226,6 +233,7 @@
             day: "2-digit",
           }).format(new Date());
     form.querySelector("details").open = !!task;
+    syncCustomCategory(form);
     form.querySelector('button[type="submit"],button:not([type])').textContent =
       t(task ? "Save changes" : "Add task");
     $("#task-form-heading").textContent = t(
@@ -520,6 +528,9 @@
     } finally {
       buttons.forEach((b) => (b.disabled = false));
     }
+  });
+  document.addEventListener("change", (event) => {
+    if (event.target.matches("#task-category")) syncCustomCategory(event.target.form);
   });
   const drafts = JSON.parse(sessionStorage.getItem("mawj-drafts") || "{}");
   sessionStorage.removeItem("mawj-drafts");

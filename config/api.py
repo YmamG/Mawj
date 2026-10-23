@@ -72,7 +72,7 @@ def invalid(form):
 
 def task_data(task):
     return {field: getattr(task, field) for field in (
-        "id", "title", "description", "date", "start_time", "deadline", "estimated_duration", "priority", "status", "completed_at", "created_at", "category", "repeat", "reminder_at", "reminder_dismissed",
+        "id", "title", "description", "date", "start_time", "deadline", "estimated_duration", "priority", "status", "completed_at", "created_at", "category", "custom_category", "repeat", "reminder_at", "reminder_dismissed",
     )}
 
 
@@ -175,7 +175,13 @@ def tasks(request):
     query = request.GET.get("q", "").strip()
     if query:
         queryset = queryset.filter(Q(title__icontains=query) | Q(description__icontains=query))
-    for field, choices in [("status", Task.STATUS_CHOICES), ("priority", Task.PRIORITY_CHOICES), ("category", Task.CATEGORY_CHOICES)]:
+    requested_status = request.GET.get("status", "todo")
+    if requested_status == "done":
+        queryset = queryset.filter(status="done")
+    elif requested_status != "all":
+        requested_status = "todo"
+        queryset = queryset.filter(status=requested_status)
+    for field, choices in [("priority", Task.PRIORITY_CHOICES), ("category", Task.CATEGORY_CHOICES)]:
         value = request.GET.get(field, "")
         if field == "category" and value == "uncategorized":
             queryset = queryset.filter(category="")

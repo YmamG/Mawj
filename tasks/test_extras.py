@@ -27,16 +27,36 @@ class ExtraTaskFeaturesTests(TestCase):
         response = self.client.post(reverse("task_create"), {"title": "Wrong", "category": "unknown"})
         self.assertIn("category", response.context["form"].errors)
 
+    def test_custom_category_requires_a_name_and_is_preserved(self):
+        response = self.client.post(reverse("task_create"), {"title": "Appointment", "category": "custom"})
+        self.assertIn("custom_category", response.context["form"].errors)
+        self.assertEqual(self.client.post(reverse("task_create"), {"title": "Appointment", "category": "custom", "custom_category": "Health"}).status_code, 302)
+        task = Task.objects.get(title="Appointment")
+        self.assertEqual((task.category, task.custom_category), ("custom", "Health"))
+        self.client.post(reverse("task_update", args=[task.pk]), {"title": task.title, "category": "work", "custom_category": "Should clear"})
+        task.refresh_from_db()
+        self.assertEqual((task.category, task.custom_category), ("work", ""))
+
+    def test_completed_tasks_leave_active_list_but_remain_in_archive(self):
+        active = Task.objects.create(user=self.user, title="Active")
+        done = Task.objects.create(user=self.user, title="Archived", status="done", completed_at=timezone.now())
+        default = self.client.get(reverse("task_list"))
+        self.assertEqual([task.pk for task in default.context["tasks"]], [active.pk])
+        archive = self.client.get(reverse("task_list"), {"status": "done"})
+        self.assertEqual([task.pk for task in archive.context["tasks"]], [done.pk])
+        self.client.post(reverse("task_toggle", args=[done.pk]))
+        self.assertTrue(Task.objects.filter(pk=done.pk, status="todo").exists())
+
     def test_daily_repeat_copies_details_and_creates_one_successor(self):
         now = timezone.now()
-        task = Task.objects.create(user=self.user, title="Daily", date=self.today, repeat="daily", category="study", reminder_at=now, deadline=now, estimated_duration=20)
+        task = Task.objects.create(user=self.user, title="Daily", date=self.today, repeat="daily", category="custom", custom_category="Routine", reminder_at=now, deadline=now, estimated_duration=20)
         url = reverse("task_toggle", args=[task.pk])
         self.client.post(url)
         next_task = Task.objects.get(previous_occurrence=task)
         self.assertEqual(next_task.date, self.today + timedelta(days=1))
         self.assertEqual(next_task.reminder_at, now + timedelta(days=1))
         self.assertEqual(next_task.deadline, now + timedelta(days=1))
-        self.assertEqual(next_task.category, "study")
+        self.assertEqual((next_task.category, next_task.custom_category), ("custom", "Routine"))
         self.assertEqual(next_task.status, "todo")
         self.client.post(url)  # Undo does not delete a successor the user might have edited.
         self.client.post(url)

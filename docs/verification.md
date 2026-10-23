@@ -252,3 +252,11 @@ Limitations remain: no production deployment or live AI provider test; reminders
 - Journal analysis now classifies each explicit next step as either a concrete task or a longer-term goal. The review UI labels both types and gives the user a separate action to add a goal to Goals; no suggestion is added automatically.
 - Goal acceptance preserves an optional future target date and category, is owner-scoped and idempotent, and validates dates through the existing goal form. Encrypted entries keep the suggestion encrypted until acceptance, then copy only the selected goal details to the ordinary Goals list.
 - **159 Django tests passed**, including goal parsing, Demo task/goal distinction, ordinary and encrypted acceptance, repeated-click idempotency, invalid-date retry and account ownership. Migration consistency, Django checks, translation JSON, JavaScript syntax and the Web Crypto test also passed.
+
+## Goal journey, custom categories and completed archive (2026-10-24)
+
+- Replaced the goal-card grid with a chronological visual path. Goal details use the same path language for milestones, and both layouts remain responsive. Added an optional image to goal creation/editing; uploads are type/size/dimension checked, EXIF-normalized, resized and rewritten as JPEG. Images are returned only by an authenticated owner-filtered endpoint and are removed when replaced, removed or when the goal is deleted.
+- Added a Custom task category with a required user-provided name. The name is escaped on output, copied to repeating occurrences and cleared when a fixed category is selected.
+- The default task list now contains active tasks only. Completing a task removes it from that list while preserving the record in the Completed archive, calendar and reports; archived tasks can be reopened. The Today view keeps its existing same-day Small wins section.
+- Changed the remaining Arabic journal instructions from feminine to masculine wording, which is now the consistent default. No extra profile question was added.
+- **163 Django tests passed**, including goal-image ownership, timeline rendering, custom-category validation/persistence, recurrence copying and completed-task archive behavior. Migration consistency, Django system checks, translation JSON, JavaScript syntax and diff whitespace checks passed.

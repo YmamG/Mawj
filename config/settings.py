@@ -142,7 +142,7 @@ TIME_ZONE = 'Asia/Riyadh'
 # AI provider: 'demo' (fake, no internet) or 'manual' (no AI). Real ones come later.
 AI_PROVIDER = os.environ.get('AI_PROVIDER', 'demo')
 
-# Private profile images are served by the authenticated avatar view.
+# Private profile and goal images are served by authenticated owner-filtered views.
 MEDIA_ROOT = BASE_DIR / "media"
 MEDIA_URL = "/media/"
 

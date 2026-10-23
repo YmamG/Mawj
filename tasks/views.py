@@ -55,15 +55,18 @@ def task_list(request):
     """Show only the logged-in user's tasks."""
     tasks = Task.objects.filter(user=request.user)
     query = request.GET.get("q", "").strip()
-    status = request.GET.get("status", "")
+    status = request.GET.get("status", "todo")
     priority = request.GET.get("priority", "")
     category = request.GET.get("category", "")
     if query:
         tasks = tasks.filter(Q(title__icontains=query) | Q(description__icontains=query))
-    if status in dict(Task.STATUS_CHOICES):
-        tasks = tasks.filter(status=status)
+    if status == "done":
+        tasks = tasks.filter(status="done")
+    elif status == "all":
+        pass
     else:
-        status = ""
+        status = "todo"
+        tasks = tasks.filter(status="todo")
     if priority in dict(Task.PRIORITY_CHOICES):
         tasks = tasks.filter(priority=priority)
     else:

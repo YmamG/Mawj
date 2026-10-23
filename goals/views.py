@@ -4,8 +4,8 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db import transaction
-from django.db.models import Count, Sum
-from django.http import JsonResponse
+from django.db.models import Count, F, Sum
+from django.http import FileResponse, Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -26,7 +26,7 @@ def _context(request, goal=None, **extra):
     ctx = context(request)
     all_goals = owned_goals(request.user)
     state = request.GET.get("state", "all")
-    filtered = all_goals.order_by("-created_at", "-pk")
+    filtered = all_goals.order_by(F("target_date").asc(nulls_last=True), "created_at", "pk")
     if state == "achieved":
         filtered = filtered.filter(achieved_query())
     elif state in ("active", "paused"):
@@ -63,7 +63,7 @@ def _finish(request, pk, notice):
 @require_http_methods(["GET", "POST"])
 def home(request):
     if request.method == "POST":
-        form = GoalForm(request.POST)
+        form = GoalForm(request.POST, request.FILES)
         if form.is_valid():
             goal = form.save(commit=False)
             goal.user = request.user
@@ -90,7 +90,7 @@ def detail(request, pk):
             goal.marked_complete = not goal.marked_complete
             goal.save(update_fields=["marked_complete"])
         elif action == "edit":
-            form = GoalForm(request.POST, instance=goal)
+            form = GoalForm(request.POST, request.FILES, instance=goal)
             if not form.is_valid():
                 return _response(request, _context(request, goal, goal_form=form, show_compose=True), status=400)
             form.save()
@@ -217,3 +217,18 @@ def delete(request, pk):
             return JsonResponse({"redirect": reverse("goals_home")})
         return redirect("goals_home")
     return render(request, "web/goal-delete.html", {**context(request), "section": "goals", "goal": goal})
+
+
+@login_required(login_url="/login/")
+@never_cache
+def image(request, pk):
+    goal = get_object_or_404(Goal, pk=pk, user=request.user)
+    if not goal.image:
+        raise Http404
+    try:
+        response = FileResponse(goal.image.open("rb"), content_type="image/jpeg")
+    except (FileNotFoundError, OSError):
+        raise Http404
+    response["Content-Disposition"] = 'inline; filename="goal.jpg"'
+    response["Cache-Control"] = "private, no-store"
+    return response

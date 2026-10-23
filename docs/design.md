@@ -28,6 +28,7 @@ erDiagram
         datetime deadline "nullable"
         integer estimated_duration "nullable"
         string category "optional"
+        string custom_category "optional when category=custom"
         string repeat "optional"
         integer previous_occurrence_id FK,UK "nullable"
         datetime reminder_at "nullable"
@@ -46,6 +47,7 @@ erDiagram
         string category
         boolean paused
         boolean marked_complete "only without steps"
+        string image "optional private file path"
         datetime created_at
     }
     GOAL_STEP {
@@ -84,9 +86,9 @@ erDiagram
     }
 ```
 
-Every task/entry/suggestion has exactly one owner. Preferences are optional until first needed, then unique per user. Owner and journal-entry foreign keys use CASCADE; the repeating-task self-reference uses SET_NULL. An accepted task is independent of its originating suggestion; removing a journal does not remove that task. The duplicated suggestion owner supports ownership checks, but the view must keep it consistent with the entry owner; this consistency is not a database constraint. Django owns username uniqueness and password hashing. The model defaults and choice fields represent priority/status; form validation enforces allowed task values and duration bounds. Task categories use a small fixed choice set. The optional unique self-reference permits at most one generated next occurrence per task; SET_NULL preserves successors if the predecessor is removed. Uploaded avatar paths are stored in preferences; image bytes remain outside the database. No many-to-many relationship is needed.
+Every task/entry/suggestion has exactly one owner. Preferences are optional until first needed, then unique per user. Owner and journal-entry foreign keys use CASCADE; the repeating-task self-reference uses SET_NULL. An accepted task is independent of its originating suggestion; removing a journal does not remove that task. The duplicated suggestion owner supports ownership checks, but the view must keep it consistent with the entry owner; this consistency is not a database constraint. Django owns username uniqueness and password hashing. The model defaults and choice fields represent priority/status; form validation enforces allowed task values and duration bounds. Task categories include fixed choices plus a validated custom name. Completed tasks are filtered out of the default active query and remain stored for the archive and reports. The optional unique self-reference permits at most one generated next occurrence per task; SET_NULL preserves successors if the predecessor is removed. Uploaded avatar and goal-image paths are stored in their owner-scoped records; image bytes remain outside the database. No many-to-many relationship is needed.
 
-Goals and steps are ordinary owner-scoped records, outside the optional journal encryption boundary. A linked task supplies the step completion state; deleting it preserves the last state in `is_done`. Deleting a goal cascades to its steps, without deleting linked tasks. [Goal details](goals.md).
+Goals and steps are ordinary owner-scoped records, outside the optional journal encryption boundary. Goal images are returned only through an authenticated owner-filtered endpoint. A linked task supplies the step completion state; deleting it preserves the last state in `is_done`. Deleting a goal cascades to its steps, without deleting linked tasks. [Goal details](goals.md).
 
 ## Wireframes
 

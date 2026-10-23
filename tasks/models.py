@@ -13,10 +13,11 @@ class Task(models.Model):
         ("done", "Done"),
     ]
 
-    CATEGORY_CHOICES = [("", "Uncategorized"), ("study", "Study"), ("personal", "Personal"), ("work", "Work")]
+    CATEGORY_CHOICES = [("", "Uncategorized"), ("study", "Study"), ("personal", "Personal"), ("work", "Work"), ("custom", "Custom")]
     REPEAT_CHOICES = [("", "Does not repeat"), ("daily", "Daily"), ("weekly", "Weekly")]
 
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, blank=True)
+    custom_category = models.CharField(max_length=40, blank=True)
     repeat = models.CharField(max_length=10, choices=REPEAT_CHOICES, blank=True)
     previous_occurrence = models.OneToOneField("self", on_delete=models.SET_NULL, null=True, blank=True, related_name="next_occurrence")
     reminder_at = models.DateTimeField(null=True, blank=True)

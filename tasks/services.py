@@ -17,7 +17,7 @@ def create_next_occurrence(task):
         "date": next_date, "start_time": task.start_time,
         "deadline": task.deadline + shift if task.deadline else None,
         "estimated_duration": task.estimated_duration, "priority": task.priority,
-        "category": task.category, "repeat": task.repeat,
+        "category": task.category, "custom_category": task.custom_category, "repeat": task.repeat,
         "reminder_at": task.reminder_at + shift if task.reminder_at else None,
     })
     return successor

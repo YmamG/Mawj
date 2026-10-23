@@ -18,7 +18,7 @@
         <label for="task-search">Search tasks</label>
         <input id="task-search" name="q" value="{{ query }}" type="search" placeholder="Title or description">
         <label for="task-status">Status</label>
-        <select id="task-status" name="status"><option value="">All statuses</option>{% for value, label in status_choices %}<option value="{{ value }}" {% if status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+        <select id="task-status" name="status"><option value="todo" {% if status == 'todo' %}selected{% endif %}>Active tasks</option><option value="done" {% if status == 'done' %}selected{% endif %}>Completed archive</option><option value="all" {% if status == 'all' %}selected{% endif %}>All statuses</option></select>
         <label for="task-priority">Priority</label>
         <select id="task-priority" name="priority"><option value="">All priorities</option>{% for value, label in priority_choices %}<option value="{{ value }}" {% if priority == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
         <label for="task-category">Category</label>
@@ -29,7 +29,7 @@
     {% for task in tasks %}
         {% include "tasks/task_card.html" %}
     {% empty %}
-        {% if query or status or priority or category %}<p>No tasks match your filters. Try another search or clear the filters.</p>{% else %}<p>You have no tasks yet.</p>{% endif %}
+        {% if query or priority or category or status == 'done' or status == 'all' %}<p>No tasks match your filters. Try another search or clear the filters.</p>{% else %}<p>You have no active tasks yet. Completed tasks stay in the archive.</p>{% endif %}
     {% endfor %}
 {% include "pagination.html" %}
 {% endblock %}

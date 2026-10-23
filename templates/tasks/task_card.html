@@ -11,7 +11,7 @@
                     {% if task.estimated_duration %}{{ task.estimated_duration }} min{% else %}-{% endif %}
                 </li>
                 <li>Priority: {{ task.get_priority_display }}</li>
-                <li>Category: {{ task.get_category_display }}</li>
+                <li>Category: {% if task.category == 'custom' %}{{ task.custom_category }}{% else %}{{ task.get_category_display }}{% endif %}</li>
                 <li>Repeat: {{ task.get_repeat_display }}</li>
                 {% if task.reminder_at %}<li>Reminder: {{ task.reminder_at|date:"j M Y H:i" }}{% if task.reminder_dismissed %} (dismissed){% endif %}</li>{% endif %}
                 <li>Status: {{ task.get_status_display }}</li>

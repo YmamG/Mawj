@@ -1,5 +1,10 @@
 from django.conf import settings
 from django.db import models
+import uuid
+
+
+def goal_image_path(instance, filename):
+    return f"goal-images/{instance.user_id}/{uuid.uuid4().hex}.jpg"
 
 
 class Goal(models.Model):
@@ -11,6 +16,7 @@ class Goal(models.Model):
     target_date = models.DateField(null=True, blank=True)
     paused = models.BooleanField(default=False)
     marked_complete = models.BooleanField(default=False)
+    image = models.ImageField(upload_to=goal_image_path, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

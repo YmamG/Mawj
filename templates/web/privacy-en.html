@@ -3,7 +3,7 @@
 <main id="main" class="prose-page">
   <a class="brand" aria-label="Mawj home" href="/"><svg viewBox="0 0 40 40" fill="none" aria-hidden="true"><path d="M4 15c7-11 10 11 18 0s10 6 14 0M4 24c7-11 10 11 18 0s10 6 14 0" stroke="currentColor" stroke-width="3" stroke-linecap="round"></path></svg><span>mawj<span class="brand-period">.</span></span></a>
   <h1>Your thoughts are personal.</h1>
-  <p>Mawj stores your account, journal entries, task details, future goals, settings and uploaded profile photo in its database and file storage. Other users cannot access your records through the application.</p>
+  <p>Mawj stores your account, journal entries, task details, future goals, optional goal images, settings and uploaded profile photo in its database and file storage. Other users cannot access your records through the application.</p>
   <h2>Operator access</h2>
   <p>Django administration is disabled in production. A separate read-only operator page lists usernames and registration dates without email addresses, account content or editing controls. An administrator using Mawj’s interface cannot read another user’s records or sign in as that user. A person who controls the server, code and encryption secret can still technically access data.</p>
   {% if e2ee_preview %}<p>Journal text is encrypted in the browser before storage. After sign-in, the server automatically gives the account session its journal key, so no extra phrase or recovery key is required. This protects text when the database is viewed by itself, but it is not end-to-end encryption and does not hide journals from the server operator. Tasks, goals and some metadata remain outside journal-text encryption. This design has not had an independent security review.</p>{% else %}<p>Journals, tasks and goals are not end-to-end encrypted and should not be treated as hidden from the hosting operator.</p>{% endif %}
@@ -13,7 +13,7 @@
   <h2>Sessions and local settings</h2>
   <p>Essential session and CSRF cookies support sign-in and protect changes. Your theme is stored locally and in your account; interface language is stored locally and in a preference cookie. Mawj includes no advertising or analytics trackers.</p>
   <h2>Your control</h2>
-  <p>You can edit and delete journal entries and tasks, and remove your profile photo. Deleting an entry deletes its suggestions; accepted tasks remain until you delete them separately. The site operator manages backups and retention.</p>
+  <p>You can edit and delete journal entries, tasks and goals, and remove profile or goal images. Deleting an entry deletes its suggestions; accepted tasks and goals remain until you delete them separately. The site operator manages backups and retention.</p>
   <a class="button" href="/">Back to Mawj</a>
 </main>
 {% endblock %}

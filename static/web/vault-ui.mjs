@@ -24,8 +24,8 @@ async function api(path, data) {
     return result;
   } finally { activeRequests.delete(controller); }
 }
-function unchanged(token) { if (generation !== token) throw Error(say("انتهت جلسة الصفحة. أعيدي تحميلها للتحقق من حالة الحفظ.", "The page session ended. Reload to check saved state.")); }
-function stillOpen(token) { if (!key || token !== generation) throw Error(say("انتهت جلسة اليوميات. أعيدي تحميل الصفحة.", "The journal session ended. Reload the page.")); }
+function unchanged(token) { if (generation !== token) throw Error(say("انتهت جلسة الصفحة. أعد تحميلها للتحقق من حالة الحفظ.", "The page session ended. Reload to check saved state.")); }
+function stillOpen(token) { if (!key || token !== generation) throw Error(say("انتهت جلسة اليوميات. أعد تحميل الصفحة.", "The journal session ended. Reload the page.")); }
 function lock() {
   clearTimeout(autosaveTimer); saveQueued = false;
   queuedAction = null;
@@ -48,7 +48,7 @@ function renderList(reset = false) {
   const matches = rows.filter((row) => row.document.text.toLocaleLowerCase().includes(query));
   if (!matches.length) {
     const empty = element("section", "", "empty-state journal-empty");
-    empty.append(element("span", "✎", "empty-journal-cover"), element("h3", query ? say("لا توجد نتائج بعد.", "No matches yet.") : say("يومياتك تبدأ هنا", "Your journal starts here")), element("p", say("اكتبي سطرًا واحدًا عن يومك. هذا يكفي.", "Write one line about today. That is enough.")));
+    empty.append(element("span", "✎", "empty-journal-cover"), element("h3", query ? say("لا توجد نتائج بعد.", "No matches yet.") : say("يومياتك تبدأ هنا", "Your journal starts here")), element("p", say("اكتب سطرًا واحدًا عن يومك. هذا يكفي.", "Write one line about today. That is enough.")));
     list.append(empty);
     return;
   }
@@ -141,9 +141,9 @@ async function fresh() {
   dirty = false; renderEditor(); $("#vault-text").focus();
 }
 function syncDraft() {
-  if (!current) throw Error(say("اختاري تدوينة أولًا.", "Choose an entry first."));
+  if (!current) throw Error(say("اختر تدوينة أولًا.", "Choose an entry first."));
   const text = $("#vault-text").value;
-  if (!text.trim() && !current.revision) throw Error(say("اكتبي نص التدوينة أولًا.", "Write an entry first."));
+  if (!text.trim() && !current.revision) throw Error(say("اكتب نص التدوينة أولًا.", "Write an entry first."));
   if (text !== current.document.text) {
     const {legacy, ...rest} = current.document;
     current.document = {...rest, text, clean_text: "", suggestions: current.document.suggestions.filter((s) => s.status !== "pending")};
@@ -221,7 +221,7 @@ function localSchedule(value) {
 }
 const actions = {
   async resetLegacy() {
-    if (!confirm(say("لا يمكن استعادة اليوميات القديمة من دون مفتاحها. هل تريدين حذف النسخة المقفلة وبدء دفتر جديد؟", "The old journal cannot be recovered without its key. Delete the locked copy and start a new journal?"))) return;
+    if (!confirm(say("لا يمكن استعادة اليوميات القديمة من دون مفتاحها. هل تريد حذف النسخة المقفلة وبدء دفتر جديد؟", "The old journal cannot be recovered without its key. Delete the locked copy and start a new journal?"))) return;
     const token = generation;
     vault = await api("vault/reset/", {confirmation: "delete-locked-journal"}); unchanged(token);
     await openManaged();
@@ -285,7 +285,7 @@ const actions = {
       }
     }
     legacyCount = 0; $("#vault-legacy").hidden = true; current = null; dirty = false; renderEditor(); await loadPage();
-    notice(say("نُقلت التدوينات إلى التخزين المشفّر. راجعي سياسة النسخ الاحتياطية القديمة منفصلًا.", "Entries migrated to encrypted storage. Review older backups separately."));
+    notice(say("نُقلت التدوينات إلى التخزين المشفّر. راجع سياسة النسخ الاحتياطية القديمة منفصلًا.", "Entries migrated to encrypted storage. Review older backups separately."));
   },
 };
 const channel = typeof BroadcastChannel === "function" ? new BroadcastChannel("mawj-vault-lock") : null;
@@ -301,7 +301,7 @@ async function run(name, button) {
   if (name === "save") saveQueued = false;
   busy = true; if (button) button.disabled = true;
   try { await actions[name](button); }
-  catch (error) { saveQueued = false; notice(error.message || say("تعذّر الحفظ الآن. نصك ما زال في الصفحة؛ حاولي مجددًا.", "Could not save yet. Your text is still on this page; try again."), true); }
+  catch (error) { saveQueued = false; notice(error.message || say("تعذّر الحفظ الآن. نصك ما زال في الصفحة؛ حاول مجددًا.", "Could not save yet. Your text is still on this page; try again."), true); }
   finally {
     busy = false; if (button) button.disabled = false;
     if (queuedAction && key) {

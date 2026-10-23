@@ -73,7 +73,7 @@ from config.wsgi_production import application
 ```
 
 4. أضف Static files mapping: العنوان `/static/` والمسار `/home/PA_USERNAME/mawj/staticfiles`.
-5. **لا تضف mapping لـ`/media/`**؛ صور الملف الشخصي خاصة وتُقدّم عبر Django من `/api/profile/avatar/`.
+5. **لا تضف mapping لـ`/media/`**؛ صور الملف الشخصي وصور الأهداف خاصة، وتُقدّم عبر مسارات Django التي تتحقق من صاحب الحساب.
 6. اضغط **Reload**، وافتح `https://PA_USERNAME.pythonanywhere.com/`. المنصة توفر شهادة النطاق الافتراضي. راجع Error log إن ظهر خطأ، دون مشاركة أسرار.
 7. بعد التأكد من HTTPS فعّل **Force HTTPS** من Web. تحقق من انتقال HTTP إلى HTTPS دون حلقة إعادة توجيه. لا تضف ثقة في ترويسات الوكيل دون التحقق من إعداد الاستضافة.
 

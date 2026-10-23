@@ -15,6 +15,7 @@
         <details class="task-details" {% if show_details %}open{% endif %}>
             <summary>Additional details (optional)</summary>
             <p>{{ form.category.errors }}{{ form.category.label_tag }} {{ form.category }}</p>
+            <p>{{ form.custom_category.errors }}{{ form.custom_category.label_tag }} {{ form.custom_category }} <small>Required only when category is Custom.</small></p>
             <p>{{ form.repeat.errors }}{{ form.repeat.label_tag }} {{ form.repeat }}</p>
             <p><small>Completing a repeating task creates its next occurrence. Missed dates are skipped. Undoing completion keeps the next occurrence.</small></p>
             <p>{{ form.reminder_at.errors }}{{ form.reminder_at.label_tag }} {{ form.reminder_at }}</p>

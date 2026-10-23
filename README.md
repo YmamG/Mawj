@@ -10,14 +10,14 @@ The initial adoption model is a free student pilot. Audience demand and benefits
 
 ## Features
 
-- Django accounts, saved sessions and owner-only access to tasks, journals and profile photos.
+- Django accounts, saved sessions and owner-only access to tasks, journals, goal images and profile photos.
 - Active staff/superusers can view a read-only account directory at `/operator/accounts/`, linked from their own profile. It lists usernames and registration dates only, with no account editing, impersonation, email addresses or private content.
 - Production disables Django administration, including user password changes and private-record browsing. App ownership checks also apply to staff/superusers. Server/database operators retain direct access; this is not end-to-end encryption.
-- Task creation, editing, completion/reopening and confirmed deletion; search, status/category/priority filters and pagination.
-- Title-only quick entry with optional scheduling, duration, priority, category, daily/weekly recurrence and in-app reminders.
+- Task creation, editing, completion/reopening and confirmed deletion; completed tasks leave the active list and remain available in a separate archive.
+- Title-only quick entry with optional scheduling, duration, priority, fixed or user-named custom category, daily/weekly recurrence and in-app reminders.
 - Journal creation, search, editing and deletion; suggestion analysis, explicit acceptance and dismissal.
 - Calendar days showing tasks and complete journal text, including undated tasks on their creation day.
-- Future goals with title-only entry, optional dates, milestones, real completion percentages and linked tasks. See [goal behavior and implementation](docs/goals.md).
+- Future goals shown as a chronological journey, with optional private images, dates, milestones, real completion percentages and linked tasks. See [goal behavior and implementation](docs/goals.md).
 - Weekly, monthly and yearly reports with completion percentage, charts and a data table.
 - Editable profile, private PNG/JPEG avatar upload/removal, five themes and English/Arabic switching.
 - Locally served fonts, including Saudi for Arabic headings and the Arabic wordmark; responsive layouts and modal confirmations.

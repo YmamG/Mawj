@@ -1,11 +1,15 @@
 from datetime import timedelta
+from io import BytesIO
+import tempfile
 
 from django.contrib.auth import get_user_model
 from unittest.mock import patch
 
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
+from PIL import Image
 
 from tasks.models import Task
 from .forms import GoalForm, StepForm
@@ -41,6 +45,26 @@ class GoalTests(TestCase):
         self.assertEqual(created.user, self.user)
         self.assertEqual(created.category, "personal")
         self.assertEqual(response.json()["redirect"], reverse("goal_detail", args=[created.pk]))
+
+    def test_goal_image_is_processed_private_and_shown_on_timeline(self):
+        output = BytesIO()
+        Image.new("RGB", (900, 600), "#588157").save(output, format="PNG")
+        upload = SimpleUploadedFile("vision.png", output.getvalue(), content_type="image/png")
+        with tempfile.TemporaryDirectory() as media_root, override_settings(MEDIA_ROOT=media_root):
+            response = self.client.post(reverse("goals_home"), {"title": "Visual goal", "image": upload})
+            self.assertEqual(response.status_code, 302)
+            goal = Goal.objects.get(title="Visual goal")
+            self.assertTrue(goal.image.name.endswith(".jpg"))
+            image_url = reverse("goal_image", args=[goal.pk])
+            image_response = self.client.get(image_url)
+            self.assertEqual(image_response.status_code, 200)
+            self.assertIn("private", image_response["Cache-Control"])
+            self.assertIn("no-store", image_response["Cache-Control"])
+            listing = self.client.get(reverse("goals_home"))
+            self.assertContains(listing, 'class="goal-grid goal-timeline"')
+            self.assertContains(listing, image_url)
+            self.client.force_login(self.other)
+            self.assertEqual(self.client.get(image_url).status_code, 404)
 
     def test_other_owner_and_staff_cannot_access_content_or_mutate(self):
         step = GoalStep.objects.create(goal=self.goal, title="Private step")

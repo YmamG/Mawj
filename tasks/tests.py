@@ -119,7 +119,7 @@ class TaskFilteringTests(TestCase):
         self.assertEqual(len(response.context["tasks"]), 10)
         self.assertNotContains(response, "Study private")
         self.assertContains(response, "q=Study")
-        response = self.client.get(reverse("task_list"), {"q": "Study", "page": 2})
+        response = self.client.get(reverse("task_list"), {"q": "Study", "status": "done", "page": 2})
         self.assertEqual(len(response.context["tasks"]), 2)
 
     def test_no_results_and_invalid_query_parameters(self):
@@ -127,7 +127,7 @@ class TaskFilteringTests(TestCase):
         self.assertContains(response, "No tasks match your filters")
         response = self.client.get(reverse("task_list"), {"status": "bad", "priority": "bad", "page": "bad"})
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.context["page_obj"].paginator.count, 13)
+        self.assertEqual(response.context["page_obj"].paginator.count, 1)
 
     def test_duration_limits(self):
         for value in ("0", "-1", "1441"):
