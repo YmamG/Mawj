@@ -4,10 +4,11 @@ import uuid
 
 
 class JournalVault(models.Model):
-    """Only encrypted master-key envelopes; never a passphrase or recovery code."""
+    """Encrypted journal container; current vaults use an account-managed key."""
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     envelopes = models.JSONField()
+    key_mode = models.CharField(max_length=12, default="legacy")
     revision = models.PositiveIntegerField(default=1)
 
 

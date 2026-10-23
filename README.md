@@ -24,7 +24,7 @@ The initial adoption model is a free student pilot. Audience demand and benefits
 
 ## Technology and architecture
 
-This experimental branch includes an **opt-in encrypted journal preview**. It is disabled by default and must be tested with fictional data in a separate checkout/database. See [the design, limitations and trial instructions](docs/e2ee-preview.md). No production rollout or independent security review is claimed.
+This experimental branch includes an **opt-in managed encrypted journal**. After account sign-in it opens automatically without a second passphrase. The browser encrypts entry text before storage, while the server manages the account key; this protects a database viewed by itself but is not end-to-end encryption from the operator. It is disabled by default. See [the design, limitations and trial instructions](docs/e2ee-preview.md). No independent security review is claimed.
 
 This version uses **Python, Django, SQLite, Django templates, CSS and plain JavaScript**, with one development server. Node.js and npm are not required.
 

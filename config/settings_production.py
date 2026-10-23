@@ -20,6 +20,12 @@ if (
     raise ImproperlyConfigured(
         "Production requires a new random DJANGO_SECRET_KEY of at least 50 characters."
     )
+_journal_key = os.environ.get("MAWJ_JOURNAL_KEY", "")
+if _journal_key and (len(_journal_key) < 32 or len(set(_journal_key)) < 5):
+    raise ImproperlyConfigured(
+        "MAWJ_JOURNAL_KEY must be a random value of at least 32 characters."
+    )
+JOURNAL_ENCRYPTION_KEY = _journal_key or SECRET_KEY
 
 ALLOWED_HOSTS = [
     host.strip().lower()

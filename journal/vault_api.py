@@ -1,6 +1,7 @@
 """Opaque, owner-filtered experimental storage. Cryptography lives in the browser."""
 import base64
 import hashlib
+import hmac
 import json
 import uuid
 from functools import wraps
@@ -11,7 +12,6 @@ from django.db import IntegrityError, transaction
 from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from django.utils.crypto import salted_hmac
 
 from ai.provider import CLOUD_PROVIDERS, AIProviderError, process_journal
 from config.api import endpoint, payload, paginated, entry_data
@@ -32,7 +32,7 @@ def preview(methods=("GET",)):
 
 def only(data, names):
     if not isinstance(data, dict) or set(data) != set(names):
-        raise ValueError("Invalid envelope fields")
+        raise ValueError("Invalid request fields")
 
 
 def b64(value, minimum, maximum=None):
@@ -58,22 +58,14 @@ def encrypted(data):
     return data
 
 
-def envelopes(data):
-    only(data, ("passphrase", "recovery"))
-    for name, method, salt_size in (("passphrase", "PBKDF2-SHA256", 16), ("recovery", "HKDF-SHA256", 32)):
-        item = data[name]
-        fields = ("kdf", "salt", "iv", "ciphertext", "iterations") if name == "passphrase" else ("kdf", "salt", "iv", "ciphertext")
-        only(item, fields)
-        if item["kdf"] != method or (name == "passphrase" and (type(item["iterations"]) is not int or item["iterations"] != 600000)):
-            raise ValueError()
-        b64(item["salt"], salt_size)
-        b64(item["iv"], 12)
-        b64(item["ciphertext"], 48)
-    return data
-
-
 def vault_data(vault):
-    return {"id": str(vault.pk), "envelopes": vault.envelopes, "revision": vault.revision}
+    return {"id": str(vault.pk), "key_mode": vault.key_mode, "revision": vault.revision}
+
+
+def managed_key_bytes(vault):
+    secret = settings.JOURNAL_ENCRYPTION_KEY.encode()
+    context = f"mawj:managed-journal:v1:user:{vault.user_id}:vault:{vault.pk}".encode()
+    return hmac.new(secret, context, hashlib.sha256).digest()
 
 
 def note_data(note):
@@ -81,49 +73,52 @@ def note_data(note):
 
 
 def conflict():
-    return JsonResponse({"error": "This record changed. Reload and unlock again; your draft has not been saved."}, status=409)
+    return JsonResponse({"error": "This record changed. Reload the page; your draft has not been saved."}, status=409)
 
 
 @preview(("GET", "POST"))
 def vault(request):
     existing = JournalVault.objects.filter(user=request.user).first()
     if request.method == "GET":
-        # An opaque cache binding, not a credential and never the session cookie.
-        binding = salted_hmac("mawj.vault.browser-session", request.session.session_key or "", algorithm="sha256").hexdigest()
-        return JsonResponse({"vault": vault_data(existing) if existing else None, "legacy_count": JournalEntry.objects.filter(user=request.user).count(), "device_session": binding})
+        return JsonResponse({"vault": vault_data(existing) if existing else None, "legacy_count": JournalEntry.objects.filter(user=request.user).count()})
     data = payload(request)
-    only(data, ("id", "envelopes"))
-    key_id = identifier(data["id"])
-    wrapped = envelopes(data["envelopes"])
-    if existing:
-        return conflict()
-    try:
-        with transaction.atomic():
-            created = JournalVault.objects.create(id=key_id, user=request.user, envelopes=wrapped)
-    except IntegrityError:
-        return conflict()
-    return JsonResponse(vault_data(created), status=201)
+    if data == {"mode": "managed"}:
+        if existing:
+            return conflict()
+        try:
+            created = JournalVault.objects.create(user=request.user, envelopes={}, key_mode="managed")
+        except IntegrityError:
+            return conflict()
+        return JsonResponse(vault_data(created), status=201)
+    raise ValueError()
 
 
 @preview(("POST",))
-def rewrap(request):
-    current = get_object_or_404(JournalVault, user=request.user)
-    data = payload(request)
-    only(data, ("revision", "envelopes"))
-    wrapped = envelopes(data["envelopes"])
-    if type(data["revision"]) is not int:
+def managed_key(request):
+    current = get_object_or_404(JournalVault, user=request.user, key_mode="managed")
+    if payload(request):
         raise ValueError()
-    # Recovery rewraps the same master key; no destructive reset or new empty vault.
-    updated = JournalVault.objects.filter(pk=current.pk, revision=data["revision"]).update(envelopes=wrapped, revision=data["revision"] + 1)
-    if not updated:
-        return conflict()
-    current.refresh_from_db()
-    return JsonResponse(vault_data(current))
+    response = JsonResponse({"key": base64.b64encode(managed_key_bytes(current)).decode()})
+    response["Cache-Control"] = "no-store"
+    return response
+
+
+@preview(("POST",))
+def reset_legacy(request):
+    current = get_object_or_404(JournalVault, user=request.user, key_mode="legacy")
+    data = payload(request)
+    only(data, ("confirmation",))
+    if data["confirmation"] != "delete-locked-journal":
+        raise ValueError()
+    with transaction.atomic():
+        current.delete()
+        created = JournalVault.objects.create(user=request.user, envelopes={}, key_mode="managed")
+    return JsonResponse(vault_data(created), status=201)
 
 
 @preview(("GET", "POST"))
 def notes(request):
-    current = get_object_or_404(JournalVault, user=request.user)
+    current = get_object_or_404(JournalVault, user=request.user, key_mode="managed")
     if request.method == "GET":
         return paginated(current.entries.all(), request, note_data)
     data = payload(request)
@@ -140,7 +135,7 @@ def notes(request):
 
 @preview(("GET", "POST"))
 def note(request, pk):
-    current = get_object_or_404(EncryptedJournalEntry, pk=pk, vault__user=request.user)
+    current = get_object_or_404(EncryptedJournalEntry, pk=pk, vault__user=request.user, vault__key_mode="managed")
     if request.method == "GET":
         return JsonResponse(note_data(current))
     data = payload(request)
@@ -173,7 +168,7 @@ def legacy(request):
 
 @preview(("POST",))
 def import_legacy(request, pk):
-    current = get_object_or_404(JournalVault, user=request.user)
+    current = get_object_or_404(JournalVault, user=request.user, key_mode="managed")
     data = payload(request)
     only(data, ("id", "payload", "fingerprint", "consent"))
     if data["consent"] is not True:
@@ -196,7 +191,7 @@ def import_legacy(request, pk):
 
 @preview(("POST",))
 def analyze(request):
-    get_object_or_404(JournalVault, user=request.user)
+    get_object_or_404(JournalVault, user=request.user, key_mode="managed")
     data = payload(request)
     only(data, ("text", "provider", "consent"))
     if data["consent"] is not True or data["provider"] != settings.AI_PROVIDER or settings.AI_PROVIDER not in CLOUD_PROVIDERS:
@@ -215,7 +210,7 @@ def analyze(request):
 @preview(("POST",))
 def accept_task(request, pk):
     from tasks.forms import TaskForm
-    entry = get_object_or_404(EncryptedJournalEntry, pk=pk, vault__user=request.user)
+    entry = get_object_or_404(EncryptedJournalEntry, pk=pk, vault__user=request.user, vault__key_mode="managed")
     data = payload(request)
     only(data, ("token", "task", "consent"))
     if data["consent"] is not True or not isinstance(data["task"], dict):

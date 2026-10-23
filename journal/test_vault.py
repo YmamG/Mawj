@@ -18,16 +18,12 @@ def encoded(size):
     return base64.b64encode(bytes(range(size))).decode()
 
 
-def wrapped_keys():
-    return {"passphrase": {"kdf": "PBKDF2-SHA256", "iterations": 600000, "salt": encoded(16), "iv": encoded(12), "ciphertext": encoded(48)}, "recovery": {"kdf": "HKDF-SHA256", "salt": encoded(32), "iv": encoded(12), "ciphertext": encoded(48)}}
-
-
 def opaque_payload():
     # Only a wire-format fixture; actual authenticated encryption is tested in JS.
     return {"version": 1, "iv": encoded(12), "ciphertext": encoded(48)}
 
 
-@override_settings(E2EE_JOURNAL_PREVIEW=True, AI_PROVIDER="demo")
+@override_settings(E2EE_JOURNAL_PREVIEW=True, AI_PROVIDER="demo", JOURNAL_ENCRYPTION_KEY="test-only-managed-journal-key")
 class VaultApiTests(TestCase):
     @classmethod
     def setUpTestData(cls):
@@ -41,8 +37,12 @@ class VaultApiTests(TestCase):
         return self.client.post("/api/" + path, json.dumps(data), content_type="application/json")
 
     def create_vault(self):
-        result = self.post("vault/", {"id": str(uuid.uuid4()), "envelopes": wrapped_keys()})
+        return self.create_managed_vault()
+
+    def create_managed_vault(self):
+        result = self.post("vault/", {"mode": "managed"})
         self.assertEqual(result.status_code, 201)
+        self.assertEqual(result.json()["key_mode"], "managed")
         return result.json()
 
     def create_note(self):
@@ -64,20 +64,56 @@ class VaultApiTests(TestCase):
         client.force_login(self.user)
         self.assertEqual(client.post("/api/vault/", "{}", content_type="application/json").status_code, 403)
 
+    def test_managed_key_is_stable_owner_scoped_and_never_in_vault_metadata(self):
+        own_vault = self.create_managed_vault()
+        first = self.post("vault/key/", {})
+        self.assertEqual(first.status_code, 200)
+        self.assertIn("no-store", first.headers["Cache-Control"])
+        own_key = base64.b64decode(first.json()["key"], validate=True)
+        self.assertEqual(len(own_key), 32)
+        self.assertNotIn("key", self.client.get("/api/vault/").json()["vault"])
+        self.assertEqual(self.post("vault/key/", {}).json(), first.json())
+
+        self.client.force_login(self.other)
+        self.assertEqual(self.post("vault/key/", {}).status_code, 404)
+        other_vault = self.create_managed_vault()
+        other_key = base64.b64decode(self.post("vault/key/", {}).json()["key"], validate=True)
+        self.assertNotEqual(other_key, own_key)
+        self.assertNotEqual(other_vault["id"], own_vault["id"])
+
+        self.client.logout()
+        self.assertEqual(self.client.post("/api/vault/key/", HTTP_AUTHORIZATION=first.json()["key"]).status_code, 401)
+
+    def test_managed_key_endpoint_requires_csrf(self):
+        JournalVault.objects.create(user=self.user, envelopes={}, key_mode="managed")
+        client = Client(enforce_csrf_checks=True)
+        client.force_login(self.user)
+        self.assertEqual(client.post("/api/vault/key/", "{}", content_type="application/json").status_code, 403)
+
+    def test_locked_legacy_reset_is_explicit_and_preserves_account_tasks(self):
+        legacy = JournalVault.objects.create(user=self.user, envelopes={"old": "unreadable"}, key_mode="legacy")
+        note = legacy.entries.create(id=uuid.uuid4(), payload=opaque_payload())
+        task = Task.objects.create(user=self.user, title="keep this task")
+        self.assertEqual(self.client.get("/api/vault/entries/").status_code, 404)
+        self.assertEqual(self.post("vault/key/", {}).status_code, 404)
+        self.assertEqual(self.post("vault/reset/", {"confirmation": "wrong"}).status_code, 400)
+        self.assertTrue(EncryptedJournalEntry.objects.filter(pk=note.pk).exists())
+        result = self.post("vault/reset/", {"confirmation": "delete-locked-journal"})
+        self.assertEqual(result.status_code, 201)
+        self.assertEqual(result.json()["key_mode"], "managed")
+        self.assertFalse(EncryptedJournalEntry.objects.filter(pk=note.pk).exists())
+        self.assertTrue(Task.objects.filter(pk=task.pk).exists())
+        self.assertEqual(JournalVault.objects.filter(user=self.user).count(), 1)
+
     def test_vault_registration_never_overwrites_existing_keys(self):
         original = self.create_vault()
-        self.assertEqual(self.post("vault/", {"id": str(uuid.uuid4()), "envelopes": wrapped_keys()}).status_code, 409)
+        self.assertEqual(self.post("vault/", {"mode": "managed"}).status_code, 409)
         self.assertEqual(self.client.get("/api/vault/").json()["vault"], original)
         self.assertEqual(JournalVault.objects.count(), 1)
 
-    def test_rejects_plaintext_extra_fields_and_malformed_envelopes(self):
-        for replacement in (None, 1, {}, "invalid"):
-            self.assertEqual(self.post("vault/", {"id": replacement, "envelopes": wrapped_keys()}).status_code, 400)
-        for field, value in (("iterations", 1), ("salt", "invalid"), ("iv", encoded(8)), ("ciphertext", encoded(16))):
-            keys = wrapped_keys()
-            keys["passphrase"][field] = value
-            self.assertEqual(self.post("vault/", {"id": str(uuid.uuid4()), "envelopes": keys}).status_code, 400)
-        self.assertEqual(self.post("vault/", {"id": str(uuid.uuid4()), "envelopes": wrapped_keys(), "passphrase": "never-send-this"}).status_code, 400)
+    def test_rejects_legacy_setup_and_plaintext_payload_fields(self):
+        for invalid_setup in ({}, {"mode": "legacy"}, {"id": str(uuid.uuid4()), "envelopes": {}}, {"mode": "managed", "password": "never-send-this"}):
+            self.assertEqual(self.post("vault/", invalid_setup).status_code, 400)
         self.create_vault()
         for invalid in ({"version": True, "iv": encoded(12), "ciphertext": encoded(48)}, {"version": 1, "iv": "!!!!!!!!!!!!", "ciphertext": encoded(48)}, {**opaque_payload(), "text": "private"}):
             self.assertEqual(self.post("vault/entries/", {"id": str(uuid.uuid4()), "payload": invalid}).status_code, 400)
@@ -97,15 +133,6 @@ class VaultApiTests(TestCase):
         self.assertEqual(self.post(path, {"revision": 1, "action": "delete"}).status_code, 409)
         self.assertEqual(self.post(path, {"revision": 2, "action": "delete"}).status_code, 200)
         self.assertFalse(EncryptedJournalEntry.objects.exists())
-
-    def test_rewrap_requires_matching_revision(self):
-        self.create_vault()
-        keys = wrapped_keys()
-        keys["passphrase"]["iv"] = base64.b64encode(b"x" * 12).decode()
-        response = self.post("vault/rewrap/", {"revision": 1, "envelopes": keys})
-        self.assertEqual(response.json()["revision"], 2)
-        self.assertEqual(self.post("vault/rewrap/", {"revision": 1, "envelopes": wrapped_keys()}).status_code, 409)
-        self.assertEqual(JournalVault.objects.get(user=self.user).envelopes, keys)
 
     @patch("config.api.process_journal")
     @patch("journal.views.process_journal")
@@ -203,9 +230,10 @@ class VaultApiTests(TestCase):
         self.assertTrue(day["has_journal"])
         self.assertEqual(self.client.get("/api/session/").json()["user"]["stats"]["journals"], 1)
         response = self.client.get("/app/encrypted-journal/")
-        self.assertContains(response, "Preview · use fictional data")
-        self.assertContains(response, 'id="vault-device-open"')
-        self.assertContains(response, "Forget this device")
+        self.assertContains(response, "Opening your journal")
+        self.assertContains(response, 'id="vault-legacy-lock"')
+        self.assertNotContains(response, "Journal passphrase")
+        self.assertNotContains(response, "Forget this device")
         self.assertNotContains(response, "<form")
         self.assertIn("no-store", response.headers["Cache-Control"])
 
@@ -225,15 +253,3 @@ class VaultApiTests(TestCase):
         data["task"] = {"title": "corrected task"}
         self.assertEqual(self.post(path, data).status_code, 201)
         self.assertEqual(Task.objects.count(), 1)
-
-    def test_device_binding_follows_login_session_and_is_not_a_credential(self):
-        first = self.client.get("/api/vault/").json()["device_session"]
-        self.assertEqual(len(first), 64)
-        self.assertNotEqual(first, self.client.session.session_key)
-        self.assertEqual(self.client.get("/api/vault/").json()["device_session"], first)
-        self.client.logout()
-        self.client.force_login(self.user)
-        second = self.client.get("/api/vault/").json()["device_session"]
-        self.assertNotEqual(first, second)
-        self.client.logout()
-        self.assertEqual(self.client.get("/api/vault/", HTTP_AUTHORIZATION=second).status_code, 401)

@@ -1,9 +1,8 @@
-/* Notes stay encrypted at rest; a non-extractable key may be remembered on this device. */
-import {readDeviceKey, rememberDeviceKey, forgetDeviceKey} from "./vault-device.mjs";
+/* Journal text is encrypted in the browser with an account-managed key. */
 const boot = JSON.parse(document.getElementById("mawj-boot").textContent);
 const $ = (selector) => document.querySelector(selector);
 const say = (ar, en) => boot.language === "ar" ? ar : en;
-let cryptoModule, key = null, deviceKey = null, vault = null, pending = null, current = null;
+let cryptoModule, key = null, vault = null, current = null;
 let csrf = boot.csrf, busy = false, dirty = false, generation = 0, editVersion = 0;
 let autosaveTimer, saveQueued = false;
 let queuedAction = null;
@@ -20,37 +19,22 @@ async function api(path, data) {
   try {
     const response = await fetch(`/api/${path}`, {method: data === undefined ? "GET" : "POST", credentials: "same-origin", cache: "no-store", signal: controller.signal, headers: {"Content-Type": "application/json", "X-CSRFToken": csrf, "X-Mawj-Language": boot.language}, body: data === undefined ? undefined : JSON.stringify(data)});
     const result = await response.json();
-    if (response.status === 401) lock(false);
+    if (response.status === 401) lock();
     if (!response.ok) throw Error(result.error || say("تعذّر إكمال الطلب.", "Request failed."));
     return result;
   } finally { activeRequests.delete(controller); }
 }
-function unchanged(token) { if (generation !== token) throw Error(say("أُوقفت العملية عند القفل. أعيدي تحميل الصفحة للتحقق من حالة الحفظ.", "Operation stopped on lock. Reload to check saved state.")); }
-function stillOpen(token) { if (!key || token !== generation) throw Error(say("اليوميات مقفلة. افتحيها مجددًا.", "Journals are locked. Unlock again.")); }
-function clearSecrets() {
-  document.querySelectorAll('.vault-page input[type="password"], #vault-recovery-code').forEach((input) => { input.value = ""; });
-}
-function lock(forget = false) {
+function unchanged(token) { if (generation !== token) throw Error(say("انتهت جلسة الصفحة. أعيدي تحميلها للتحقق من حالة الحفظ.", "The page session ended. Reload to check saved state.")); }
+function stillOpen(token) { if (!key || token !== generation) throw Error(say("انتهت جلسة اليوميات. أعيدي تحميل الصفحة.", "The journal session ended. Reload the page.")); }
+function lock() {
   clearTimeout(autosaveTimer); saveQueued = false;
   queuedAction = null;
-  if (forget) forgetDeviceKey(boot.user.id).catch(() => {});
   for (const controller of activeRequests) controller.abort();
-  generation++; key = null; deviceKey = null; pending = null; current = null; rows = []; dirty = false; bookIndex = 0;
-  clearSecrets();
+  generation++; key = null; current = null; rows = []; dirty = false; bookIndex = 0;
   $("#vault-text").value = ""; $("#vault-search").value = "";
   for (const name of ["list", "clean", "suggestions", "entry-date"]) $(`#vault-${name}`).textContent = "";
-  for (const name of ["open", "editor", "recovery-display"]) $(`#vault-${name}`).hidden = true;
-  $("#vault-unlock").hidden = !vault;
-  $("#vault-setup").hidden = Boolean(vault);
-  $("#vault-device-open").hidden = true;
-  $("#vault-device-ready").hidden = true;
-  $("#vault-passphrase-open").hidden = false;
+  for (const name of ["open", "editor", "legacy-lock", "loading"]) { const node = $(`#vault-${name}`); if (node) node.hidden = true; }
   notice("");
-}
-function passphrase(first, second) {
-  const value = $(first).value;
-  if (value.length < 12 || value !== $(second).value) throw Error(say("استخدمي 12 حرفًا على الأقل وتحققي من تطابق العبارتين.", "Use at least 12 characters and matching passphrases."));
-  return value;
 }
 function date(value) { return new Intl.DateTimeFormat(boot.language === "ar" ? "ar-SA-u-ca-gregory" : "en", {dateStyle: "medium", timeZone: "Asia/Riyadh"}).format(new Date(value)); }
 function element(tag, text, className) { const node = document.createElement(tag); node.textContent = text; if (className) node.className = className; return node; }
@@ -172,10 +156,8 @@ async function save() {
 }
 async function opened() {
   const token = generation;
-  try { await rememberDeviceKey(boot.user.id, vault.id, key); }
-  catch { $("#vault-device-help").hidden = false; }
   stillOpen(token);
-  clearSecrets(); $("#vault-unlock").hidden = true; $("#vault-setup").hidden = true; $("#vault-recovery-display").hidden = true;
+  $("#vault-loading").hidden = true; $("#vault-legacy-lock").hidden = true;
   $("#vault-open").hidden = false;
   $("#vault-legacy").hidden = !legacyCount;
   $("#vault-legacy-count").textContent = say(`لديك ${legacyCount} تدوينة قديمة ما زالت غير مشفّرة.`, `${legacyCount} old entries are still unencrypted.`);
@@ -194,48 +176,11 @@ function demo(text) {
   return {clean_text: text.trim(), suggestions: [...new Set(titles.filter(Boolean).map((s) => s.slice(0, 200)))].slice(0, 20).map((title) => ({title, priority: "medium", date: null, start_time: null, estimated_duration: null}))};
 }
 const actions = {
-  async deviceOpen() {
-    if (!deviceKey) throw Error(say("تعذّر فتح اليوميات من هذا الجهاز. استخدمي عبارة اليوميات.", "This device could not open the journal. Use your journal passphrase."));
-    key = deviceKey; deviceKey = null; await opened();
-  },
-  async prepare() {
+  async resetLegacy() {
+    if (!confirm(say("لا يمكن استعادة اليوميات القديمة من دون مفتاحها. هل تريدين حذف النسخة المقفلة وبدء دفتر جديد؟", "The old journal cannot be recovered without its key. Delete the locked copy and start a new journal?"))) return;
     const token = generation;
-    const phrase = passphrase("#vault-new-pass", "#vault-new-confirm");
-    const prepared = await cryptoModule.createVault(phrase, boot.user.id); unchanged(token); pending = prepared;
-    clearSecrets(); $("#vault-setup").hidden = true; $("#vault-recovery-display").hidden = false;
-    $("#vault-recovery-code").value = pending.recoveryCode;
-    notice("");
-  },
-  download() {
-    if (!pending) return;
-    const url = URL.createObjectURL(new Blob([`Mawj experimental journal recovery key\nAccount: ${boot.user.username}\nVault: ${pending.id}\n${pending.recoveryCode}\nKeep this file private. Do not upload it to Mawj.\n`], {type: "text/plain"}));
-    const link = document.createElement("a"); link.href = url; link.download = "mawj-private-recovery-key.txt"; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
-  },
-  async finish() {
-    if (!pending) return;
-    actions.download();
-    const token = generation, candidate = pending;
-    const saved = await api("vault/", {id: candidate.id, envelopes: candidate.envelopes}); unchanged(token);
-    vault = saved; key = candidate.key; pending = null; await opened();
-  },
-  async unlock() {
-    const token = generation;
-    const result = await api("vault/"); unchanged(token); vault = result.vault; legacyCount = result.legacy_count;
-    let candidate;
-    try { candidate = await cryptoModule.unlock($("#vault-pass").value, vault, boot.user.id); }
-    catch { throw Error(say("لم تُفتح اليوميات. تحققي من عبارة القفل أو استخدمي مفتاح الاسترداد.", "Could not unlock. Check the vault passphrase or use your recovery key.")); }
-    unchanged(token); key = candidate; await opened();
-  },
-  async recover() {
-    const token = generation;
-    const phrase = passphrase("#vault-recover-pass", "#vault-recover-confirm");
-    const result = await api("vault/"); unchanged(token); vault = result.vault; legacyCount = result.legacy_count;
-    let recovered;
-    try { recovered = await cryptoModule.recover($("#vault-recover-key").value, phrase, vault, boot.user.id); }
-    catch { throw Error(say("مفتاح الاسترداد غير صحيح، أو تعذّر التحقق من المخزن. لم تُغيّر بياناتك.", "Invalid recovery key or vault verification failed. Your data is unchanged.")); }
-    unchanged(token);
-    const saved = await api("vault/rewrap/", {revision: vault.revision, envelopes: recovered.envelopes}); unchanged(token);
-    vault = saved; key = recovered.key; await opened();
+    vault = await api("vault/reset/", {confirmation: "delete-locked-journal"}); unchanged(token);
+    await openManaged();
   },
   new: fresh,
   bookPrev() { if (bookIndex > 0) { bookDirection = "prev"; bookIndex--; renderList(); } },
@@ -243,11 +188,6 @@ const actions = {
     const query = $("#vault-search").value.toLocaleLowerCase();
     const total = rows.filter((row) => row.document.text.toLocaleLowerCase().includes(query)).length + (query ? 0 : 1);
     if (bookIndex < total - 1) { bookDirection = "next"; bookIndex++; renderList(); }
-  },
-  async lock() {
-    await flushDraft();
-    try { await forgetDeviceKey(boot.user.id); } catch { /* The passphrase fallback remains available. */ }
-    lock(false); channel?.postMessage("lock");
   },
   async close() { await flushDraft(); current = null; dirty = false; renderEditor(); },
   async navigate(link) { await flushDraft(); location.assign(link.href); },
@@ -301,12 +241,12 @@ const actions = {
   },
 };
 const channel = typeof BroadcastChannel === "function" ? new BroadcastChannel("mawj-vault-lock") : null;
-if (channel) channel.onmessage = () => lock(false);
+if (channel) channel.onmessage = () => lock();
 async function run(name, button) {
   if (!actions[name]) return;
   if (busy) {
     if (name === "save") saveQueued = true;
-    else if (["new", "select", "close", "lock", "navigate"].includes(name)) queuedAction = {name, button};
+    else if (["new", "select", "close", "navigate"].includes(name)) queuedAction = {name, button};
     return;
   }
   clearTimeout(autosaveTimer);
@@ -334,35 +274,27 @@ $("#vault-text").addEventListener("input", () => {
   if (dirty) autosaveTimer = setTimeout(() => run("save"), 1200);
 });
 $("#vault-search").addEventListener("input", () => renderList(true));
-document.addEventListener("keydown", (event) => {
-  if (event.key !== "Enter") return;
-  const name = {"vault-pass": "unlock", "vault-new-confirm": "prepare", "vault-recover-confirm": "recover"}[event.target.id];
-  if (name) { event.preventDefault(); run(name, document.querySelector(`[data-vault="${name}"]`)); }
-});
 addEventListener("beforeunload", (event) => { if (dirty) { event.preventDefault(); event.returnValue = ""; } });
 addEventListener("pagehide", () => lock());
 setInterval(async () => {
   if (!key) return;
-  try { const session = await api("session/"); if (session.user?.id !== boot.user.id) lock(false); else csrf = session.csrf; }
+  try { const session = await api("session/"); if (session.user?.id !== boot.user.id) lock(); else csrf = session.csrf; }
   catch { /* Temporary connection loss does not interrupt writing. */ }
 }, 30000);
+async function openManaged() {
+  const token = generation;
+  const result = await api("vault/key/", {}); unchanged(token);
+  key = await cryptoModule.managedKey(result.key); result.key = ""; unchanged(token);
+  await opened();
+}
 async function initialize() { try {
   if (!window.isSecureContext || !crypto.subtle) throw Error(say("يلزم HTTPS ومتصفح يدعم Web Crypto. لن يُرسل النص دون تشفير.", "HTTPS and a Web Crypto browser are required. No plaintext will be submitted."));
   cryptoModule = await import("./vault-crypto.mjs");
   const token = generation;
   const result = await api("vault/"); unchanged(token); vault = result.vault; legacyCount = result.legacy_count;
-  if (vault) {
-    let remembered;
-    try { remembered = await readDeviceKey(boot.user.id, vault.id); } catch { /* Unlock still works without browser storage. */ }
-    unchanged(token);
-    if (remembered) {
-      deviceKey = remembered;
-      $("#vault-setup").hidden = true; $("#vault-unlock").hidden = false;
-      $("#vault-device-open").hidden = false; $("#vault-device-ready").hidden = false;
-      $("#vault-passphrase-open").hidden = true;
-    }
-    else lock();
-  } else lock();
-} catch (error) { notice(error.message, true); } }
+  if (!vault) { vault = await api("vault/", {mode: "managed"}); unchanged(token); }
+  if (vault.key_mode === "managed") await openManaged();
+  else { lock(); vault = result.vault; $("#vault-legacy-lock").hidden = false; }
+} catch (error) { $("#vault-loading").hidden = true; notice(error.message, true); } }
 addEventListener("pageshow", (event) => { if (event.persisted) initialize(); });
 await initialize();

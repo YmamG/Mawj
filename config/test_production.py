@@ -34,6 +34,16 @@ class ProductionSettingsTests(SimpleTestCase):
                 self.assertNotEqual(result.returncode, 0)
                 self.assertIn("Production requires a new random DJANGO_SECRET_KEY", result.stderr)
 
+    def test_optional_journal_key_must_be_strong_or_falls_back_to_django_key(self):
+        for value in ("short", "a" * 64):
+            with self.subTest(journal_key_type=len(value)):
+                result = self.run_isolated("import config.settings_production", MAWJ_JOURNAL_KEY=value)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn("MAWJ_JOURNAL_KEY must be a random value", result.stderr)
+        code = "from config import settings_production as s; assert s.JOURNAL_ENCRYPTION_KEY == s.SECRET_KEY"
+        result = self.run_isolated(code, MAWJ_JOURNAL_KEY="")
+        self.assertEqual(result.returncode, 0, result.stderr)
+
     def test_hosts_must_be_explicit(self):
         for value in ("", "*", ".example.test", "https://example.test", "example.test:8000"):
             with self.subTest(host=value):
