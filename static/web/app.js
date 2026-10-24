@@ -14,6 +14,20 @@
     deleteNotice = "";
   const $ = (selector) => document.querySelector(selector);
   const t = (text) => (lang === "ar" ? boot.translations[text] || text : text);
+  const startAILoading = (button, message) => {
+    const label = button?.querySelector(".ai-button-label");
+    if (!button || !label) return () => {};
+    const original = label.textContent;
+    button.disabled = true;
+    button.classList.add("ai-loading");
+    button.setAttribute("aria-busy", "true");
+    label.textContent = t(message);
+    return () => {
+      label.textContent = original;
+      button.classList.remove("ai-loading");
+      button.removeAttribute("aria-busy");
+    };
+  };
   const esc = (value) =>
     String(value ?? "").replace(
       /[&<>"']/g,
@@ -263,7 +277,7 @@
     document.querySelector(".entry-grid")?.setAttribute("hidden", "");
     panel.hidden = false;
     panel.classList.add("journal-reader");
-    panel.innerHTML = `<span class="journal-binding" aria-hidden="true"></span><header class="compose-heading"><div><span class="eyebrow">${esc(t("From my journal"))} · ${esc(date(entry.created_at))}</span><h2>${esc(t("A page from your day"))}</h2></div><button class="text-link" data-close-compose="journal-detail">← ${esc(t("Back to your pages"))}</button></header><div class="journal-reader-actions"><button class="button secondary" data-edit-journal="${entry.id}">${esc(t("Edit journal entry"))}</button><button class="icon-button danger" data-delete-journal="${entry.id}" aria-label="${esc(t("Delete entry"))}">×</button></div><p class="journal-text" dir="auto">${esc(entry.clean_text || entry.raw_text)}</p><div class="journal-next-steps"><div class="journal-next-heading"><div><span class="journal-spark" aria-hidden="true">✦</span><h3>${esc(t("Your next steps"))}</h3></div><button class="button secondary" data-analyze="${entry.id}" ${boot.provider === "manual" ? "disabled" : ""}>${esc(t("Find next steps"))}</button></div><div class="suggestion-list">${
+    panel.innerHTML = `<span class="journal-binding" aria-hidden="true"></span><header class="compose-heading"><div><span class="eyebrow">${esc(t("From my journal"))} · ${esc(date(entry.created_at))}</span><h2>${esc(t("A page from your day"))}</h2></div><button class="text-link" data-close-compose="journal-detail">← ${esc(t("Back to your pages"))}</button></header><div class="journal-reader-actions"><button class="button secondary" data-edit-journal="${entry.id}">${esc(t("Edit journal entry"))}</button><button class="icon-button danger" data-delete-journal="${entry.id}" aria-label="${esc(t("Delete entry"))}">×</button></div><p class="journal-text" dir="auto">${esc(entry.clean_text || entry.raw_text)}</p><div class="journal-next-steps"><div class="journal-next-heading"><div><span class="journal-spark" aria-hidden="true">✦</span><h3>${esc(t("Your next steps"))}</h3></div><button class="button secondary" data-analyze="${entry.id}" ${boot.provider === "manual" ? "disabled" : ""}><span class="ai-button-label">${esc(t("Find next steps"))}</span></button></div><div class="suggestion-list">${
       entry.suggestions
         .filter((s) => s.status === "pending")
         .map(
@@ -323,6 +337,8 @@
   document.addEventListener("click", async (event) => {
     const button = event.target.closest("button");
     if (!button) return;
+    let stopAILoading = null;
+    let handledButton = false;
     try {
       if (button.dataset.themeChoice) {
         const theme = button.dataset.themeChoice;
@@ -420,7 +436,22 @@
         location.href = `?year=${d.getFullYear()}&month=${d.getMonth() + 1}`;
         return;
       }
+      const handledHere =
+        button.hasAttribute("data-logout") ||
+        button.dataset.toggle ||
+        button.dataset.reminder ||
+        button.id === "confirm-delete" ||
+        button.id === "suggest-task" ||
+        button.dataset.analyze ||
+        button.dataset.accept ||
+        button.dataset.dismiss;
+      if (!handledHere) return;
+      handledButton = true;
       button.disabled = true;
+      if (button.id === "suggest-task")
+        stopAILoading = startAILoading(button, "Preparing suggestion…");
+      else if (button.dataset.analyze)
+        stopAILoading = startAILoading(button, "Finding next steps…");
       if (button.hasAttribute("data-logout")) {
         await api("/auth/logout/", {});
         location.href = "/";
@@ -478,7 +509,8 @@
     } catch (error) {
       showError(error);
     } finally {
-      button.disabled = false;
+      stopAILoading?.();
+      if (handledButton) button.disabled = false;
     }
   });
   document.addEventListener("submit", async (event) => {

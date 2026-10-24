@@ -95,6 +95,26 @@ button:disabled {
   cursor: wait;
   opacity: 0.6;
 }
+.ai-loading {
+  cursor: wait !important;
+  pointer-events: none;
+}
+.ai-loading > svg {
+  display: none;
+}
+.ai-loading::before {
+  content: "";
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  border: 2px solid currentColor;
+  border-inline-end-color: transparent;
+  border-radius: 50%;
+  animation: ai-spin .75s linear infinite;
+}
+@keyframes ai-spin {
+  to { transform: rotate(1turn); }
+}
 button,
 a {
   transition:

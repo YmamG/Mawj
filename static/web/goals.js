@@ -2,6 +2,18 @@
 (() => {
   const boot = JSON.parse(document.getElementById("mawj-boot").textContent);
   const text = (message) => boot.language === "ar" ? boot.translations[message] || message : message;
+  const startAILoading = (button, message) => {
+    const label = button.querySelector(".ai-button-label");
+    const original = label.textContent;
+    button.classList.add("ai-loading");
+    button.setAttribute("aria-busy", "true");
+    label.textContent = text(message);
+    return (next = original) => {
+      label.textContent = next;
+      button.classList.remove("ai-loading");
+      button.removeAttribute("aria-busy");
+    };
+  };
   const notice = (message, error = false) => {
     const node = document.getElementById("goal-notice");
     node.textContent = text(message); node.hidden = !message;
@@ -31,6 +43,8 @@
   async function suggest(panel, button) {
     if (busy) return;
     busy = true; button.disabled = true; panel.setAttribute("aria-busy", "true");
+    const stopAILoading = startAILoading(button, "Finding next steps…");
+    let finishedLabel;
     const data = new FormData(); data.set("action", "suggest");
     if (panel.dataset.cloud === "yes") data.set("consent", "yes");
     try {
@@ -48,11 +62,11 @@
         row.append(check, input); list.append(row);
       });
       panel.querySelector("[data-goal-ai-results]").hidden = false;
-      button.querySelector("span").textContent = text("Suggest again");
+      finishedLabel = text("Suggest again");
       panel.querySelector(".goal-ai-option input[type=text]")?.focus();
       notice("");
     } catch { notice("We could not reach Mawj. Check your connection and try again.", true); }
-    finally { busy = false; button.disabled = false; panel.removeAttribute("aria-busy"); }
+    finally { stopAILoading(finishedLabel); busy = false; button.disabled = false; panel.removeAttribute("aria-busy"); }
   }
   document.addEventListener("submit", async (event) => {
     const form = event.target;

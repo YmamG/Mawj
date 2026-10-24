@@ -266,3 +266,8 @@ Limitations remain: no production deployment or live AI provider test; reminders
 - Mobile writing mode now hides the book shelf while an entry is open and restores it when the editor closes. The editor uses a shorter viewport-aware writing area, wider usable text space, a stable save row and full-width suggestion actions on narrow screens.
 - Chromium exercised Arabic journal loading, automatic encryption, creating/saving an entry, Demo analysis and returning to the book at 320, 360, 390 and 430 px. All widths kept the document within the viewport and reported no browser errors. The 390 px editor page fell from roughly 2234 to 1499 px without removing controls or content.
 - **163 Django tests passed**. JavaScript syntax, Web Crypto round-trip/tamper checks and diff whitespace also passed. No schema migration was added.
+
+## AI request progress feedback (2026-10-24)
+
+- Task-detail suggestions, journal analysis and goal-step planning now replace the sparkle with a spinner and an Arabic/English progress label while waiting. The active button is disabled and marked `aria-busy` until success or failure, then its normal label returns.
+- A delayed-browser test at mobile width pressed each control again while its mocked request was pending. Each of the three flows sent exactly one request, remained disabled during the wait and restored its final label afterward. This also fixed the shared click handler prematurely re-enabling controls owned by the journal and goals scripts.

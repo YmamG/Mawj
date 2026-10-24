@@ -16,7 +16,7 @@
     <section class="goal-ai-panel" id="goal-ai-panel" data-url="{% url 'goal_ai_plan' goal.id %}" data-cloud="{% if sends_to_cloud %}yes{% else %}no{% endif %}" hidden>
       <header><span>{% icon 'Sparkle' %}</span><div><h3>{% tr 'Build a starting plan' %}</h3><p>{% tr 'Review and edit every suggestion before adding it.' %}</p></div></header>
       <p class="goal-ai-provider">{% if sends_to_cloud %}{% tr 'Step suggestions from' %} <strong>{% if provider == 'openai' %}OpenAI{% elif provider == 'claude' %}Claude{% else %}Gemini{% endif %}</strong>.{% else %}<strong>{% tr 'Demo mode' %}</strong> · {% tr 'These sample steps are generated locally.' %}{% endif %}</p>
-      <button type="button" class="button secondary" data-goal-ai-generate>{% icon 'Sparkle' %}<span>{% tr 'Suggest steps' %}</span></button>
+      <button type="button" class="button secondary" data-goal-ai-generate>{% icon 'Sparkle' %}<span class="ai-button-label">{% tr 'Suggest steps' %}</span></button>
       <div class="goal-ai-results" data-goal-ai-results hidden><p>{% tr 'Keep, edit, or remove any step:' %}</p><div class="goal-ai-list" data-goal-ai-list></div><button type="button" class="button" data-goal-ai-add>{% tr 'Add selected steps' %}</button></div>
     </section>
   </section>

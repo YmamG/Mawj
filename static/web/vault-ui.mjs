@@ -2,6 +2,19 @@
 const boot = JSON.parse(document.getElementById("mawj-boot").textContent);
 const $ = (selector) => document.querySelector(selector);
 const say = (ar, en) => boot.language === "ar" ? ar : en;
+function startAILoading(button) {
+  const label = button?.querySelector(".ai-button-label");
+  if (!button || !label) return () => {};
+  const original = label.textContent;
+  button.classList.add("ai-loading");
+  button.setAttribute("aria-busy", "true");
+  label.textContent = say("جارٍ استخراج الاقتراحات…", "Finding next steps…");
+  return () => {
+    label.textContent = original;
+    button.classList.remove("ai-loading");
+    button.removeAttribute("aria-busy");
+  };
+}
 let cryptoModule, key = null, vault = null, current = null;
 let csrf = boot.csrf, busy = false, dirty = false, generation = 0, editVersion = 0;
 let autosaveTimer, saveQueued = false;
@@ -301,9 +314,11 @@ async function run(name, button) {
   clearTimeout(autosaveTimer);
   if (name === "save") saveQueued = false;
   busy = true; if (button) button.disabled = true;
+  const stopAILoading = name === "analyze" ? startAILoading(button) : null;
   try { await actions[name](button); }
   catch (error) { saveQueued = false; notice(error.message || say("تعذّر الحفظ الآن. نصك ما زال في الصفحة؛ حاول مجددًا.", "Could not save yet. Your text is still on this page; try again."), true); }
   finally {
+    stopAILoading?.();
     busy = false; if (button) button.disabled = false;
     if (queuedAction && key) {
       const next = queuedAction; queuedAction = null; run(next.name, next.button);
