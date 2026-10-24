@@ -4668,16 +4668,58 @@ html[dir="rtl"] .journal-reader {
     max-width: none;
     flex-basis: 100%;
   }
+  .vault-layout.is-editing .vault-library {
+    display: none;
+  }
+  .vault-layout.is-editing {
+    gap: 0;
+  }
+  .vault-page .journal-compose {
+    margin-top: 0;
+  }
   .journal-compose,
   .journal-reader,
   html[dir="rtl"] .journal-compose {
-    padding: 26px 22px 26px 38px;
+    padding: 22px 16px 22px 30px;
   }
   html[dir="rtl"] .journal-compose {
-    padding-inline: 38px 22px;
+    padding-inline: 30px 16px;
   }
   html[dir="rtl"] .journal-reader {
-    padding-inline: 38px 22px;
+    padding-inline: 30px 16px;
+  }
+  .journal-binding {
+    width: 12px;
+  }
+  .journal-compose textarea {
+    height: min(36dvh, 280px);
+    min-height: 230px;
+    line-height: 32px;
+    background: repeating-linear-gradient(to bottom, transparent 0 31px, var(--line) 32px);
+  }
+  .journal-compose .form-actions {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    width: 100%;
+  }
+  .journal-compose .form-actions .field-help {
+    text-align: center;
+    overflow-wrap: anywhere;
+  }
+  .journal-compose .vault-delete {
+    margin-inline-start: 0;
+  }
+  .vault-analysis {
+    display: grid;
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+  .vault-analysis .button,
+  .vault-suggestion .button {
+    width: 100%;
+  }
+  .vault-suggestion .button {
+    margin: 4px 0;
   }
   .journal-reader-actions {
     margin: 0 0 16px;
@@ -4705,13 +4747,13 @@ html[dir="rtl"] .journal-reader {
     border-radius: 9px 22px 22px 9px;
   }
   .journal-book-page {
-    padding: 30px 22px 28px 30px;
+    padding: 26px 16px 24px 26px;
   }
   html[dir="rtl"] .journal-book-page {
-    padding-inline: 30px 22px;
+    padding-inline: 26px 16px;
   }
   .journal-book-page::before {
-    inset-inline-start: 28px;
+    inset-inline-start: 24px;
   }
   .journal-book-page-open {
     padding-inline-start: 13px;
@@ -4771,6 +4813,15 @@ html[dir="rtl"] .journal-reader {
   }
   .journal-heading .journal-new-button,
   .goals-simple-head > .button {
+    width: 100%;
+  }
+  .journal-heading h1 {
+    font-size: 34px;
+  }
+  .vault-page .journal-tools {
+    margin-block: 18px;
+  }
+  .vault-page .journal-new-button {
     width: 100%;
   }
   .goals-simple-title {

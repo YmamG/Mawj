@@ -260,3 +260,9 @@ Limitations remain: no production deployment or live AI provider test; reminders
 - The default task list now contains active tasks only. Completing a task removes it from that list while preserving the record in the Completed archive, calendar and reports; archived tasks can be reopened. The Today view keeps its existing same-day Small wins section.
 - Changed the remaining Arabic journal instructions from feminine to masculine wording, which is now the consistent default. No extra profile question was added.
 - **163 Django tests passed**, including goal-image ownership, timeline rendering, custom-category validation/persistence, recurrence copying and completed-task archive behavior. Migration consistency, Django system checks, translation JSON, JavaScript syntax and diff whitespace checks passed.
+
+## Encrypted journal mobile layout (2026-10-24)
+
+- Mobile writing mode now hides the book shelf while an entry is open and restores it when the editor closes. The editor uses a shorter viewport-aware writing area, wider usable text space, a stable save row and full-width suggestion actions on narrow screens.
+- Chromium exercised Arabic journal loading, automatic encryption, creating/saving an entry, Demo analysis and returning to the book at 320, 360, 390 and 430 px. All widths kept the document within the viewport and reported no browser errors. The 390 px editor page fell from roughly 2234 to 1499 px without removing controls or content.
+- **163 Django tests passed**. JavaScript syntax, Web Crypto round-trip/tamper checks and diff whitespace also passed. No schema migration was added.

@@ -65,7 +65,7 @@ function renderList(reset = false) {
     const eyebrow = element("p", say("مساحة صغيرة ليومك", "A little space for your day"), "eyebrow");
     const title = element("h2", say("يومياتي", "My journal"));
     const count = element("p", say(`عدد التدوينات المحفوظة: ${matches.length}`, `${matches.length} saved ${matches.length === 1 ? "entry" : "entries"}`), "journal-cover-count");
-    const open = element("button", say("افتحي الدفتر", "Open the journal"), "button journal-cover-open");
+    const open = element("button", say("افتح الدفتر", "Open the journal"), "button journal-cover-open");
     open.type = "button"; open.dataset.vault = "bookNext";
     cover.append(mark, eyebrow, title, count, open); stage.append(cover);
   } else {
@@ -112,6 +112,7 @@ async function loadPage(page = 1) {
 }
 function renderEditor(preserveText = false) {
   $("#vault-editor").hidden = !current;
+  $(".vault-layout").classList.toggle("is-editing", Boolean(current));
   if (!current) return;
   if (!preserveText) $("#vault-text").value = current.document.text;
   $("#vault-entry-date").textContent = current.revision ? date(current.created_at) : say("تدوينة جديدة", "New entry");
