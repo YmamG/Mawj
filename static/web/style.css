@@ -2530,6 +2530,11 @@ textarea {
 .app-chrome .app-date { margin-inline-end: 5px; }
 .app-chrome .brand > span { font-size: 29px; }
 .app-chrome .brand > svg { width: 29px; }
+.compact-appearance {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
 .appearance-menu { position: relative; }
 .appearance-trigger {
   display: grid;
@@ -2562,7 +2567,26 @@ textarea {
 }
 .appearance-popover strong { font-size: 11px; }
 .appearance-popover .theme-picker { justify-content: space-between; }
-.appearance-popover .language-toggle { width: 100%; }
+.language-icon-toggle {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background .2s, color .2s, transform .2s;
+}
+.language-icon-toggle:hover,
+.language-icon-toggle:focus-visible {
+  color: var(--ink);
+  background: var(--soft);
+  transform: translateY(-2px);
+}
+.language-icon-toggle svg { width: 19px; height: 19px; }
 .app-chrome .app-nav {
   justify-content: center;
   gap: 5px;
@@ -2950,26 +2974,26 @@ h2 em {
   border-right-color: var(--palette-5);
 }
 
-/* Additional palettes: readable foregrounds over the supplied dark surfaces. */
+/* Additional palettes. The blue option stays light like the other calm themes. */
 [data-theme="midnight"] {
   --palette-1: #7c9eb2;
   --palette-2: #52528c;
   --palette-3: #372554;
   --palette-4: #231123;
   --palette-5: #000000;
-  --bg: #110d19;
-  --paper: #231123;
-  --ink: #e9e7f2;
-  --muted: #b8b2c8;
-  --accent: #7c9eb2;
-  --accent-ink: #110d19;
-  --soft: #201a30;
-  --soft-2: #52528c;
-  --line: #42374c;
-  --blush: #372554;
-  --shadow: #00000045;
-  --emphasis: #7c9eb2;
-  color-scheme: dark;
+  --bg: #f5f9fc;
+  --paper: #fffefe;
+  --ink: #302a4c;
+  --muted: #68768a;
+  --accent: #607f9c;
+  --accent-ink: #ffffff;
+  --soft: #e8f1f7;
+  --soft-2: #d3e4ee;
+  --line: #d8e4ec;
+  --blush: #e8e3f0;
+  --shadow: #37255412;
+  --emphasis: #52528c;
+  color-scheme: light;
 }
 [data-theme="ember"] {
   --palette-1: #250902;
@@ -2995,7 +3019,7 @@ h2 em {
   background: linear-gradient(135deg, #ad2831 50%, #250902 50%);
 }
 .theme-dot.midnight span {
-  background: linear-gradient(135deg, #7c9eb2 50%, #231123 50%);
+  background: linear-gradient(135deg, #7c9eb2 50%, #d9eaf3 50%);
 }
 .chart-tip {
   top: 8px;
@@ -5221,5 +5245,33 @@ html[dir="rtl"] .journal-reader {
   }
   .app-chrome .app-nav-label {
     display: none;
+  }
+}
+
+@media (max-width: 360px) {
+  .app-chrome .app-header {
+    padding-inline: 6px;
+  }
+  .app-chrome .app-header-actions {
+    gap: 2px;
+  }
+  .app-chrome .brand {
+    gap: 5px;
+  }
+  .app-chrome .brand > span {
+    font-size: 22px;
+  }
+  .app-chrome .brand > svg {
+    width: 22px;
+  }
+  .app-chrome .appearance-trigger,
+  .app-chrome .language-icon-toggle,
+  .app-chrome .header-logout {
+    width: 32px;
+    height: 32px;
+  }
+  .app-chrome .avatar {
+    width: 32px;
+    height: 32px;
   }
 }

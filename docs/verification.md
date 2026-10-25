@@ -279,3 +279,9 @@ Limitations remain: no production deployment or live AI provider test; reminders
 - Reworked Today so its three counts appear once, moved journaling and progress into clear secondary cards, and kept the task sections and empty state as the primary action area. Removed the repeated journal text from the encrypted suggestion result while retaining the encrypted saved text and reviewable suggestions.
 - Rewrote the English and Arabic privacy pages around three short assurances and four plain-language sections. Accurate operator, backup and encryption-boundary information remains available in a collapsed technical-details section. Provider-specific AI disclosure still reflects the active configuration.
 - **166 Django tests passed**, including new search, Today, privacy and journal-duplication regressions. Django checks, migration consistency, Python compilation, translation JSON, JavaScript syntax, Web Crypto checks and diff whitespace passed. Chromium login and layout checks passed at 1366px and 390px in English and Arabic with no document overflow; desktop/mobile Today, encrypted Journal and Privacy screenshots were visually reviewed.
+
+## Separate language control and light blue theme (2026-10-25)
+
+- Moved language switching out of the theme popover into its own globe button in the application header. The theme button now controls colors only.
+- Converted the existing `midnight` theme identifier into the light **Sky** palette so saved user preferences remain valid without a data migration. The interface no longer offers an explicit dark palette; automatic browser dark mode is intentionally not claimed because the site does not currently implement `prefers-color-scheme` theme switching.
+- Chromium checks at 390px and 320px confirmed that the theme and language controls are separate, the globe icon renders, all seven navigation destinations fit, the Sky palette is light and there is no document overflow.

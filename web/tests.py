@@ -99,6 +99,15 @@ class TemplateEditionTests(TestCase):
         self.assertNotContains(response, 'class="stats-row"')
         self.assertNotContains(response, 'Today &amp; undated <span>')
 
+    def test_language_control_is_separate_from_theme_menu(self):
+        self.client.force_login(self.owner)
+        response = self.client.get('/app/today/')
+        self.assertContains(response, 'class="compact-appearance"')
+        self.assertContains(response, 'class="language-icon-toggle"')
+        self.assertContains(response, 'data-language="ar"')
+        self.assertContains(response, 'aria-label="Switch to Arabic"')
+        self.assertContains(response, 'title="Sky"')
+
     def test_privacy_page_leads_with_plain_summary_and_keeps_details_optional(self):
         self.client.cookies['mawj-language'] = 'en'
         response = self.client.get('/privacy/')

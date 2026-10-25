@@ -187,14 +187,18 @@
   function refreshThemeButtons() {
     document
       .querySelectorAll("[data-theme-choice]")
-      .forEach((b) =>
+      .forEach((b) => {
         b.setAttribute(
           "aria-pressed",
           String(
             b.dataset.themeChoice === document.documentElement.dataset.theme,
           ),
-        ),
-      );
+        );
+        if (b.dataset.themeChoice === "midnight") {
+          b.setAttribute("aria-label", t("Sky"));
+          b.setAttribute("title", t("Sky"));
+        }
+      });
   }
   refreshThemeButtons();
   let themeSave = Promise.resolve();

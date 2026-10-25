@@ -19,7 +19,7 @@ from django.views.decorators.http import require_safe
 from config import api
 from .templatetags.mawj import MESSAGES
 
-THEMES = [("grove", "Grove"), ("petal", "Petal"), ("dusk", "Dusk"), ("ember", "Ember"), ("midnight", "Midnight")]
+THEMES = [("grove", "Grove"), ("petal", "Petal"), ("dusk", "Dusk"), ("ember", "Ember"), ("midnight", "Sky")]
 NAV = [
     ("today", "Today", "Sun"), ("tasks", "My tasks", "CheckCircle"),
     ("journal", "Journal", "BookOpenText"), ("achievements", "Progress", "ChartBar"),
