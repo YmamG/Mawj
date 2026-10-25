@@ -1,7 +1,6 @@
 {% extends "web/base.html" %}{% load mawj %}
 {% block content %}<div class="app-container">
-<header class="app-header">{% include 'web/brand.html' %}<div class="app-header-actions"><span class="app-date">{{ today|display_date }}</span>{% include 'web/appearance.html' %}<a class="user-button" href="/app/profile/">{% if account.has_avatar %}<img class="avatar" alt="{% tr 'Your profile photo' %}" src="/api/profile/avatar/">{% else %}<span class="avatar default-avatar">{{ account.display_name|default:account.username|first|upper }}</span>{% endif %}<span>{{ account.display_name|default:account.username }}</span></a><button class="icon-button" data-logout aria-label="{% tr 'Log out' %}">{% icon 'SignOut' %}</button></div></header>
-<nav class="app-nav" aria-label="{% tr 'Your workspace' %}">{% for id,label,glyph in navigation %}<a href="/app/{{ id }}/" {% if id == section %}aria-current="page"{% endif %}>{% icon glyph %}{% tr label %}</a>{% endfor %}</nav>
+{% include 'web/app-header.html' with current_section=section %}
 <main id="main" class="app-main">{% block workspace_content %}{% endblock %}</main>
 <footer class="app-footer"><span>{% tr 'Made by' %} <a href="https://github.com/ymamggg-jpg" target="_blank" rel="noopener noreferrer">Ymam</a></span><div><a href="/privacy/">{% tr 'Privacy' %}</a> · <a href="/about/">{% tr 'About Mawj' %}</a></div></footer>
 </div>{% block workspace_scripts %}{% endblock %}{% endblock %}

@@ -1,19 +1,18 @@
-{% extends "web/base.html" %}
-{% block content %}
-<main id="main" class="prose-page">
-  <a class="brand" aria-label="Mawj home" href="/"><svg viewBox="0 0 40 40" fill="none" aria-hidden="true"><path d="M4 15c7-11 10 11 18 0s10 6 14 0M4 24c7-11 10 11 18 0s10 6 14 0" stroke="currentColor" stroke-width="3" stroke-linecap="round"></path></svg><span>mawj<span class="brand-period">.</span></span></a>
-  <h1>Your thoughts are personal.</h1>
-  <p>Mawj stores your account, journal entries, task details, future goals, optional goal images, settings and uploaded profile photo in its database and file storage. Other users cannot access your records through the application.</p>
-  <h2>Operator access</h2>
-  <p>Django administration is disabled in production. A separate read-only operator page lists usernames and registration dates without email addresses, account content or editing controls. An administrator using Mawj’s interface cannot read another user’s records or sign in as that user. A person who controls the server, code and encryption secret can still technically access data.</p>
-  {% if e2ee_preview %}<p>Journal text is encrypted in the browser before storage. After sign-in, the server automatically gives the account session its journal key, so no extra phrase or recovery key is required. This protects text when the database is viewed by itself, but it is not end-to-end encryption and does not hide journals from the server operator. Tasks, goals and some metadata remain outside journal-text encryption. This design has not had an independent security review.</p>{% else %}<p>Journals, tasks and goals are not end-to-end encrypted and should not be treated as hidden from the hosting operator.</p>{% endif %}
-  <p>Account passwords are stored as hashes, not readable text.</p>
-  <h2>Optional AI processing</h2>
-  <p>Demo mode is a labeled simulation and sends no text to an outside service. If Gemini, OpenAI or Claude is configured, the selected text is sent to that provider when you press the feature button. The server and provider can read it during that request, and the provider’s policy applies.</p>
-  <h2>Sessions and local settings</h2>
-  <p>Essential session and CSRF cookies support sign-in and protect changes. Your theme is stored locally and in your account; interface language is stored locally and in a preference cookie. Mawj includes no advertising or analytics trackers.</p>
-  <h2>Your control</h2>
-  <p>You can edit and delete journal entries, tasks and goals, and remove profile or goal images. Deleting an entry deletes its suggestions; accepted tasks and goals remain until you delete them separately. The site operator manages backups and retention.</p>
-  <a class="button" href="/">Back to Mawj</a>
-</main>
-{% endblock %}
+{% extends "web/base.html" %}{% load mawj %}
+{% block content %}<main id="main" class="privacy-page container">
+  <header class="privacy-header"><a class="brand" aria-label="Mawj home" href="/">{% include 'web/brand-mark.html' %}<span>mawj<span class="brand-period">.</span></span></a><span class="privacy-badge">{% icon 'ShieldCheck' %} Privacy</span></header>
+  <section class="privacy-hero"><span class="page-icon">{% icon 'ShieldCheck' %}</span><p class="eyebrow">Your space stays yours</p><h1>Privacy, in plain language.</h1><p>Mawj keeps your thoughts and plans in your account so the features you choose can work. Other users cannot see your journals, tasks, or goals.</p></section>
+  <section class="privacy-highlights">
+    <article><span>{% icon 'UserCircle' %}</span><h2>Private to your account</h2><p>Each person sees only their own content in the site.</p></article>
+    <article><span>{% icon 'ShieldCheck' %}</span><h2>Password protected</h2><p>Your password is stored as a secure hash, never readable text.</p></article>
+    <article><span>{% icon 'Sparkle' %}</span><h2>AI when you choose</h2><p>Analysis starts only after you press a suggestion button.</p></article>
+  </section>
+  <section class="privacy-sections surface">
+    <article><h2>What Mawj needs</h2><p>We store account details and the journals, tasks, goals, settings, and optional images you add so your space is ready when you return.</p></article>
+    <article><h2>Journal protection</h2>{% if e2ee_preview %}<p>Your browser encrypts journal text before saving and opens it automatically after sign-in. This protects the text when the database is separated from Mawj, while the server manages the key so you do not need another password.</p>{% else %}<p>Journal entries stay in your account and appear after you sign in.</p>{% endif %}</article>
+    <article><h2>When you use suggestions</h2><p>{% if sends_to_cloud %}When you ask for a suggestion, Mawj sends the text needed for that request to {% if provider == 'openai' %}OpenAI{% elif provider == 'claude' %}Claude{% else %}Gemini{% endif %}. This does not happen while simply writing or saving, and the provider’s policy applies to the request.{% elif provider == 'demo' %}Demo suggestions run locally without sending text to an outside AI service.{% else %}AI suggestions are currently turned off.{% endif %}</p></article>
+    <article><h2>You control your content</h2><p>You can edit and delete journals, tasks, and goals, and remove uploaded images. Mawj includes no advertising or analytics trackers.</p></article>
+  </section>
+  <details class="privacy-details"><summary>More technical detail</summary><div><p>The operator tool lists usernames and registration dates only; it has no control for opening another account’s content. Hosting operators need technical access to maintain the server and backups, and that access can make data technically available when necessary.</p>{% if e2ee_preview %}<p>Current journal encryption is not end-to-end encryption and has not had an independent security review. Tasks, goals, and some journal metadata remain outside journal-text encryption.</p>{% endif %}<p>Deleted data may remain for a limited time in backups until those backups are replaced.</p></div></details>
+  <footer class="privacy-actions"><a class="button" href="/">Back to Mawj</a><span>Last updated: October 25, 2026</span></footer>
+</main>{% endblock %}

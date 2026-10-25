@@ -1,12 +1,18 @@
 {% load mawj %}
 {% if section == 'today' %}
   {% if data.reminders %}<section class="reminder-banner"><h3>{% tr 'A gentle reminder' %}</h3>{% for task in data.reminders %}<div class="reminder-row"><span>{{ task.title }}</span><button class="icon-button" data-reminder="{{ task.id }}" aria-label="{% tr 'Dismiss message' %}">{% icon 'X' %}</button></div>{% endfor %}</section>{% endif %}
-  <div class="stats-row"><div class="stat"><span class="stat-label">{% tr "Today & undated" %}</span><strong>{{ data.counts.today }}</strong></div><div class="stat"><span class="stat-label">{% tr "A little overdue" %}</span><strong>{{ data.counts.overdue }}</strong></div><div class="stat"><span class="stat-label">{% tr "Completed today" %}</span><strong>{{ data.counts.completed }}</strong></div></div>
-  <div class="dashboard-grid"><section>
-    <nav class="segmented" aria-label="{% tr 'Task sections' %}"><a href="?section=today" {% if request.GET.section != 'overdue' and request.GET.section != 'completed' %}aria-current="page"{% endif %}>{% tr 'Today & undated' %} {{ data.counts.today }}</a><a href="?section=overdue" {% if request.GET.section == 'overdue' %}aria-current="page"{% endif %}>{% tr 'Overdue' %} {{ data.counts.overdue }}</a><a href="?section=completed" {% if request.GET.section == 'completed' %}aria-current="page"{% endif %}>{% tr 'Small wins' %} {{ data.counts.completed }}</a></nav>
+  <section class="today-glance" aria-label="{% tr 'Your day at a glance' %}">
+    <div class="today-focus"><span class="today-focus-icon">{% icon 'Sun' %}</span><div><span>{% tr 'Ready for today' %}</span><strong>{{ data.counts.today }}</strong><small>{% tr 'tasks waiting' %}</small></div></div>
+    <div class="today-secondary"><a href="?section=overdue"><span>{% tr 'Overdue' %}</span><strong>{{ data.counts.overdue }}</strong></a><a href="?section=completed"><span>{% tr 'Small wins' %}</span><strong>{{ data.counts.completed }}</strong></a></div>
+  </section>
+  <div class="dashboard-grid today-grid"><section>
+    <nav class="segmented today-sections" aria-label="{% tr 'Task sections' %}"><a href="?section=today" {% if request.GET.section != 'overdue' and request.GET.section != 'completed' %}aria-current="page"{% endif %}>{% tr 'Today & undated' %}</a><a href="?section=overdue" {% if request.GET.section == 'overdue' %}aria-current="page"{% endif %}>{% tr 'Overdue' %}</a><a href="?section=completed" {% if request.GET.section == 'completed' %}aria-current="page"{% endif %}>{% tr 'Small wins' %}</a></nav>
 {% else %}
-  <form class="filters" method="get">
-    <div class="search-field">{% icon 'MagnifyingGlass' %}<input name="q" type="search" value="{{ request.GET.q }}" aria-label="{% tr 'Search tasks' %}" placeholder="{% tr 'Find a task…' %}"></div>
+  <form class="filters task-filters" method="get">
+    <div class="search-dock{% if request.GET.q %} is-expanded{% endif %}" data-search-dock>
+      <button type="button" class="search-dock-toggle" data-search-toggle aria-expanded="{% if request.GET.q %}true{% else %}false{% endif %}" {% if request.GET.q %}tabindex="-1"{% endif %} aria-label="{% tr 'Search tasks' %}">{% icon 'MagnifyingGlass' %}</button>
+      <div class="search-dock-panel" aria-hidden="{% if request.GET.q %}false{% else %}true{% endif %}" {% if not request.GET.q %}inert{% endif %}>{% icon 'MagnifyingGlass' %}<input name="q" type="search" value="{{ request.GET.q }}" aria-label="{% tr 'Search tasks' %}" placeholder="{% tr 'Find a task…' %}"><button type="button" class="search-dock-close" data-search-close aria-label="{% tr 'Close search' %}">{% icon 'X' %}</button></div>
+    </div>
     <select name="status" aria-label="{% tr 'Status' %}"><option value="todo" {% if not request.GET.status or request.GET.status == 'todo' %}selected{% endif %}>{% tr 'Active tasks' %}</option><option value="done" {% if request.GET.status == 'done' %}selected{% endif %}>{% tr 'Completed archive' %}</option><option value="all" {% if request.GET.status == 'all' %}selected{% endif %}>{% tr 'All statuses' %}</option></select>
     <select name="category" aria-label="{% tr 'Category' %}"><option value="">{% tr 'All categories' %}</option>{% for value,label in categories %}<option value="{{ value }}" {% if request.GET.category == value %}selected{% endif %}>{% tr label %}</option>{% endfor %}</select>
     <select name="priority" aria-label="{% tr 'Priority' %}"><option value="">{% tr 'All priorities' %}</option>{% for value,label in priorities %}<option value="{{ value }}" {% if request.GET.priority == value %}selected{% endif %}>{% tr label %}</option>{% endfor %}</select>
@@ -14,7 +20,7 @@
   </form>
   {% if request.GET.status == 'done' %}<p class="archive-note">{% icon 'CheckCircle' %}{% tr 'Completed tasks are saved here. Reopen one whenever you need it.' %}</p>{% endif %}
 {% endif %}
-<div class="section-label"><span>{% if request.GET.status == 'done' %}{% tr 'Completed archive' %}{% else %}{% tr 'Your list' %}{% endif %}</span><span>{{ data.total }} {% tr 'tasks' %}</span></div>
+<div class="section-label"><span>{% if section == 'today' %}{% tr "Today's plan" %}{% elif request.GET.status == 'done' %}{% tr 'Completed archive' %}{% else %}{% tr 'Your list' %}{% endif %}</span>{% if section == 'today' %}<span>{{ data.date|display_date }}</span>{% else %}<span>{{ data.total }} {% tr 'tasks' %}</span>{% endif %}</div>
 <div class="task-list">
   {% for task in data.results %}
     <article class="task-row">
@@ -27,4 +33,4 @@
   {% endfor %}
 </div>
 {% include 'web/pagination.html' %}
-{% if section == 'today' %}</section><aside><div class="welcome-note">{% icon 'Notebook' %}<h3>{% tr 'A thought worth' %}<br>{% tr 'making room for.' %}</h3><p>{% tr 'You don’t have to organize your thoughts before you write them down. Start anywhere.' %}</p><a class="text-link" href="/app/journal/">{% tr 'Open your journal' %}</a></div><div class="quiet-note"><p>{% tr 'Progress doesn’t have to be loud. A single finished task counts.' %}</p><a href="/app/achievements/" class="text-link">{% tr 'See your progress' %}</a></div></aside></div>{% endif %}
+{% if section == 'today' %}</section><aside class="today-side"><div class="welcome-note today-journal-card">{% icon 'Notebook' %}<span class="eyebrow">{% tr 'A place to begin' %}</span><h3>{% tr 'A thought worth' %}<br>{% tr 'making room for.' %}</h3><p>{% tr 'Write down what is on your mind, then choose what comes next.' %}</p><a class="button secondary" href="/app/journal/">{% tr 'Write in my journal' %}</a></div><div class="quiet-note today-progress-card">{% icon 'ChartBar' %}<div><strong>{% tr 'A little progress' %}</strong><p>{% tr 'See the small wins from this week, month, or year.' %}</p></div><a href="/app/achievements/" class="text-link">{% tr 'View progress' %}</a></div></aside></div>{% endif %}

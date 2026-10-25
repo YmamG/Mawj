@@ -45,7 +45,7 @@ function lock() {
   for (const controller of activeRequests) controller.abort();
   generation++; key = null; current = null; rows = []; dirty = false; bookIndex = 0;
   $("#vault-text").value = ""; $("#vault-search").value = "";
-  for (const name of ["list", "clean", "suggestions", "entry-date"]) $(`#vault-${name}`).textContent = "";
+  for (const name of ["list", "suggestions", "entry-date"]) $(`#vault-${name}`).textContent = "";
   for (const name of ["open", "editor", "legacy-lock", "loading"]) { const node = $(`#vault-${name}`); if (node) node.hidden = true; }
   notice("");
 }
@@ -129,7 +129,6 @@ function renderEditor(preserveText = false) {
   if (!current) return;
   if (!preserveText) $("#vault-text").value = current.document.text;
   $("#vault-entry-date").textContent = current.revision ? date(current.created_at) : say("تدوينة جديدة", "New entry");
-  $("#vault-clean").textContent = current.document.clean_text && current.document.clean_text !== current.document.text ? current.document.clean_text : "";
   const list = $("#vault-suggestions"); list.replaceChildren();
   $("#vault-suggestion-disclosure").hidden = !current.document.suggestions.some((s) => s.status === "pending");
   for (const suggestion of current.document.suggestions) {

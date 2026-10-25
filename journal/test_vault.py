@@ -259,6 +259,7 @@ class VaultApiTests(TestCase):
         self.assertContains(response, 'id="vault-legacy-lock"')
         self.assertNotContains(response, "Journal passphrase")
         self.assertNotContains(response, "Forget this device")
+        self.assertNotContains(response, 'id="vault-clean"')
         self.assertNotContains(response, "<form")
         self.assertIn("no-store", response.headers["Cache-Control"])
 

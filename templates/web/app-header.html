@@ -1,0 +1,18 @@
+{% load mawj %}
+<div class="app-chrome">
+  <header class="app-header">
+    {% include 'web/brand.html' %}
+    <div class="app-header-actions">
+      <span class="app-date">{{ today|display_date }}</span>
+      {% include 'web/appearance.html' with compact=True %}
+      <a class="user-button" href="/app/profile/" aria-label="{% tr 'My space' %}">
+        {% if account.has_avatar %}<img class="avatar" alt="{% tr 'Your profile photo' %}" src="/api/profile/avatar/">{% else %}<span class="avatar default-avatar">{{ account.display_name|default:account.username|first|upper }}</span>{% endif %}
+        <span>{{ account.display_name|default:account.username }}</span>
+      </a>
+      <button class="icon-button header-logout" data-logout aria-label="{% tr 'Log out' %}" title="{% tr 'Log out' %}">{% icon 'SignOut' %}</button>
+    </div>
+  </header>
+  <nav class="app-nav" aria-label="{% tr 'Your workspace' %}">
+    {% for id,label,glyph in navigation %}<a href="/app/{{ id }}/" aria-label="{% tr label %}" title="{% tr label %}" {% if id == current_section %}aria-current="page"{% endif %}><span class="app-nav-icon">{% icon glyph %}</span><span class="app-nav-label">{% tr label %}</span></a>{% endfor %}
+  </nav>
+</div>

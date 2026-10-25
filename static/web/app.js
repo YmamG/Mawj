@@ -14,6 +14,19 @@
     deleteNotice = "";
   const $ = (selector) => document.querySelector(selector);
   const t = (text) => (lang === "ar" ? boot.translations[text] || text : text);
+  const setSearchDock = (dock, expanded) => {
+    if (!dock) return;
+    dock.classList.toggle("is-expanded", expanded);
+    const toggle = dock.querySelector("[data-search-toggle]");
+    const panel = dock.querySelector(".search-dock-panel");
+    toggle?.setAttribute("aria-expanded", String(expanded));
+    if (toggle) toggle.tabIndex = expanded ? -1 : 0;
+    if (panel) {
+      panel.inert = !expanded;
+      panel.setAttribute("aria-hidden", String(!expanded));
+    }
+    if (expanded) requestAnimationFrame(() => dock.querySelector('input[type="search"]')?.focus());
+  };
   const startAILoading = (button, message) => {
     const label = button?.querySelector(".ai-button-label");
     if (!button || !label) return () => {};
@@ -350,6 +363,24 @@
           themeSave = themeSave
             .then(() => api("/theme/", { theme }))
             .catch((e) => showError(e));
+        button.closest(".appearance-menu")?.removeAttribute("open");
+        return;
+      }
+      if (button.hasAttribute("data-search-toggle")) {
+        setSearchDock(button.closest("[data-search-dock]"), true);
+        return;
+      }
+      if (button.hasAttribute("data-search-close")) {
+        const dock = button.closest("[data-search-dock]");
+        const input = dock?.querySelector('input[type="search"]');
+        const hadValue = Boolean(input?.value);
+        if (input) {
+          input.value = "";
+          input.dispatchEvent(new Event("input", {bubbles: true}));
+        }
+        setSearchDock(dock, false);
+        const form = dock?.closest("form");
+        if (hadValue && form?.method.toLowerCase() === "get") form.requestSubmit();
         return;
       }
       if (button.dataset.language) {
@@ -512,6 +543,11 @@
       stopAILoading?.();
       if (handledButton) button.disabled = false;
     }
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape") return;
+    const dock = document.activeElement?.closest?.("[data-search-dock].is-expanded");
+    if (dock) dock.querySelector("[data-search-close]")?.click();
   });
   document.addEventListener("submit", async (event) => {
     const form = event.target;

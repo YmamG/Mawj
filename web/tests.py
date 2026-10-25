@@ -77,3 +77,31 @@ class TemplateEditionTests(TestCase):
         self.assertContains(response, 'Write a new entry')
         self.assertContains(response, 'Writing assistant')
         self.assertNotContains(response, 'class="banner journal-mode"')
+
+    def test_task_and_journal_search_stay_compact_until_opened(self):
+        self.client.force_login(self.owner)
+        tasks = self.client.get('/app/tasks/')
+        self.assertContains(tasks, 'class="search-dock"')
+        self.assertContains(tasks, 'aria-expanded="false"')
+        filtered_tasks = self.client.get('/app/tasks/?q=private')
+        self.assertContains(filtered_tasks, 'class="search-dock is-expanded"')
+        journal = self.client.get('/app/journal/')
+        self.assertContains(journal, 'class="search-dock journal-search"')
+        filtered_journal = self.client.get('/app/journal/?q=page')
+        self.assertContains(filtered_journal, 'class="search-dock journal-search is-expanded"')
+
+    def test_today_shows_each_summary_count_once(self):
+        Task.objects.create(user=self.owner, title='An undated task')
+        self.client.force_login(self.owner)
+        response = self.client.get('/app/today/')
+        self.assertContains(response, 'class="today-glance"')
+        self.assertContains(response, "Today's plan")
+        self.assertNotContains(response, 'class="stats-row"')
+        self.assertNotContains(response, 'Today &amp; undated <span>')
+
+    def test_privacy_page_leads_with_plain_summary_and_keeps_details_optional(self):
+        self.client.cookies['mawj-language'] = 'en'
+        response = self.client.get('/privacy/')
+        self.assertContains(response, 'Privacy, in plain language.')
+        self.assertContains(response, '<details class="privacy-details">')
+        self.assertContains(response, 'Other users cannot see your journals, tasks, or goals.')
